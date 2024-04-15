@@ -1,0 +1,27 @@
+[
+    {
+      "model": "PaytacaApp.location",
+      "pk": 1,
+      "fields": {
+        "name": "Atlas Maritime Review Center",
+        "street": "Rizal Ave. St.",
+        "city": "Tacloban City",
+        "country": "Philippines",
+        "latitude": 11.2441900,
+        "longitude": 124.9987370
+      }
+    },
+    {
+      "model": "PaytacaApp.location",
+      "pk": 2,
+      "fields": {
+        "name": "Berakah Coffee Co.",
+        "street": "Real street",
+        "city": "Tacloban",
+        "country": "Philippines",
+        "latitude": 11.2352500,
+        "longitude": 125.0030540
+      }
+    }
+  ]
+  

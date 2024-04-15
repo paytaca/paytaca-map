@@ -1,0 +1,92 @@
+{
+  "count": 2,
+  "limit": 50,
+  "offset": 0,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 314,
+      "name": "Atlas Maritime Review Center",
+      "location": {
+        "landmark": "",
+        "location": "Bercom Realty Bldg. 69",
+        "street": "Rizal Ave. St.",
+        "city": "Tacloban City",
+        "country": "Philippines",
+        "longitude": "124.9987370",
+        "latitude": "11.2441900"
+      },
+      "website_url": null,
+      "category": null,
+      "description": "",
+      "gmap_business_link": "https://maps.app.goo.gl/GHbvxxebegMHpo3a7",
+      "last_transaction_date": "2024-03-13 07:47:18.042126+00:00",
+      "receiving_pubkey": "0382e9f18998259f19fbc7a36b4d4cfe6a6cc3007373b77825d6dc60409c4772f5",
+      "receiving_address": "bitcoincash:qqmfc5684253sjdl20k9kc2t0ju6r7kc957hhe9pa2",
+      "vault": {
+        "id": 166,
+        "address": "bitcoincash:p0wyvdrcnjfx6e5ltv3a8u40mmhsy6572jpquafdeahrquj2mexhxx5r5ppp9",
+        "token_address": "bitcoincash:r0wyvdrcnjfx6e5ltv3a8u40mmhsy6572jpquafdeahrquj2mexhx58l4cqcw",
+        "merchant": 314
+      },
+      "vouchers": {
+        "count": {
+          "total": 0,
+          "claimed": 0,
+          "unclaimed": 0
+        },
+        "amount": {
+          "total": 0,
+          "claimed": 0,
+          "unclaimed": 0
+        }
+      },
+      "logos": {
+        "30x30": "https://watchtower.cash/media/merchant_logos/Atlas_Review_qoU6ucr.png",
+        "60x60": "https://watchtower.cash/media/merchant_logos/Atlas_Review_fepI6s6.png",
+        "90x90": "https://watchtower.cash/media/merchant_logos/Atlas_Review_jaMV4Hw.png",
+        "120x120": "https://watchtower.cash/media/merchant_logos/Atlas_Review_CaJqF15.png"
+      }
+    },
+    {
+      "id": 84,
+      "name": "Berakah Coffee Co.",
+      "location": {
+        "landmark": "",
+        "location": "Gaisano real",
+        "street": "Rral street",
+        "city": "Tacloban",
+        "country": "Philippines",
+        "longitude": "125.0030540",
+        "latitude": "11.2352500"
+      },
+      "website_url": null,
+      "category": null,
+      "description": "",
+      "gmap_business_link": "https://goo.gl/maps/tHvjKgr8VKBzstws9",
+      "last_transaction_date": "2024-01-25 10:43:34.723212+00:00",
+      "receiving_pubkey": null,
+      "receiving_address": "",
+      "vault": null,
+      "vouchers": {
+        "count": {
+          "total": 0,
+          "claimed": 0,
+          "unclaimed": 0
+        },
+        "amount": {
+          "total": 0,
+          "claimed": 0,
+          "unclaimed": 0
+        }
+      },
+      "logos": {
+        "30x30": "https://watchtower.cash/media/merchant_logos/Berakah_X7mvbw2.png",
+        "60x60": "https://watchtower.cash/media/merchant_logos/Berakah_2Yj25YU.png",
+        "90x90": "https://watchtower.cash/media/merchant_logos/Berakah_rsKDt8j.png",
+        "120x120": "https://watchtower.cash/media/merchant_logos/Berakah_dhL1qaB.png"
+      }
+    }
+  ]
+}
