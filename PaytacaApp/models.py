@@ -7,8 +7,8 @@ class Location(models.Model):
     street = models.CharField(max_length=255, null=True)
     city = models.CharField(max_length=255, null=True)
     country = models.CharField(max_length=255, null=True)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6)
-    latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    longitude = models.DecimalField(max_digits=20, decimal_places=10)
+    latitude = models.DecimalField(max_digits=20, decimal_places=10)
     website_url = models.URLField(blank=True, null=True)
     category = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
@@ -24,5 +24,5 @@ class Vault(models.Model):
 
 class Logo(models.Model):
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
-    size = models.CharField(max_length=10, null=True)  # e.g., '30x30', '60x60'
+    size = models.CharField(max_length=10, null=True)
     url = models.URLField(null=True)

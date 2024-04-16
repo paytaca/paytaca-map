@@ -85,8 +85,8 @@ WSGI_APPLICATION = 'PaytacaProject.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': '../PaytacaProject.sqlite3',   
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'PaytacaProject',   
         'USER': 'postgres', 
         'PASSWORD': 'password101801', 
         'HOST': 'localhost',    
