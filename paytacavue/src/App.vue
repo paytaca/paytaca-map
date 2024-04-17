@@ -2,11 +2,19 @@
   <div class="grid grid-cols-1 sm:grid-cols-2 bg-gray-900 h-screen">
     <!-- Left Section: Logos with Descriptions -->
     <div class="p-4 overflow-y-auto h-96 sm:h-full">
+      <!-- Search Bar -->
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Search merchants..."
+        class="w-full px-4 py-2 mb-4 rounded-lg bg-gray-800 text-white focus:outline-none"
+      />
+
       <div class="mt-2 grid grid-cols-3">
         <!-- Logos with descriptions -->
-        <div v-for="location in locations" :key="location.id" class="flex flex-col items-center border-2 p-2 m-2 rounded-3xl bg-slate-400">
+        <div v-for="location in filteredLocations" :key="location.id" class="flex flex-col items-center border-2 p-2 m-2 rounded-3xl bg-slate-400">
           <!-- Check if location.logo is defined before accessing its url property -->
-          <img v-if="location.logo" :src="location.logo" :alt="location.name + ' Logo'" class="h-40 w-60 rounded-full">
+          <img v-if="location.logo" :src="location.logo" :alt="location.name + ' Logo'" class="h-120 w-120 rounded-full">
           <div class="">
             <h3 class="text-lg font-semibold">{{ location.name }}</h3>
             <p class="text-gray-500">{{ location.location }}</p>
@@ -19,7 +27,7 @@
 
     <!-- Right Section: Map -->
     <div class="h-screen">
-      <div id="map" class="h-screen"><MapView /></div>
+      <div id="map" class="h-screen"><MapView :locations="filteredLocations" /></div>
     </div>
   </div>
 </template>
@@ -36,16 +44,24 @@ export default {
   data() {
     return {
       locations: [],
+      searchQuery: '',
     };
   },
   mounted() {
     this.fetchLocations();
   },
+  computed: {
+    filteredLocations() {
+      return this.locations.filter(location => {
+        return location.name.toLowerCase().includes(this.searchQuery.toLowerCase());
+      });
+    },
+  },
   methods: {
     fetchLocations() {
       axios.get('http://localhost:8000/locations/')
         .then(response => {
-          this.locations = response.data;
+          this.locations = response.data; 
           // After fetching locations, fetch logos for each location
           this.fetchLogos();
         })
@@ -54,32 +70,31 @@ export default {
         });
     },
     fetchLogos() {
-  axios.get('http://localhost:8000/logos/')
-    .then(response => {
-      const logos = response.data;
-      // Filter logos to ensure they are of size 120x120
-      const filteredLogos = logos.filter(logo => logo.size === '120x120');
-      // Create a map of location IDs to logos for easy lookup
-      const logoMap = filteredLogos.reduce((map, logo) => {
-        if (!map.has(logo.location)) {
-          map.set(logo.location, []);
-        }
-        map.get(logo.location).push(logo.url);
-        return map;
-      }, new Map());
+      axios.get('http://localhost:8000/logos/')
+        .then(response => {
+          const logos = response.data;
+          // Filter logos to ensure they are of size 120x120
+          const filteredLogos = logos.filter(logo => logo.size === '120x120');
+          // Create a map of location IDs to logos for easy lookup
+          const logoMap = filteredLogos.reduce((map, logo) => {
+            if (!map.has(logo.location)) {
+              map.set(logo.location, []);
+            }
+            map.get(logo.location).push(logo.url);
+            return map;
+          }, new Map());
 
-      // Assign logos to locations
-      this.locations.forEach(location => {
-        const locationLogos = logoMap.get(location.id);
-        // Assign the first logo to the location (you can modify this logic if needed)
-        location.logo = locationLogos ? locationLogos[0] : null;
-      });
-    })
-    .catch(error => {
-      console.error('Error fetching logos:', error);
-    });
-}
-
+          // Assign logos to locations
+          this.locations.forEach(location => {
+            const locationLogos = logoMap.get(location.id);
+            // Assign the first logo to the location (you can modify this logic if needed)
+            location.logo = locationLogos ? locationLogos[0] : null;
+          });
+        })
+        .catch(error => {
+          console.error('Error fetching logos:', error);
+        });
+    }
   }
 };
 </script>

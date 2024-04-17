@@ -16,9 +16,29 @@ import axios from 'axios';
 
 export default {
   name: 'MapView',
+  props: {
+    locations: {
+      type: Array,
+      default: () => [],
+    },
+    searchQuery: {
+      type: String,
+      default: '',
+    },
+  },
   mounted() {
     this.loadMap();
-    this.fetchMarkers();
+  },
+  watch: {
+    locations: {
+      handler(newLocations) {
+        this.updateMarkers(newLocations);
+      },
+      deep: true,
+    },
+    searchQuery() {
+      this.updateMarkers(this.locations);
+    },
   },
   methods: {
     loadMap() {
@@ -26,45 +46,41 @@ export default {
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(this.map);
+
+      // Initialize marker cluster group
+      this.markerClusterGroup = L.markerClusterGroup();
+      this.map.addLayer(this.markerClusterGroup);
     },
-    fetchMarkers() {
-      axios.get('http://localhost:8000/locations/')
-        .then(response => {
-          const locations = response.data;
-          const markers = L.markerClusterGroup({
-            maxClusterRadius: 50,
-            disableClusteringAtZoom: 13,
-          });
-          locations.forEach(location => {
-            const transactionDate = new Date(location.last_transaction_date);
-            const currentDate = new Date();
-            const weeksAgo = Math.round((currentDate - transactionDate) / (1000 * 60 * 60 * 24 * 7));
-            const lastTransactionText = weeksAgo === 1 ? '1 week ago' : `${weeksAgo} weeks ago`;
+    updateMarkers(locations) {
+      // Clear existing markers
+      this.markerClusterGroup.clearLayers();
 
-            const customIcon = L.icon({
-              iconUrl: image,
-              iconSize: [35, 48],
-              iconAnchor: [24, 48],
-            });
+      // Add new markers for filtered locations
+      locations.forEach(location => {
+        const transactionDate = new Date(location.last_transaction_date);
+        const currentDate = new Date();
+        const weeksAgo = Math.round((currentDate - transactionDate) / (1000 * 60 * 60 * 24 * 7));
+        const lastTransactionText = weeksAgo === 1 ? '1 week ago' : `${weeksAgo} weeks ago`;
 
-            const popupContent = `
-              <div>
-                <h3>${location.name}</h3>
-                <p>Last transaction: ${lastTransactionText}</p>
-                <a href="${location.gmap_business_link}" target="_blank">View in Google Map</a>
-              </div>
-            `;
-            const marker = L.marker([location.latitude, location.longitude], { icon: customIcon })
-              .bindPopup(popupContent);
-            markers.addLayer(marker);
-          });
-          this.map.addLayer(markers);
-        })
-        .catch(error => {
-          console.error('Error fetching locations:', error);
+        const customIcon = L.icon({
+          iconUrl: image,
+          iconSize: [35, 48],
+          iconAnchor: [24, 48],
         });
-    }
-  }
+
+        const popupContent = `
+          <div>
+            <h3>${location.name}</h3>
+            <p>Last transaction: ${lastTransactionText}</p>
+            <a href="${location.gmap_business_link}" target="_blank">View in Google Map</a>
+          </div>
+        `;
+        const marker = L.marker([location.latitude, location.longitude], { icon: customIcon })
+          .bindPopup(popupContent);
+        this.markerClusterGroup.addLayer(marker);
+      });
+    },
+  },
 };
 </script>
 
