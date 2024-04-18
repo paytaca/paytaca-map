@@ -7,14 +7,14 @@
         v-model="searchQuery"
         type="text"
         placeholder="Search merchants..."
-        class="w-full px-4 py-2 mb-4 rounded-lg bg-gray-800 text-white focus:outline-none"
+        class="w-full px-4 py-2 mb-4 rounded-lg bg-gray-200 text-white focus:outline-none"
       />
 
       <div class="mt-2 grid grid-cols-3">
         <!-- Logos with descriptions -->
         <div v-for="location in filteredLocations" :key="location.id" class="flex flex-col items-center border-2 p-2 m-2 rounded-3xl bg-slate-400">
           <!-- Check if location.logo is defined before accessing its url property -->
-          <img v-if="location.logo" :src="location.logo" :alt="location.name + ' Logo'" class="h-120 w-120 rounded-full">
+          <img v-if="location.logo" :src="location.logo" :alt="location.name + ' Logo'" class="h-50 w-50 ">
           <div class="">
             <h3 class="text-lg font-semibold">{{ location.name }}</h3>
             <p class="text-gray-500">{{ location.location }}</p>

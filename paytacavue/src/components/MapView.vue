@@ -5,14 +5,12 @@
 </template>
 
 <script>
-/* eslint-disable */
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import 'leaflet.markercluster/dist/leaflet.markercluster';
 import image from "../assets/marker_pin.png"
-import axios from 'axios';
 
 export default {
   name: 'MapView',
@@ -20,10 +18,6 @@ export default {
     locations: {
       type: Array,
       default: () => [],
-    },
-    searchQuery: {
-      type: String,
-      default: '',
     },
   },
   mounted() {
@@ -35,9 +29,6 @@ export default {
         this.updateMarkers(newLocations);
       },
       deep: true,
-    },
-    searchQuery() {
-      this.updateMarkers(this.locations);
     },
   },
   methods: {
@@ -55,13 +46,8 @@ export default {
       // Clear existing markers
       this.markerClusterGroup.clearLayers();
 
-      // Add new markers for filtered locations
+      // Add new markers for locations
       locations.forEach(location => {
-        const transactionDate = new Date(location.last_transaction_date);
-        const currentDate = new Date();
-        const weeksAgo = Math.round((currentDate - transactionDate) / (1000 * 60 * 60 * 24 * 7));
-        const lastTransactionText = weeksAgo === 1 ? '1 week ago' : `${weeksAgo} weeks ago`;
-
         const customIcon = L.icon({
           iconUrl: image,
           iconSize: [35, 48],
@@ -71,14 +57,16 @@ export default {
         const popupContent = `
           <div>
             <h3>${location.name}</h3>
-            <p>Last transaction: ${lastTransactionText}</p>
-            <a href="${location.gmap_business_link}" target="_blank">View in Google Map</a>
+            <p>${location.location}, ${location.city}, ${location.country}</p>
           </div>
         `;
         const marker = L.marker([location.latitude, location.longitude], { icon: customIcon })
           .bindPopup(popupContent);
         this.markerClusterGroup.addLayer(marker);
       });
+    },
+    setCenter(latitude, longitude) {
+      this.map.setView([latitude, longitude], 15); // Adjust the zoom level as needed
     },
   },
 };

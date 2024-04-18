@@ -1,33 +1,23 @@
+// Import the Tailwind CSS Config type
 /** @type {import('tailwindcss').Config} */
 // @ts-ignore
-const defaultTheme = require('tailwindcss/defaultTheme');
 
+// Export the configuration object
 module.exports = {
+  // Specify the files Tailwind should analyze for generating utility classes
   content: [
-    "./index.html",
-    "./src/**/*.{vue,js,ts,jsx,tsx}"
+    "./index.html", // HTML file(s) to analyze
+    "./src/**/*.{vue,js,ts,jsx,tsx}" // Vue, JavaScript, TypeScript files to analyze in the src directory
   ],
+  // Customize Tailwind CSS theme
   theme: {
+    // Extend or override the default theme here
     extend: {
-      fontFamily: {
-        sans: ['Inter var', ...defaultTheme.fontFamily.sans],
-      },
+      // You can add customizations here, such as new colors, fonts, spacing, etc.
     },
   },
-  plugins: [],
+  // Specify additional plugins for Tailwind CSS
+  plugins: [
+    // You can add any additional Tailwind CSS plugins here
+  ],
 };
-
-export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{vue,js,ts,jsx,tsx}",
-  ],
-  theme: {
-    extend: {
-      fontFamily: {
-        sans: ['Inter var', ...defaultTheme.fontFamily.sans],
-      },
-    },
-  },
-  plugins: [],
-}
