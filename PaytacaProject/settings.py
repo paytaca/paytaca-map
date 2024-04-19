@@ -88,7 +88,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'PaytacaProject',   
         'USER': 'postgres', 
-        'PASSWORD': 'admin', 
+        'PASSWORD': 'password101801', 
         'HOST': 'localhost',    
         'PORT': '5432',  
     }

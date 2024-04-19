@@ -1,5 +1,5 @@
 <template>
-  <div class="grid grid-cols-1 sm:grid-cols-2 bg-gray-900 h-screen">
+  <div class="grid grid-cols-1 sm:grid-cols-2 bg-gray-dark h-screen">
     <!-- Left Section: Logos with Descriptions -->
     <div class="p-4 overflow-y-auto h-96 sm:h-full">
       <!-- Search Bar -->
@@ -7,19 +7,19 @@
         v-model="searchQuery"
         type="text"
         placeholder="Search merchants..."
-        class="w-full px-4 py-2 mb-4 rounded-lg bg-gray-200 text-white focus:outline-none"
+        class="w-full px-4 py-2 mb-4 rounded-lg bg-gray-light text-gray-dark focus:outline-none"
       />
 
-      <div class="mt-2 grid grid-cols-3">
+      <div class="mt-2 grid grid-cols-1 sm:grid-cols-3">
         <!-- Logos with descriptions -->
-        <div v-for="location in filteredLocations" :key="location.id" class="flex flex-col items-center border-2 p-2 m-2 rounded-3xl bg-slate-400">
+        <div v-for="location in filteredLocations" :key="location.id" class="flex flex-col border-2 border-y-gray-dark p-2 m-2 rounded-3xl bg-gray-light" @click="showPopup(location)">
           <!-- Check if location.logo is defined before accessing its url property -->
-          <img v-if="location.logo" :src="location.logo" :alt="location.name + ' Logo'" class="h-50 w-50 ">
-          <div class="">
-            <h3 class="text-lg font-semibold">{{ location.name }}</h3>
-            <p class="text-gray-500">{{ location.location }}</p>
-            <p class="text-gray-500">{{ location.city }}</p>
-            <p class="text-gray-500">{{ location.country }}</p>
+          <img v-if="location.logo" :src="location.logo" :alt="location.name + ' Logo'" class="h-120 w-auto rounded-2xl object-fill cursor-pointer">
+          <div class="text-sm text-">
+            <h3 class="text-lg font-semibold italic">{{ location.name }}</h3>
+            <p class="text-gray-800">{{ location.location }}</p>
+            <p class="text-gray-800">{{ location.city }}</p>
+            <p class="text-gray-800">{{ location.country }}</p>
           </div>
         </div>
       </div>
@@ -27,7 +27,7 @@
 
     <!-- Right Section: Map -->
     <div class="h-screen">
-      <div id="map" class="h-screen"><MapView :locations="filteredLocations" /></div>
+      <div id="map" class="h-screen"><MapView ref="mapView" :locations="filteredLocations" /></div>
     </div>
   </div>
 </template>
@@ -94,23 +94,27 @@ export default {
         .catch(error => {
           console.error('Error fetching logos:', error);
         });
+    },
+    showPopup(location) {
+      const popupContent = `
+        <div>
+          <h3>${location.name}</h3>
+          <p>${location.location}, ${location.city}, ${location.country}</p>
+          <p>Last transaction: ${location.last_transaction_date}</p>
+          <a href="${location.gmap_business_link}" target="_blank">View in Google Map</a>
+        </div>
+      `;
+
+      // Set map view to the location coordinates
+      this.$refs.mapView.setCenter(location.latitude, location.longitude);
+
+      // Open popup at location coordinates with the popup content
+      this.$refs.mapView.openPopup(location.latitude, location.longitude, popupContent);
     }
   }
 };
 </script>
 
 <style scoped>
-/* Adjusting the width of the left and right sections */
-.w-70 {
-  width: 70%;
-}
-
-.w-30 {
-  width: 30%;
-}
-
-/* Ensuring that the map container takes up the entire height of the screen */
-#map {
-  height: 100%;
-}
+/* Add your styles here */
 </style>
