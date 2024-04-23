@@ -41,3 +41,12 @@ Setup Tailwind CSS:
         npm install postcss autoprefixer
 
 implement the map
+
+
+New Tasks:
+ filtering by country
+    pagination
+    models
+        merchants
+        category
+        
