@@ -82,18 +82,22 @@ export default {
 
         const marker = L.marker([latitude, longitude], { icon: customIcon })
           .bindPopup(`
-            <div>
-              <h3 class='font-semibold'>${merchant.name}</h3>
+          <div class="sm:w-full rounded-lg">
+              <div class="flex items-center justify-between">
+                  <h3 class="font-semibold">${merchant.name}</h3>
+                  <img src="${merchant.logo}" alt="${merchant.name} Logo" class="h-16 w-16 rounded-full">
+              </div>
               <p>${merchant.location}, ${merchant.city}, ${merchant.country}</p>
               <p>Last transaction: ${timeText}</p>
-              <a href="${merchant.gmap_business_link}" target="_blank">View in Google Map</a>
-            </div>
+              <a href="${merchant.gmap_business_link}" target="_blank" class="text-blue-500 hover:underline">View in Google Map</a>
+          </div>
           `);
         this.markerClusterGroup.addLayer(marker);
       });
     },
     setCenter(latitude, longitude) {
-      this.map.setView([latitude, longitude], 17.5, { animate: true, duration: 1 }); 
+      const zoomLevel = window.innerWidth < 768 ? 10 : 17.5; 
+      this.map.setView([latitude, longitude], zoomLevel, { animate: true, duration: 1 }); 
     },
     openPopup(latitude, longitude, content) {
       const popup = L.popup()

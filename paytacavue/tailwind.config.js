@@ -13,7 +13,7 @@ module.exports = {
   theme: {
     // Extend or override the default theme here
     screens: {
-      sm: '480px',
+      sm: '425px',
       md: '768px',
       lg: '976px',
       xl: '1440px',
@@ -28,6 +28,7 @@ module.exports = {
       'gray-dark': '#273444',
       'gray': '#8492a6',
       'gray-light': '#d3dce6',
+      'bg-dark': '#1E293B',
     },
     fontFamily: {
       sans: ['Graphik', 'sans-serif'],
@@ -37,9 +38,6 @@ module.exports = {
       spacing: {
         '128': '32rem',
         '144': '36rem',
-      },
-      borderRadius: {
-        '4xl': '2rem',
       }
     }
   },

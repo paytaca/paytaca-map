@@ -1,7 +1,10 @@
 <template>
-  <div class="grid h-full md:h-auto md:grid-cols-2 bg-bg-dark">
+  <div class="fixed">
+      
+  </div>
+  <div class="grid h-screen md:h-auto md:grid-cols-2">
     <!-- Left Section: Logos with Descriptions -->
-    <div id="list" class="p-4 overflow-y-scroll h-screen sm:h-screen" ref="logosContainer">
+    <div class="p-4 overflow-y-scroll h-screen sm:h-screen">
 
       <!-- Search Bar -->
       <input
@@ -12,9 +15,9 @@
       />
 
       <!-- Flex container for dropdowns -->
-      <div class="grid grid-cols-2 gap-2 text-justify sm:text-sm">
+      <div class="grid grid-cols-2 gap-2 mb-4">
         <!-- Dropdown for sorting by country -->
-        <select v-model="sortBy" class="px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
+        <select v-model="sortBy" class="px-4 py-2 mr-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
           <option value="default">All Country</option>
           <option v-for="country in uniqueCountries" :key="country" :value="country">{{ country }}</option>
         </select>
@@ -26,11 +29,10 @@
         </select>
       </div>
 
-
       <!-- Grid for logos with descriptions -->
       <div class="mt-2 grid grid-cols-1 md:grid-cols-3 w-85 md-270 lg-255 h-auto md-auto">
         <!-- Logos with descriptions -->
-        <div v-for="(merchant, index) in paginatedMerchants" :key="merchant.id" class="flex flex-col p-2 m-2 rounded-3xl bg-gray-light" :class="{ 'pointer-events-none': isMobile }" @click="showPopup(merchant)">
+        <div v-for="(merchant, index) in paginatedMerchants" :key="merchant.id" class="flex flex-col border-2 border-y-gray-dark p-2 m-2 rounded-3xl bg-gray-light" @click="showPopup(merchant)">
           <!-- Check if merchant.logo is defined before accessing its url property -->
           <img v-if="merchant.logo" :src="merchant.logo" :alt="merchant.name + ' Logo'" class="h-auto w-25 md-50 lg-75 rounded-2xl object-fill cursor-pointer">
           <div class="text-sm md:text-xs">
@@ -43,40 +45,29 @@
       </div>
 
       <!-- Pagination -->
-      <div class="flex items-center justify-center mt-4 space-x-2 md:hidden">
-        <button @click="previousPage" :disabled="currentPage === 1" :class="{ 'opacity-50': currentPage === 1 }" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md focus:outline-none focus:ring focus:ring-gray-300">
+      <div class="flex items-center justify-center mt-4 space-x-2">
+        <button @click="previousPage" :disabled="currentPage === 1" :class="{ 'opacity-50': currentPage === 1 }" class="px-4 py-2 bg-gray-light text-gray-dark rounded-md focus:outline-none focus:ring focus:ring-gray-300">
           Previous
         </button>
         <template v-for="pageNumber in visiblePageNumbers" :key="pageNumber">
-          <button @click="gotoPage(pageNumber)" :class="{ 'bg-blue-500 text-white': pageNumber === currentPage, 'bg-gray-200 text-gray-700': pageNumber !== currentPage }" class="px-4 py-2 rounded-md focus:outline-none focus:ring focus:ring-gray-300">
+          <button @click="gotoPage(pageNumber)" :class="{ 'bg-blue-500 text-white': pageNumber === currentPage, 'bg-gray-light text-gray-dark': pageNumber !== currentPage }" class="px-4 py-2 rounded-md focus:outline-none focus:ring focus:ring-gray-300">
             {{ pageNumber }}
           </button>
         </template>
-        <button @click="nextPage" :disabled="currentPage === totalPages" :class="{ 'opacity-50': currentPage === totalPages }" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md focus:outline-none focus:ring focus:ring-gray-300">
+        <button @click="nextPage" :disabled="currentPage === totalPages" :class="{ 'opacity-50': currentPage === totalPages }" class="px-4 py-2 bg-gray-light text-gray-dark rounded-md focus:outline-none focus:ring focus:ring-gray-300">
           Next
         </button>
       </div>
-
-      <!-- "You reached the end" text -->
-      <div v-if="reachedEnd" class="flex items-center justify-center mt-4 text-gray-700">
-        <p>You reached the end</p>
-      </div>
     </div>
 
-
-    <!-- Right Section: Map  -->
-    <div class="sm:inline-block h-screen w-full">
-      <div id="map" class="sm:m-4 h-screen"><MapView ref="mapView" :merchants="filteredMerchants" /></div>
+    <!-- Right Section: Map (hidden on small screens) -->
+    <div class="hidden sm:block h-screen w-full">
+      <div id="map" class="h-screen"><MapView ref="mapView" :merchants="filteredMerchants" /></div>
     </div>
-
-    <div class="fixed bottom-4 left-4 md:left-8 md:bottom-8 md:hidden" style="z-index: 9999;">
-      <button @click="toggleMapView" class="px-4 py-2 ml-2 bg-gray-light text-gray-dark rounded-md focus:outline-none focus:ring focus:ring-gray-300">
-        {{ currentView === 'map' ? 'Show List' : 'Show Map' }}
-      </button>
-    </div>
-
   </div>
 </template>
+  
+
 
 <script>
 import axios from 'axios';
@@ -96,20 +87,11 @@ export default {
       currentPage: 1,
       pageSize: 9,
       categoriesMap: new Map(), // Map to store categories for each merchant
-      reachedEnd: false, // Flag to indicate whether the end of scroll is reached
-      currentView: 'list',
-      isMobile: window.innerWidth < 768
     };
   },
   mounted() {
     this.fetchMerchants();
     this.fetchCategories(); // Fetch categories on component mount
-    this.$refs.logosContainer.addEventListener('scroll', this.handleScroll);
-    console.log("Scroll event listener added.");
-  },
-  beforeDestroy() {
-    this.$refs.logosContainer.removeEventListener('scroll', this.handleScroll);
-    console.log("Scroll event listener removed.");
   },
   computed: {
     // Filtered merchants based on search query, country, and category
@@ -151,7 +133,8 @@ export default {
     },
     // Paginated merchants based on filtered results
     paginatedMerchants() {
-      return this.filteredMerchants.slice(0, this.pageSize);
+      const startIndex = (this.currentPage - 1) * this.pageSize;
+      return this.filteredMerchants.slice(startIndex, startIndex + this.pageSize);
     },
     totalPages() {
       return Math.ceil(this.filteredMerchants.length / this.pageSize);
@@ -241,11 +224,13 @@ export default {
       const currentDate = new Date();
       const timeDifference = currentDate - transactionDate;
       let timeText = '';
+
       // Convert milliseconds to years, months, weeks, and days
       const years = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 365));
       const months = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 30));
       const weeks = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 7));
       const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+
       // Choose the appropriate time unit based on the duration
       if (years > 0) {
         timeText = years === 1 ? '1 year ago' : `${years} years ago`;
@@ -256,27 +241,36 @@ export default {
       } else {
         timeText = days === 1 ? '1 day ago' : `${days} days ago`;
       }
-      let popupContent = `<div class="sm:w-full rounded-lg"><div class="flex items-center justify-between"><h3 class='font-semibold'>${merchant.name}</h3>`;
+
+      let popupContent = `<div class="flex items-center justify-between"><div><h3 class='font-semibold'>${merchant.name}</h3>`;
+
       // Include merchant logo if available
       if (merchant.logo) {
         popupContent += `<img src="${merchant.logo}" alt="${merchant.name} Logo" class="h-16 w-16 rounded-full">`;
       }
+
       popupContent += `</div><div>`;
+      
       // Include merchant information if available
       if (merchant.location && merchant.city && merchant.country) {
         popupContent += `<p>${merchant.location}, ${merchant.city}, ${merchant.country}</p>`;
       }
+
       // Include last transaction time if available
       if (timeText) {
         popupContent += `<p>Last transaction: ${timeText}</p>`;
       }
+
       // Include Google Maps link if available
       if (merchant.gmap_business_link) {
         popupContent += `<a href="${merchant.gmap_business_link}" target="_blank">View in Google Map</a>`;
       }
-      popupContent += `</div></div></div>`;
+
+      popupContent += `</div></div>`;
+
       // Open popup at merchant coordinates with the popup content
       this.$refs.mapView.openPopup(merchant.latitude, merchant.longitude, popupContent);
+
       // Center the map on the merchant coordinates
       this.$refs.mapView.setCenter(merchant.latitude, merchant.longitude);
     },
@@ -295,84 +289,10 @@ export default {
     },
     gotoPage(pageNumber) {
       this.currentPage = pageNumber;
-    },
-    handleScroll() {
-      const container = this.$refs.logosContainer;
-      // Check if the user has scrolled to the bottom of the container
-      if (container.scrollTop + container.clientHeight >= container.scrollHeight) {
-        // Load more merchants
-        console.log("Reached bottom of container. Loading more merchants...");
-        this.loadMoreMerchants();
-      }
-    },
-    loadMoreMerchants() {
-  // Check if the page is already loading
-  if (this.loading) {
-    return; // Exit the function if the page is already loading
-  }
-
-  // Set loading flag to true to indicate that the page is loading
-  this.loading = true;
-
-  // Increase the pageSize by 9 to load more merchants
-  this.pageSize += 9;
-
-  // Check if all merchants are loaded
-  if (this.pageSize >= this.filteredMerchants.length) {
-    this.reachedEnd = true; // Set the flag to indicate the end of scroll
-  }
-
-  // For smaller screens (SM), automatically load more merchants when reaching the bottom
-  if (window.innerWidth < 320) { // Adjust the breakpoint as needed
-    const container = this.$refs.logosContainer;
-    // Check if the user has scrolled to the bottom of the container
-    if (container.scrollTop + container.clientHeight >= container.scrollHeight) {
-      // Load more merchants
-      console.log("Reached bottom of container. Loading more merchants...");
-      // Update the loading flag to false before calling loadMoreMerchants() recursively
-      this.loading = false;
-      this.loadMoreMerchants();
     }
   }
-
-  // Reset loading flag to false after loading is complete
-  this.loading = false;
-},
-    showListView() {
-      this.currentView = 'list';
-    },
-    showMapView() {
-      // Toggle the map view regardless of screen size
-      this.currentView = 'map';
-    },
-    toggleMapView() {
-      // Toggle between 'list' and 'map' views
-      this.currentView = this.currentView === 'map' ? 'list' : 'map';
-      // Update visibility of list and map based on currentView
-      const listElement = document.getElementById('list');
-      const mapElement = document.getElementById('map');
-      if (this.currentView === 'list') {
-        listElement.style.display = 'block';
-        mapElement.style.display = 'none';
-      } else {
-        listElement.style.display = 'none';
-        mapElement.style.display = 'block';
-      }
-    }
-  },
-  watch: {
-    searchQuery(newValue, oldValue) {
-      // Reset current page to 1 when search query changes
-      if (newValue !== oldValue) {
-        this.currentPage = 1;
-        this.reachedEnd = false; // Reset the flag when search query changes
-      }
-    },
-  },
 };
 </script>
-
-
 
 <style scoped>
 /* Additional Styles for Pagination */
@@ -431,10 +351,6 @@ button:hover {
   cursor: pointer;
 }
 
-#vute{
-  color: #000;
-}
-
 button:hover:not(:disabled) {
   background-color: #e2e8f0;
 }
@@ -447,9 +363,5 @@ button:active:not(:disabled) {
 /* Disabled button styles */
 button:disabled {
   cursor: not-allowed;
-}
-
-.pointer-events-none {
-  pointer-events: none;
 }
 </style>
