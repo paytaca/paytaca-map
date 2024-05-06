@@ -30,7 +30,7 @@
       <!-- Grid for logos with descriptions -->
       <div class="mt-2 grid grid-cols-1 md:grid-cols-3 w-85 md-270 lg-255 h-auto md-auto">
         <!-- Logos with descriptions -->
-        <div v-for="(merchant, index) in paginatedMerchants" :key="merchant.id" class="flex flex-col p-2 m-2 rounded-3xl bg-gray-light" :class="{ 'pointer-events-none': isMobile }" @click="showPopup(merchant)">
+        <div v-for="(merchant, index) in paginatedMerchants" :key="merchant.id" class="flex flex-col border-2 border-y-gray p-2 m-2 rounded-3xl bg-gray-light" :class="{ 'pointer-events-none': isMobile }" @click="showPopup(merchant)">
           <!-- Check if merchant.logo is defined before accessing its url property -->
           <img v-if="merchant.logo" :src="merchant.logo" :alt="merchant.name + ' Logo'" class="h-auto w-25 md-50 lg-75 rounded-2xl object-fill cursor-pointer">
           <div class="text-sm md:text-xs">
@@ -74,6 +74,7 @@
         {{ currentView === 'map' ? 'Show List' : 'Show Map' }}
       </button>
     </div>
+
 
   </div>
 </template>
