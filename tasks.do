@@ -50,3 +50,8 @@ New Tasks:
         merchants
         category
         
+New tasks:
+ Last Transaction Filtering
+ Include the Last Transaction date
+ Total Results
+ Remove the pagination
