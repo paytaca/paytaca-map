@@ -1,7 +1,7 @@
 from django.db import models
 
 class Merchants(models.Model): 
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, db_index=True)
     website_url = models.URLField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     gmap_business_link = models.URLField(blank=True, null=True)
@@ -15,13 +15,13 @@ class Location(models.Model):
     location = models.CharField(max_length=255, null=True)
     street = models.CharField(max_length=255, null=True)
     city = models.CharField(max_length=255, null=True)
-    country = models.CharField(max_length=255, null=True)
+    country = models.CharField(max_length=255, null=True, db_index=True)
     longitude = models.DecimalField(max_digits=20, decimal_places=10)
     latitude = models.DecimalField(max_digits=20, decimal_places=10)
 
 class Category(models.Model):
     merchant = models.OneToOneField(Merchants, on_delete=models.CASCADE) 
-    category = models.CharField(max_length=255, blank=True, null=True)
+    category = models.CharField(max_length=255, blank=True, null=True, db_index=True)
 
 class Vault(models.Model):
     merchant = models.OneToOneField(Merchants, on_delete=models.CASCADE) 

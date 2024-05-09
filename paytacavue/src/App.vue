@@ -42,7 +42,7 @@
       <!-- Grid for logos with descriptions -->
       <div class="mt-2 grid grid-cols-1 md:grid-cols-3 w-85 md-270 lg-255 h-auto md-auto">
         <!-- Logos with descriptions -->
-        <div v-for="(merchant, index) in paginatedMerchants" :key="merchant.id" class="flex flex-col border-2 border-y-gray p-2 m-2 rounded-3xl bg-gray-light" :class="{ 'pointer-events-none': isMobile }" @click="showPopup(merchant)">
+        <div v-for="(merchant, index) in paginatedMerchants" :key="merchant.id" class="flex flex-col p-2 m-2 rounded-3xl bg-gray-light" :class="{ 'pointer-events-none': isMobile }" @click="showPopup(merchant)">
           <!-- Check if merchant.logo is defined before accessing its url property -->
           <img v-if="merchant.logo" :src="merchant.logo" :alt="merchant.name + ' Logo'" class="h-auto w-25 md-50 lg-75 rounded-2xl object-fill cursor-pointer">
           <div class="text-sm md:text-xs">
@@ -399,6 +399,44 @@ export default {
       if (newValue !== oldValue) {
         this.currentPage = 1;
         this.reachedEnd = false; // Reset the flag when search query changes
+
+        // Reset all dropdowns when search query changes
+        this.sortBy = 'default';
+        this.sortByCategory = 'default';
+        this.sortByLastTransaction = 'default';
+      }
+    },
+    sortBy(newValue, oldValue) {
+      // Reset search query when sortBy changes
+      if (newValue !== oldValue && newValue !== 'default') {
+        this.searchQuery = ''; // Reset search query
+      }
+      // Reset sortByCategory and sortByLastTransaction when sortBy changes
+      if (newValue !== 'default') {
+        this.sortByCategory = 'default';
+        this.sortByLastTransaction = 'default';
+      }
+    },
+    sortByCategory(newValue, oldValue) {
+      // Reset search query when sortByCategory changes
+      if (newValue !== oldValue && newValue !== 'default') {
+        this.searchQuery = ''; // Reset search query
+      }
+      // Reset sortBy and sortByLastTransaction when sortByCategory changes
+      if (newValue !== 'default') {
+        this.sortBy = 'default';
+        this.sortByLastTransaction = 'default';
+      }
+    },
+    sortByLastTransaction(newValue, oldValue) {
+      // Reset search query when sortByLastTransaction changes
+      if (newValue !== oldValue && newValue !== 'default') {
+        this.searchQuery = ''; // Reset search query
+      }
+      // Reset sortBy and sortByCategory when sortByLastTransaction changes
+      if (newValue !== 'default') {
+        this.sortBy = 'default';
+        this.sortByCategory = 'default';
       }
     },
   },
