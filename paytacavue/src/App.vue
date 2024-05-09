@@ -44,7 +44,7 @@
         <!-- Logos with descriptions -->
         <div v-for="(merchant, index) in paginatedMerchants" :key="merchant.id" class="flex flex-col p-2 m-2 rounded-3xl bg-gray-light" :class="{ 'pointer-events-none': isMobile }" @click="showPopup(merchant)">
           <!-- Check if merchant.logo is defined before accessing its url property -->
-          <img v-if="merchant.logo" :src="merchant.logo" :alt="merchant.name + ' Logo'" class="h-auto w-25 md-50 lg-75 rounded-2xl object-fill cursor-pointer">
+          <img v-if="merchant.logo" :src="merchant.logo" :alt="merchant.name + ' Logo'" class="sm:h-auto md:h-48 w-25 md-50 lg-75 rounded-2xl object-fill cursor-pointer">
           <div class="text-sm md:text-xs">
             <h3 class="text-lg font-semibold italic">{{ merchant.name }}</h3>
             <p class="text-gray-800">{{ merchant.location }}</p>
@@ -271,7 +271,7 @@ export default {
         timeText = minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`;
       }
 
-      let popupContent = `<div class="sm:w-full rounded-lg"><div class="flex items-center justify-between"><h3 class='font-semibold'>${merchant.name}</h3>`;
+      let popupContent = `<div class="rounded-lg"><div class="flex items-center justify-between"><h3 class='font-semibold'>${merchant.name}</h3>`;
       
       // Include merchant logo if available
       if (merchant.logo) {
@@ -409,8 +409,32 @@ export default {
       }
     },
     formatDate(dateString) {
-      const options = { year: 'numeric', month: 'long', day: 'numeric' };
-      return new Date(dateString).toLocaleDateString(undefined, options);
+      const date = new Date(dateString);
+      const currentDate = new Date();
+      const timeDifference = currentDate - date;
+
+      // Convert milliseconds to years, months, weeks, days, hours, and minutes
+      const years = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 365));
+      const months = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 30));
+      const weeks = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 7));
+      const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor(timeDifference / (1000 * 60 * 60));
+      const minutes = Math.floor(timeDifference / (1000 * 60));
+
+      // Choose the appropriate time unit based on the duration
+      if (years > 0) {
+        return years === 1 ? '1 year ago' : `${years} years ago`;
+      } else if (months > 0) {
+        return months === 1 ? '1 month ago' : `${months} months ago`;
+      } else if (weeks > 0) {
+        return weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
+      } else if (days > 0) {
+        return days === 1 ? '1 day ago' : `${days} days ago`;
+      } else if (hours > 0) {
+        return hours === 1 ? '1 hour ago' : `${hours} hours ago`;
+      } else {
+        return minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`;
+      }
     }
   },
   watch: {
@@ -529,4 +553,5 @@ button:disabled {
 .pointer-events-none {
   pointer-events: none;
 }
+
 </style>

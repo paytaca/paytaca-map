@@ -53,11 +53,13 @@ export default {
         const timeDifference = currentDate - transactionDate;
         let timeText = '';
 
-        // Convert milliseconds to years, months, weeks, and days
+        // Convert milliseconds to years, months, weeks, days, hours, and minutes
         const years = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 365));
         const months = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 30));
         const weeks = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 7));
         const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor(timeDifference / (1000 * 60 * 60));
+        const minutes = Math.floor(timeDifference / (1000 * 60));
 
         // Choose the appropriate time unit based on the duration
         if (years > 0) {
@@ -66,8 +68,12 @@ export default {
           timeText = months === 1 ? '1 month ago' : `${months} months ago`;
         } else if (weeks > 0) {
           timeText = weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
-        } else {
+        } else if (days > 0) {
           timeText = days === 1 ? '1 day ago' : `${days} days ago`;
+        } else if (hours > 0) {
+          timeText = hours === 1 ? '1 hour ago' : `${hours} hours ago`;
+        } else {
+          timeText = minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`;
         }
 
         const customIcon = L.icon({
