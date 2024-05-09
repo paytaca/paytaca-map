@@ -115,33 +115,24 @@ export default {
   computed: {
     // Filtered merchants based on search query, country, category, and last transaction date
     filteredMerchants() {
-  let filtered = this.merchants;
+      return this.merchants.filter(merchant => {
+        // Check if the merchant matches the search query
+        const matchesSearchQuery = !this.searchQuery || merchant.name.toLowerCase().includes(this.searchQuery.toLowerCase());
 
-  // Filter by country if sortBy is not default
-  if (this.sortBy !== 'default') {
-    filtered = filtered.filter(merchant => merchant.country === this.sortBy);
-  }
+        // Check if the merchant matches the selected country
+        const matchesCountry = this.sortBy === 'default' || merchant.country === this.sortBy;
 
-  // Filter by category if sortByCategory is not default
-  if (this.sortByCategory !== 'default') {
-    filtered = filtered.filter(merchant => {
-      const categories = this.categoriesMap.get(merchant.id);
-      return categories && categories.includes(this.sortByCategory);
-    });
-  }
+        // Check if the merchant matches the selected category
+        const matchesCategory = this.sortByCategory === 'default' ||
+          (this.categoriesMap.has(merchant.id) && this.categoriesMap.get(merchant.id).includes(this.sortByCategory));
 
-  // Filter by last transaction date
-  filtered = filtered.filter(merchant => this.filterByLastTransaction(merchant.last_transaction_date));
+        // Check if the merchant matches the selected last transaction filter
+        const matchesLastTransaction = this.filterByLastTransaction(merchant.last_transaction_date);
 
-  // Filter by search query if it exists
-  if (this.searchQuery) {
-    filtered = filtered.filter(merchant => {
-      return merchant.name.toLowerCase().includes(this.searchQuery.toLowerCase());
-    });
-  }
-
-  return filtered;
-},
+        // Return true only if all filters match
+        return matchesSearchQuery && matchesCountry && matchesCategory && matchesLastTransaction;
+      });
+    },
 
     // List of unique countries for country dropdown options
     uniqueCountries() {
@@ -436,10 +427,6 @@ export default {
       }
     },
     sortBy(newValue, oldValue) {
-      // Reset search query when sortBy changes
-      if (newValue !== oldValue && newValue !== 'default') {
-        this.searchQuery = ''; // Reset search query
-      }
       // Reset sortByCategory and sortByLastTransaction when sortBy changes
       if (newValue !== 'default') {
         this.sortByCategory = 'default';
@@ -447,10 +434,6 @@ export default {
       }
     },
     sortByCategory(newValue, oldValue) {
-      // Reset search query when sortByCategory changes
-      if (newValue !== oldValue && newValue !== 'default') {
-        this.searchQuery = ''; // Reset search query
-      }
       // Reset sortBy and sortByLastTransaction when sortByCategory changes
       if (newValue !== 'default') {
         this.sortBy = 'default';
@@ -458,10 +441,6 @@ export default {
       }
     },
     sortByLastTransaction(newValue, oldValue) {
-      // Reset search query when sortByLastTransaction changes
-      if (newValue !== oldValue && newValue !== 'default') {
-        this.searchQuery = ''; // Reset search query
-      }
       // Reset sortBy and sortByCategory when sortByLastTransaction changes
       if (newValue !== 'default') {
         this.sortBy = 'default';
