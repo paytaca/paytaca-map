@@ -115,22 +115,34 @@ export default {
   computed: {
     // Filtered merchants based on search query, country, category, and last transaction date
     filteredMerchants() {
-      let filtered = this.merchants.filter(merchant => {
-        return merchant.name.toLowerCase().includes(this.searchQuery.toLowerCase());
-      });
-      if (this.sortBy !== 'default') {
-        filtered = filtered.filter(merchant => merchant.country === this.sortBy);
-      }
-      if (this.sortByCategory !== 'default') {
-        filtered = filtered.filter(merchant => {
-          const categories = this.categoriesMap.get(merchant.id);
-          return categories && categories.includes(this.sortByCategory);
-        });
-      }
-      // Filter by last transaction date
-      filtered = filtered.filter(merchant => this.filterByLastTransaction(merchant.last_transaction_date));
-      return filtered;
-    },
+  let filtered = this.merchants;
+
+  // Filter by country if sortBy is not default
+  if (this.sortBy !== 'default') {
+    filtered = filtered.filter(merchant => merchant.country === this.sortBy);
+  }
+
+  // Filter by category if sortByCategory is not default
+  if (this.sortByCategory !== 'default') {
+    filtered = filtered.filter(merchant => {
+      const categories = this.categoriesMap.get(merchant.id);
+      return categories && categories.includes(this.sortByCategory);
+    });
+  }
+
+  // Filter by last transaction date
+  filtered = filtered.filter(merchant => this.filterByLastTransaction(merchant.last_transaction_date));
+
+  // Filter by search query if it exists
+  if (this.searchQuery) {
+    filtered = filtered.filter(merchant => {
+      return merchant.name.toLowerCase().includes(this.searchQuery.toLowerCase());
+    });
+  }
+
+  return filtered;
+},
+
     // List of unique countries for country dropdown options
     uniqueCountries() {
       const countries = new Set();
@@ -244,11 +256,15 @@ export default {
       const currentDate = new Date();
       const timeDifference = currentDate - transactionDate;
       let timeText = '';
-      // Convert milliseconds to years, months, weeks, and days
+
+      // Convert milliseconds to years, months, weeks, days, hours, and minutes
       const years = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 365));
       const months = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 30));
       const weeks = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 7));
       const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor(timeDifference / (1000 * 60 * 60));
+      const minutes = Math.floor(timeDifference / (1000 * 60));
+
       // Choose the appropriate time unit based on the duration
       if (years > 0) {
         timeText = years === 1 ? '1 year ago' : `${years} years ago`;
@@ -256,30 +272,43 @@ export default {
         timeText = months === 1 ? '1 month ago' : `${months} months ago`;
       } else if (weeks > 0) {
         timeText = weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
-      } else {
+      } else if (days > 0) {
         timeText = days === 1 ? '1 day ago' : `${days} days ago`;
+      } else if (hours > 0) {
+        timeText = hours === 1 ? '1 hour ago' : `${hours} hours ago`;
+      } else {
+        timeText = minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`;
       }
+
       let popupContent = `<div class="sm:w-full rounded-lg"><div class="flex items-center justify-between"><h3 class='font-semibold'>${merchant.name}</h3>`;
+      
       // Include merchant logo if available
       if (merchant.logo) {
         popupContent += `<img src="${merchant.logo}" alt="${merchant.name} Logo" class="h-16 w-16 rounded-full">`;
       }
+      
       popupContent += `</div><div>`;
+      
       // Include merchant information if available
       if (merchant.location && merchant.city && merchant.country) {
         popupContent += `<p>${merchant.location}, ${merchant.city}, ${merchant.country}</p>`;
       }
+      
       // Include last transaction time if available
       if (timeText) {
         popupContent += `<p>Last transaction: ${timeText}</p>`;
       }
+      
       // Include Google Maps link if available
       if (merchant.gmap_business_link) {
         popupContent += `<a href="${merchant.gmap_business_link}" target="_blank">View in Google Map</a>`;
       }
+      
       popupContent += `</div></div></div>`;
+      
       // Open popup at merchant coordinates with the popup content
       this.$refs.mapView.openPopup(merchant.latitude, merchant.longitude, popupContent);
+      
       // Center the map on the merchant coordinates
       this.$refs.mapView.setCenter(merchant.latitude, merchant.longitude);
     },
