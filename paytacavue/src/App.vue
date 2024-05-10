@@ -44,7 +44,7 @@
         <!-- Logos with descriptions -->
         <div v-for="(merchant, index) in paginatedMerchants" :key="merchant.id" class="flex flex-col p-2 m-2 rounded-3xl bg-gray-light" :class="{ 'pointer-events-none': isMobile }" @click="showPopup(merchant)">
           <!-- Check if merchant.logo is defined before accessing its url property -->
-          <img v-if="merchant.logo" :src="merchant.logo" :alt="merchant.name + ' Logo'" class="sm:h-auto md:h-48 w-25 md-50 lg-75 rounded-2xl object-fill cursor-pointer">
+          <img v-if="merchant.logo" :src="merchant.logo" :alt="merchant.name + ' Logo'" class="sm:h-auto md:h-44 w-25 md-50 lg-75 rounded-2xl object-fill cursor-pointer">
           <div class="text-sm md:text-xs">
             <h3 class="text-lg font-semibold italic">{{ merchant.name }}</h3>
             <p class="text-gray-800">{{ merchant.location }}</p>
@@ -302,22 +302,6 @@ export default {
       
       // Center the map on the merchant coordinates
       this.$refs.mapView.setCenter(merchant.latitude, merchant.longitude);
-    },
-    setCurrentPage(pageNumber) {
-      this.currentPage = pageNumber;
-    },
-    previousPage() {
-      if (this.currentPage > 1) {
-        this.currentPage--;
-      }
-    },
-    nextPage() {
-      if (this.currentPage < this.totalPages) {
-        this.currentPage++;
-      }
-    },
-    gotoPage(pageNumber) {
-      this.currentPage = pageNumber;
     },
     handleScroll() {
       const container = this.$refs.logosContainer;
