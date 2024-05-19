@@ -1,6 +1,6 @@
 [
     {
-      "model": "PaytacaApp.location",
+      "model": "main.location",
       "pk": 1,
       "fields": {
         "name": "Atlas Maritime Review Center",
@@ -12,7 +12,7 @@
       }
     },
     {
-      "model": "PaytacaApp.location",
+      "model": "main.location",
       "pk": 2,
       "fields": {
         "name": "Berakah Coffee Co.",

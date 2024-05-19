@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from PaytacaApp.models import Merchants, Location, Vault, Logo, Category
+from main.models import Merchants, Location, Vault, Logo, Category
 import json
 from django.utils.dateparse import parse_datetime
 import datetime

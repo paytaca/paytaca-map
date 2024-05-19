@@ -1,6 +1,6 @@
 import json
 from django.core.management.base import BaseCommand
-from PaytacaApp.models import Location
+from main.models import Location
 
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):

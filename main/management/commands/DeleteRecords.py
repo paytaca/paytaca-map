@@ -1,6 +1,6 @@
 #First Type the command "py manage.py shell"
 
-from PaytacaApp.models import Merchants, Location, Category, Vault, Logo
+from main.models import Merchants, Location, Category, Vault, Logo
 
 # Delete all objects in each model
 Merchants.objects.all().delete()
