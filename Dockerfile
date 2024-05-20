@@ -13,9 +13,11 @@ RUN pip install -r requirements.txt
 
 COPY ./frontend/package*.json /code/frontend/
 RUN npm install --prefix /code/frontend
+RUN npm install --global serve
 
 COPY . /code
 WORKDIR /code
+RUN cd /code/frontend && npm run build
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8

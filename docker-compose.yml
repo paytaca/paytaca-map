@@ -1,7 +1,7 @@
 version: "3"
 services:
   postgres:
-    image: "postgres:11.1-alpine"
+    image: "postgres:12-alpine"
     volumes:
       - paytacamap_db:/var/lib/postgresql/data
     env_file:
@@ -13,6 +13,7 @@ services:
     command: [ "supervisord", "-c", "/code/supervisord.conf", "--nodaemon" ]
     ports:
       - "8000:8000"
+      - "9000:9000"
     env_file:
       - .env
     depends_on:
