@@ -1,0 +1,22 @@
+version: "3"
+services:
+  postgres:
+    image: "postgres:11.1-alpine"
+    volumes:
+      - paytacamap_db:/var/lib/postgresql/data
+    env_file:
+      - .env
+    expose:
+      - "5432"
+  paytacamap:
+    build: .
+    command: [ "supervisord", "-c", "/code/supervisord.conf", "--nodaemon" ]
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+volumes:
+  paytacamap_db:
+    external: true

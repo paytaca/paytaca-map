@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -81,11 +82,11 @@ WSGI_APPLICATION = 'paytacamap.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'paytacamap',   
-        'USER': 'postgres', 
-        'PASSWORD': 'password101801', 
-        'HOST': 'localhost',    
-        'PORT': '5432',  
+        'NAME': config('POSTGRES_DB'),
+        'USER': config('POSTGRES_USER'), 
+        'PASSWORD': config('POSTGRES_PASSWORD'), 
+        'HOST': config('POSTGRES_HOST'),    
+        'PORT': '5432'
     }
 }
 
@@ -127,6 +128,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'static'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
