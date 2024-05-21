@@ -412,5 +412,6 @@ docs/_book
 
 # TODO: where does this rule come from?
 test/
+.env_*
 
 # End of https://www.toptal.com/developers/gitignore/api/python,django,vue,node

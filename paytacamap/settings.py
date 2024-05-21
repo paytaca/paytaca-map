@@ -24,9 +24,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-tx+p7@q_t%211u58&czjzmo58)*hi((*%jlm5brdy(pul)s%af'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'map.paytaca.com',
+    'localhost'
+]
 
 
 # Application definition
