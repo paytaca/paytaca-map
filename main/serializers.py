@@ -1,9 +1,9 @@
 from rest_framework import serializers
-from .models import  Merchants, Location, Category, Logo
+from .models import  Merchant, Location, Category, Logo
 
 class MerchantsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Merchants
+        model = Merchant
         fields = '__all__'
         
 class LocationSerializer(serializers.ModelSerializer):

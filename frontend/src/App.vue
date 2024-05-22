@@ -82,6 +82,8 @@
 import axios from 'axios';
 import MapView from '@/components/MapView.vue';
 
+const DOMAIN = 'https://map.paytaca.com'
+
 export default {
   name: 'App',
   components: {
@@ -173,7 +175,7 @@ export default {
   },
   methods: {
     fetchMerchants() {
-      axios.get('http://localhost:8000/merchants/')
+      axios.get(DOMAIN + '/api/merchants/')
         .then(response => {
           const merchants = response.data;
           this.fetchLocations(merchants);
@@ -183,7 +185,7 @@ export default {
         });
     },
     fetchLocations(merchants) {
-      axios.get('http://localhost:8000/locations/')
+      axios.get(DOMAIN + '/api/locations/')
         .then(response => {
           const locations = response.data;
           const locationMap = new Map();
@@ -208,7 +210,7 @@ export default {
         });
     },
     fetchLogos() {
-      axios.get('http://localhost:8000/logos/')
+      axios.get(DOMAIN + '/api/logos/')
         .then(response => {
           const logos = response.data;
           const logoMap = new Map();
@@ -228,7 +230,7 @@ export default {
         });
     },
     fetchCategories() {
-      axios.get('http://localhost:8000/categories/')
+      axios.get(DOMAIN + '/api/categories/')
         .then(response => {
           const categories = response.data;
           categories.forEach(category => {

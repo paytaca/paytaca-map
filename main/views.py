@@ -1,6 +1,6 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Merchants , Location, Category, Logo
+from .models import Merchant, Location, Category, Logo
 from .serializers import MerchantsSerializer, LocationSerializer, CategorySerializer, LogoSerializer
 
 
@@ -12,7 +12,7 @@ class LocationListAPIView(APIView):
 
 class MerchantListAPIView(APIView):
     def get(self, request):
-        merchants = Merchants.objects.all()
+        merchants = Merchant.objects.all()
         serializer = MerchantsSerializer(merchants, many=True)
         return Response(serializer.data)
     
