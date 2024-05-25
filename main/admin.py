@@ -6,7 +6,8 @@ from .models import Location, Logo, Vault, Merchant, Category
 class MerchantAdmin(admin.ModelAdmin):
     list_display = [
         'name',
-        'gmap_business_link'
+        'test_shop',
+        'last_transaction_date'
     ]
 
 admin.site.register(Merchant, MerchantAdmin)

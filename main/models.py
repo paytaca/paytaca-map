@@ -9,7 +9,11 @@ class Merchant(models.Model):
     last_transaction_date = models.DateTimeField(blank=True, null=True)
     receiving_pubkey = models.CharField(max_length=255, blank=True, null=True)
     receiving_address = models.CharField(max_length=255, blank=True, null=True)
-    last_update = models.DateTimeField(null=True)
+    last_update = models.DateTimeField(null=True, blank=True)
+    test_shop = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-last_transaction_date']
 
 class Location(models.Model):
     merchant = models.OneToOneField(Merchant, on_delete=models.CASCADE) 
@@ -24,6 +28,9 @@ class Location(models.Model):
 class Category(models.Model):
     merchant = models.OneToOneField(Merchant, on_delete=models.CASCADE) 
     category = models.CharField(max_length=255, blank=True, null=True, db_index=True)
+
+    class Meta:
+        verbose_name_plural = 'Categories'
 
 class Vault(models.Model):
     merchant = models.OneToOneField(Merchant, on_delete=models.CASCADE) 

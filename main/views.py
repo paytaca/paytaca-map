@@ -12,7 +12,7 @@ class LocationListAPIView(APIView):
 
 class MerchantListAPIView(APIView):
     def get(self, request):
-        merchants = Merchant.objects.all()
+        merchants = Merchant.objects.filter(test_shop=False)
         serializer = MerchantsSerializer(merchants, many=True)
         return Response(serializer.data)
     
