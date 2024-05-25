@@ -18,7 +18,7 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-justify sm:text-sm">
         <!-- Dropdown for sorting by country -->
         <select v-model="sortBy" class="px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
-          <option value="default">All Country</option>
+          <option value="default">All Countries</option>
           <option v-for="country in uniqueCountries" :key="country" :value="country">{{ country }}</option>
         </select>
 
@@ -47,10 +47,8 @@
           <img v-if="merchant.logo" :src="merchant.logo" :alt="merchant.name + ' Logo'" class="sm:h-auto md:h-44 w-25 md-50 lg-75 rounded-2xl object-fill cursor-pointer">
           <div class="text-sm md:text-xs">
             <h3 class="text-lg font-semibold italic">{{ merchant.name }}</h3>
-            <p class="text-gray-800">{{ merchant.location }}</p>
-            <p class="text-gray-800">{{ merchant.city }}</p>
-            <p class="text-gray-800">{{ merchant.country }}</p>
-            <p class="text-gray-800">Last Transaction Date: {{ formatDate(merchant.last_transaction_date) }}</p>
+            <p class="text-gray-800">{{ merchant.city }}, {{ merchant.country }}</p>
+            <p class="text-gray-800">Last transaction: {{ formatDate(merchant.last_transaction_date) }}</p>
           </div>
         </div>
       </div>

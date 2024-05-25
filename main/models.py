@@ -1,13 +1,15 @@
 from django.db import models
 
-class Merchant(models.Model): 
+class Merchant(models.Model):
     name = models.CharField(max_length=255, db_index=True)
+    watchtower_merchant_id = models.IntegerField(null=True)
     website_url = models.URLField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     gmap_business_link = models.URLField(blank=True, null=True)
     last_transaction_date = models.DateTimeField(blank=True, null=True)
     receiving_pubkey = models.CharField(max_length=255, blank=True, null=True)
     receiving_address = models.CharField(max_length=255, blank=True, null=True)
+    last_update = models.DateTimeField(null=True)
 
 class Location(models.Model):
     merchant = models.OneToOneField(Merchant, on_delete=models.CASCADE) 
