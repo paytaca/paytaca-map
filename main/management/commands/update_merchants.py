@@ -81,7 +81,7 @@ def _update_merchant(merchant_data):
         last_transaction_date = parser.parse(last_transaction_date_str)
     else:
         last_transaction_date = None
-    Merchant.objects.filter(merchant=merchant).update(
+    Merchant.objects.filter(watchtower_merchant_id=merchant_data['id']).update(
         watchtower_merchant_id=merchant_data['id'],
         name=merchant_data['name'],
         website_url=merchant_data['website_url'],
@@ -140,10 +140,10 @@ def _update_merchant(merchant_data):
 
 
 def _fetch_merchants():
-    source_url = 'https://watchtower.cash/api/paytacapos/merchants/?active=true&verified=true'
+    source_url = 'https://watchtower.cash/api/paytacapos/merchants/?active=true&verified=true&has_pagination=false'
     resp = requests.get(source_url)
     if resp.status_code == 200:
-        merchants = resp.json()['results']
+        merchants = resp.json()
         for merchant_data in merchants:
 
             merchant_check = Merchant.objects.filter(watchtower_merchant_id=merchant_data['id'])
