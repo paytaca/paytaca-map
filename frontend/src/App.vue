@@ -28,11 +28,11 @@
         <!-- Dropdown for sorting by last transaction date -->
         <select v-model="sortByLastTransaction" class="px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
           <option value="default">Last Transaction: All</option>
-          <option value="24hours">Last 24 Hours</option>
-          <option value="1week">Last 1 Week</option>
-          <option value="1month">Last 1 Month</option>
-          <option value="3months">Last 3 Months</option>
-          <option value="more">More than 3 Months</option>
+          <option value="24hours">Within last 24 hours</option>
+          <option value="1week">Within last 1 week</option>
+          <option value="1month">Within last 1 month</option>
+          <option value="3months">Within last 3 months</option>
+          <option value="more">More than 3 months ago</option>
         </select>
       </div>
 
@@ -63,7 +63,7 @@
     </div>
 
     <!-- Right Section: Map  -->
-    <div id="map" class="hidden sm:block h-screen w-full">
+    <div id="map" class="sm:block h-screen w-full">
       <MapView ref="mapView" :merchants="filteredMerchants" />
     </div>
 
@@ -81,6 +81,7 @@
 <script>
 import axios from 'axios';
 import MapView from '@/components/MapView.vue';
+import moment from 'moment';
 
 const DOMAIN = 'https://map.paytaca.com'
 
@@ -107,6 +108,10 @@ export default {
     this.fetchMerchants();
     this.fetchCategories(); // Fetch categories on component mount
     this.$refs.logosContainer.addEventListener('scroll', this.handleScroll);
+    if (this.isMobile) {
+      const mapElement = document.getElementById('map');
+      mapElement.style.display = 'none';
+    }
     console.log("Scroll event listener added.");
   },
   beforeDestroy() {
@@ -387,11 +392,11 @@ export default {
         case '1week':
           return timeDifference < 7 * 24 * 60 * 60 * 1000; // Last 1 week
         case '1month':
-          return currentDate.getMonth() === date.getMonth() && currentDate.getFullYear() === date.getFullYear(); // Last 1 month
+          return date > moment().subtract(1, 'months');
         case '3months':
-          return currentDate.getMonth() - date.getMonth() < 3; // Last 3 months
+        return date > moment().subtract(4, 'months');
         case 'more':
-          return currentDate.getMonth() - date.getMonth() >= 3; // More than 3 months
+        return date <= moment().subtract(4, 'months');
         default:
           return true;
       }
