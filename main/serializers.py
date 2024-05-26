@@ -4,7 +4,12 @@ from .models import  Merchant, Location, Category, Logo
 class MerchantsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Merchant
-        fields = '__all__'
+        exclude = [
+            'receiving_address',
+            'receiving_pubkey',
+            'test_shop',
+            'watchtower_merchant_id'
+        ]
         
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:

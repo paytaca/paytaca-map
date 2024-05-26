@@ -11,9 +11,6 @@
         class="w-full px-4 py-2 mb-4 rounded-lg bg-gray-light text-gray-dark focus:outline-none"
       />
 
-      <!-- Text view for displaying the number of search results -->
-      <p class="text-gray-700 mb-2">Displaying {{ filteredMerchants.length }} of {{ merchants.length }} merchants</p>
-
       <!-- Flex container for dropdowns -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-justify sm:text-sm">
         <!-- Dropdown for sorting by country -->
@@ -39,16 +36,21 @@
         </select>
       </div>
 
+      <!-- Text view for displaying the number of search results -->
+      <p class="text-center text-gray-700 mt-3">Displaying {{ filteredMerchants.length }} of {{ merchants.length }} merchants</p>
+
       <!-- Grid for logos with descriptions -->
       <div class="mt-2 grid grid-cols-1 md:grid-cols-3 w-85 md-270 lg-255 h-auto md-auto">
         <!-- Logos with descriptions -->
-        <div v-for="(merchant, index) in paginatedMerchants" :key="merchant.id" class="flex flex-col p-2 m-2 rounded-3xl bg-gray-light" :class="{ 'pointer-events-none': isMobile }" @click="showPopup(merchant)">
+        <div v-for="(merchant, index) in paginatedMerchants" :key="merchant.id" class="flex flex-col p-2 m-2 rounded-2xl bg-gray-light" :class="{ 'pointer-events-none': isMobile }" @click="showPopup(merchant)">
           <!-- Check if merchant.logo is defined before accessing its url property -->
-          <img v-if="merchant.logo" :src="merchant.logo" :alt="merchant.name + ' Logo'" class="sm:h-auto md:h-44 w-25 md-50 lg-75 rounded-2xl object-fill cursor-pointer">
-          <div class="text-sm md:text-xs">
-            <h3 class="text-lg font-semibold italic">{{ merchant.name }}</h3>
-            <p class="text-gray-800">{{ merchant.city }}, {{ merchant.country }}</p>
-            <p class="text-gray-800">Last transaction: {{ formatDate(merchant.last_transaction_date) }}</p>
+          <div class="h-full">
+            <img v-if="merchant.logo" :src="merchant.logo" :alt="merchant.name + ' Logo'" :class="{'float-right': isMobile}" class="m-auto sm:h-auto md:h-20 w-20 md-50 lg-75 object-fill cursor-pointer">
+            <div class="text-sm md:text-xs">
+              <h3 class="text-lg font-semibold italic">{{ merchant.name }}</h3>
+              <p class="text-gray-800">{{ merchant.city }}, {{ merchant.country }}</p>
+              <p class="text-gray-800">Last transaction: {{ formatDate(merchant.last_transaction_date) }}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -95,11 +97,10 @@ export default {
       sortByCategory: 'default', // Default value for sorting by category dropdown
       sortByLastTransaction: 'default', // Default value for sorting by last transaction dropdown
       currentPage: 1,
-      pageSize: 9,
+      pageSize: 15,
       categoriesMap: new Map(), // Map to store categories for each merchant
       reachedEnd: false, // Flag to indicate whether the end of scroll is reached
-      currentView: 'list',
-      isMobile: window.innerWidth < 768
+      currentView: 'list'
     };
   },
   mounted() {
@@ -113,6 +114,9 @@ export default {
     console.log("Scroll event listener removed.");
   },
   computed: {
+    isMobile () {
+      return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768
+    },
     // Filtered merchants based on search query, country, category, and last transaction date
     filteredMerchants() {
       return this.merchants.filter(merchant => {
