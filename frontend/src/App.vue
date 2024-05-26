@@ -40,12 +40,12 @@
       <p class="text-center text-gray-700 mt-3">Displaying {{ filteredMerchants.length }} of {{ merchants.length }} merchants</p>
 
       <!-- Grid for logos with descriptions -->
-      <div class="mt-2 grid grid-cols-1 md:grid-cols-3 w-85 md-270 lg-255 h-auto md-auto">
+      <div class="mt-2 grid grid-cols-1 md:grid-cols-2 w-85 md-270 lg-255 h-auto md-auto">
         <!-- Logos with descriptions -->
         <div v-for="(merchant, index) in paginatedMerchants" :key="merchant.id" class="flex flex-col p-2 m-2 rounded-2xl bg-gray-light" :class="{ 'pointer-events-none': isMobile }" @click="showPopup(merchant)">
           <!-- Check if merchant.logo is defined before accessing its url property -->
           <div class="h-full">
-            <img v-if="merchant.logo" :src="merchant.logo" :alt="merchant.name + ' Logo'" :class="{'float-right': isMobile}" class="m-auto sm:h-auto md:h-20 w-20 md-50 lg-75 object-fill cursor-pointer">
+            <img v-if="merchant.logo" :src="merchant.logo" :alt="merchant.name + ' Logo'" class="m-auto sm:h-auto md:h-20 w-20 md-50 lg-75 object-fill cursor-pointer float-right">
             <div class="text-sm md:text-xs">
               <h3 class="text-lg font-semibold italic">{{ merchant.name }}</h3>
               <p class="text-gray-800">{{ merchant.city }}, {{ merchant.country }}</p>
@@ -63,7 +63,7 @@
     </div>
 
     <!-- Right Section: Map  -->
-    <div id="map" class="hidden sm:block sm:m-4 h-screen w-full">
+    <div id="map" class="hidden sm:block h-screen w-full">
       <MapView ref="mapView" :merchants="filteredMerchants" />
     </div>
 
