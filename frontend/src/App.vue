@@ -15,13 +15,13 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-justify sm:text-sm">
         <!-- Dropdown for sorting by country -->
         <select v-model="sortBy" class="px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
-          <option value="default">Countries: All</option>
+          <option value="default">Country: All</option>
           <option v-for="country in uniqueCountries" :key="country" :value="country">{{ country }}</option>
         </select>
 
         <!-- Dropdown for sorting by category -->
         <select v-model="sortByCategory" class="px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
-          <option value="default">Categories: All</option>
+          <option value="default">Category: All</option>
           <option v-for="category in uniqueCategories" :key="category" :value="category">{{ category }}</option>
         </select>
 
