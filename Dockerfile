@@ -13,7 +13,7 @@ RUN pip install -r requirements.txt
 
 COPY ./frontend/package*.json /code/frontend/
 RUN npm install --prefix /code/frontend
-RUN npm install --global serve
+RUN npm install --global serve vite
 
 COPY . /code
 WORKDIR /code

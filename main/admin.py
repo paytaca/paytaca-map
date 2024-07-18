@@ -13,7 +13,38 @@ class MerchantAdmin(admin.ModelAdmin):
 admin.site.register(Merchant, MerchantAdmin)
 
 
-admin.site.register(Category)
-admin.site.register(Location)
-admin.site.register(Logo)
-admin.site.register(Vault)
+class LocationAdmin(admin.ModelAdmin):
+    list_display = [
+        'merchant',
+        'city',
+        'country'
+    ]
+
+admin.site.register(Location, LocationAdmin)
+
+
+class LogoAdmin(admin.ModelAdmin):
+    list_display = [
+        'merchant',
+        'url'
+    ]
+
+admin.site.register(Logo, LogoAdmin)
+
+
+class VaultAdmin(admin.ModelAdmin):
+    list_display = [
+        'merchant',
+        'address'
+    ]
+
+admin.site.register(Vault, VaultAdmin)
+
+
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = [
+        'merchant',
+        'category'
+    ]
+
+admin.site.register(Category, CategoryAdmin)

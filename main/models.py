@@ -12,6 +12,9 @@ class Merchant(models.Model):
     last_update = models.DateTimeField(null=True, blank=True)
     test_shop = models.BooleanField(default=False)
 
+    def __str__(self):
+        return self.name
+
     class Meta:
         ordering = ['-last_transaction_date']
 
