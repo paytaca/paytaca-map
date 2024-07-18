@@ -99,6 +99,13 @@ export default {
   data() {
     return {
       merchants: [],
+      countriesMap: {
+        'Hong Kong': 'Hong Kong',
+        'Tacloban City': 'Philippines',
+        'Ormoc City': 'Philippines',
+        'Cebu City': 'Philippines',
+        'Lapu-Lapu City': 'Philippines'
+      },
       searchQuery: '',
       sortByCountry: 'default', // Default value for sorting by country dropdown
       sortByCity: 'default', // Default value for sorting by city dropdown
@@ -465,23 +472,15 @@ export default {
       }
     },
     sortByCountry(newValue, oldValue) {
-      if (newValue == 'default') {
-        this.sortByCity = 'default';
-      } else {
+      this.sortByCity = 'default';
+      if (newValue !== 'default') {
         this.sortByCategory = 'default';
         this.sortByLastTransaction = 'default';
       }
     },
     sortByCity(newValue, oldValue) {
-      const countriesMap = {
-        'Hong Kong': 'Hong Kong',
-        'Tacloban City': 'Philippines',
-        'Ormoc City': 'Philippines',
-        'Cebu City': 'Philippines',
-        'Lapu-Lapu City': 'Philippines'
-      }
       if (newValue !== 'default') {
-        this.sortByCountry = countriesMap[newValue];
+        this.sortByCountry = this.countriesMap[newValue];
         this.sortByCategory = 'default';
         this.sortByLastTransaction = 'default';
       }
