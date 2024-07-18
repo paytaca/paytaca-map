@@ -22,7 +22,7 @@
         <!-- Dropdown for sorting by city -->
         <select v-model="sortByCity" class="px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
           <option value="default">City: All</option>
-          <option v-for="city in uniqueCities" :key="city" :value="city">{{ city }}</option>
+          <option v-for="city in (uniqueCities || allCities)" :key="city" :value="city">{{ city }}</option>
         </select>
 
         <!-- Dropdown for sorting by category
@@ -99,13 +99,25 @@ export default {
   data() {
     return {
       merchants: [],
-      countriesMap: {
-        'Hong Kong': 'Hong Kong',
-        'Tacloban City': 'Philippines',
-        'Ormoc City': 'Philippines',
-        'Cebu City': 'Philippines',
-        'Lapu-Lapu City': 'Philippines'
+      citiesByCountry: {
+        'Hong Kong': [
+          'Hong Kong'
+        ],
+        'Philippines': [
+          'Tacloban City',
+          'Ormoc City',
+          'Cebu City',
+          'Lapu-Lapu City'
+        ]
       },
+      allCities: [
+        'Hong Kong',
+        'Tacloban City',
+        'Ormoc City',
+        'Cebu City',
+        'Lapu-Lapu City'
+      ],
+      uniqueCities: [],
       searchQuery: '',
       sortByCountry: 'default', // Default value for sorting by country dropdown
       sortByCity: 'default', // Default value for sorting by city dropdown
@@ -121,6 +133,7 @@ export default {
   mounted() {
     this.fetchMerchants();
     this.fetchCategories(); // Fetch categories on component mount
+    this.uniqueCities = self.allCities;
     this.$refs.logosContainer.addEventListener('scroll', this.handleScroll);
     if (this.isMobile) {
       const mapElement = document.getElementById('map');
@@ -169,16 +182,6 @@ export default {
         }
       });
       return Array.from(countries).sort(); // Sort the country names alphabetically
-    },
-    // List of unique cities for city dropdown options
-    uniqueCities() {
-      const cities = new Set();
-      this.merchants.forEach(merchant => {
-        if (merchant.city) { // Check if city value is defined
-          cities.add(merchant.city.trim());
-        }
-      });
-      return Array.from(cities).sort(); // Sort the city names alphabetically
     },
     // List of unique categories for category dropdown options
     uniqueCategories() {
@@ -472,15 +475,17 @@ export default {
       }
     },
     sortByCountry(newValue, oldValue) {
-      this.sortByCity = 'default';
+      this.sortByCity = 'default'
       if (newValue !== 'default') {
+        this.uniqueCities = this.citiesByCountry[newValue]
         this.sortByCategory = 'default';
         this.sortByLastTransaction = 'default';
+      } else {
+        this.uniqueCities = self.allCities
       }
     },
     sortByCity(newValue, oldValue) {
       if (newValue !== 'default') {
-        this.sortByCountry = this.countriesMap[newValue];
         this.sortByCategory = 'default';
         this.sortByLastTransaction = 'default';
       }
