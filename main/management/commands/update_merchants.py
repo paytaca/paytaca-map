@@ -28,11 +28,11 @@ def _save_merchant(merchant_data):
     location_data = merchant_data['location']
     Location.objects.create(
         merchant=merchant,
-        landmark=location_data['landmark'],
-        location=location_data['location'],
-        street=location_data['street'],
-        city=location_data['city'],
-        country=location_data['country'],
+        landmark=location_data['landmark'].strip(),
+        location=location_data['location'].strip(),
+        street=location_data['street'].strip(),
+        city=location_data['city'].strip(),
+        country=location_data['country'].strip(),
         longitude=float(location_data['longitude']),
         latitude=float(location_data['latitude'])
     )

@@ -14,16 +14,22 @@
       <!-- Flex container for dropdowns -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-justify sm:text-sm">
         <!-- Dropdown for sorting by country -->
-        <select v-model="sortBy" class="px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
+        <select v-model="sortByCountry" class="px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
           <option value="default">Country: All</option>
           <option v-for="country in uniqueCountries" :key="country" :value="country">{{ country }}</option>
         </select>
 
-        <!-- Dropdown for sorting by category -->
+        <!-- Dropdown for sorting by city -->
+        <select v-model="sortByCity" class="px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
+          <option value="default">City: All</option>
+          <option v-for="city in uniqueCities" :key="city" :value="city">{{ city }}</option>
+        </select>
+
+        <!-- Dropdown for sorting by category
         <select v-model="sortByCategory" class="px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
           <option value="default">Category: All</option>
           <option v-for="category in uniqueCategories" :key="category" :value="category">{{ category }}</option>
-        </select>
+        </select> -->
 
         <!-- Dropdown for sorting by last transaction date -->
         <select v-model="sortByLastTransaction" class="px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
@@ -94,7 +100,8 @@ export default {
     return {
       merchants: [],
       searchQuery: '',
-      sortBy: 'default', // Default value for sorting by country dropdown
+      sortByCountry: 'default', // Default value for sorting by country dropdown
+      sortByCity: 'default', // Default value for sorting by city dropdown
       sortByCategory: 'default', // Default value for sorting by category dropdown
       sortByLastTransaction: 'default', // Default value for sorting by last transaction dropdown
       currentPage: 1,
@@ -129,7 +136,10 @@ export default {
         const matchesSearchQuery = !this.searchQuery || merchant.name.toLowerCase().includes(this.searchQuery.toLowerCase());
 
         // Check if the merchant matches the selected country
-        const matchesCountry = this.sortBy === 'default' || merchant.country === this.sortBy;
+        const matchesCountry = this.sortByCountry === 'default' || merchant.country === this.sortByCountry;
+
+        // Check if the merchant matches the selected city
+        const matchesCity = this.sortByCity === 'default' || merchant.city === this.sortByCity;
 
         // Check if the merchant matches the selected category
         const matchesCategory = this.sortByCategory === 'default' ||
@@ -139,7 +149,7 @@ export default {
         const matchesLastTransaction = this.filterByLastTransaction(merchant.last_transaction_date);
 
         // Return true only if all filters match
-        return matchesSearchQuery && matchesCountry && matchesCategory && matchesLastTransaction;
+        return matchesSearchQuery && matchesCountry && matchesCity && matchesCategory && matchesLastTransaction;
       });
     },
 
@@ -152,6 +162,16 @@ export default {
         }
       });
       return Array.from(countries).sort(); // Sort the country names alphabetically
+    },
+    // List of unique cities for city dropdown options
+    uniqueCities() {
+      const cities = new Set();
+      this.merchants.forEach(merchant => {
+        if (merchant.city) { // Check if city value is defined
+          cities.add(merchant.city.trim());
+        }
+      });
+      return Array.from(cities).sort(); // Sort the city names alphabetically
     },
     // List of unique categories for category dropdown options
     uniqueCategories() {
@@ -438,29 +458,45 @@ export default {
         this.reachedEnd = false; // Reset the flag when search query changes
 
         // Reset all dropdowns when search query changes
-        this.sortBy = 'default';
+        this.sortByCountry = 'default';
+        this.sortByCity = 'default';
         this.sortByCategory = 'default';
         this.sortByLastTransaction = 'default';
       }
     },
-    sortBy(newValue, oldValue) {
-      // Reset sortByCategory and sortByLastTransaction when sortBy changes
+    sortByCountry(newValue, oldValue) {
+      if (newValue == 'default') {
+        this.sortByCity = 'default';
+      } else {
+        this.sortByCategory = 'default';
+        this.sortByLastTransaction = 'default';
+      }
+    },
+    sortByCity(newValue, oldValue) {
+      const countriesMap = {
+        'Hong Kong': 'Hong Kong',
+        'Tacloban City': 'Philippines',
+        'Ormoc City': 'Philippines',
+        'Cebu City': 'Philippines',
+        'Lapu-Lapu City': 'Philippines'
+      }
       if (newValue !== 'default') {
+        this.sortByCountry = countriesMap[newValue];
         this.sortByCategory = 'default';
         this.sortByLastTransaction = 'default';
       }
     },
     sortByCategory(newValue, oldValue) {
-      // Reset sortBy and sortByLastTransaction when sortByCategory changes
       if (newValue !== 'default') {
-        this.sortBy = 'default';
+        this.sortByCountry = 'default';
+        this.sortByCity = 'default';
         this.sortByLastTransaction = 'default';
       }
     },
     sortByLastTransaction(newValue, oldValue) {
-      // Reset sortBy and sortByCategory when sortByLastTransaction changes
       if (newValue !== 'default') {
-        this.sortBy = 'default';
+        this.sortByCountry = 'default';
+        this.sortByCity = 'default';
         this.sortByCategory = 'default';
       }
     },
