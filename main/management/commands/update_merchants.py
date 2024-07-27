@@ -64,7 +64,7 @@ def _save_merchant(merchant_data):
 
     if merchant_data['category']:
         category_data = merchant_data['category']
-        Category.objects.create(
+        Category.objects.create_or_create(
             merchant=merchant,
             category=category_data
         )
@@ -94,7 +94,8 @@ def _update_merchant(merchant_data):
 
     # Update location
     location_data = merchant_data['location']
-    Location.objects.filter(merchant=merchant).update(
+    Location.objects.update_or_create(
+        merchant=merchant,
         landmark=location_data['landmark'],
         location=location_data['location'],
         street=location_data['street'],
@@ -107,7 +108,8 @@ def _update_merchant(merchant_data):
     # Update vault
     if merchant_data['vault']:
         vault_data = merchant_data['vault']
-        Vault.objects.filter(merchant=merchant).update(
+        Vault.objects.update_or_create(
+            merchant=merchant,
             address=vault_data['address'],
             token_address=vault_data['token_address']
         )
@@ -124,7 +126,8 @@ def _update_merchant(merchant_data):
                 existing_logo.save()
             else:
                 # Create a new logo entry
-                Logo.objects.filter(merchant=merchant).update(
+                Logo.objects.update_or_create(
+                    merchant=merchant,
                     size=size,
                     url=url
                 )
@@ -132,7 +135,8 @@ def _update_merchant(merchant_data):
     # Update category
     if merchant_data['category']:
         category_data = merchant_data['category']
-        Category.objects.filter(merchant=merchant).update(
+        Category.objects.update_or_create(
+            merchant=merchant,
             category=category_data
         )
 
