@@ -42,7 +42,7 @@
       </div>
 
       <!-- Text view for displaying the number of search results -->
-      <p class="text-center text-gray-700 mt-3">Displaying {{ filteredMerchants.length }} of {{ merchants.length }} merchants</p>
+      <p class="text-center text-gray-700 mt-3">{{ filteredMerchants.length }} merchants</p>
 
       <!-- Grid for logos with descriptions -->
       <div class="mt-2 grid grid-cols-1 md:grid-cols-2 w-85 md-270 lg-255 h-auto md-auto">
@@ -95,6 +95,9 @@ import moment from 'moment';
 
 const DOMAIN = 'https://map.paytaca.com'
 
+// Default map center is Tacloban City
+const defaultCenter = [11.2441900, 124.9987370];
+
 export default {
   name: 'App',
   components: {
@@ -118,11 +121,11 @@ export default {
         countries: {
           'Hong Kong': {
             coords: [22.3160643, 114.1821685],
-            zoom: 10
+            zoom: 9.5
           },
           'Philippines': {
             coords: [11.2441900, 124.9987370],
-            zoom: 8
+            zoom: 6
           }
         },
         cities: {
@@ -155,8 +158,8 @@ export default {
         'Cebu City',
         'Lapu-Lapu City'
       ],
-      mapCenter: [],
-      zoomLevel: null,
+      mapCenter: defaultCenter,
+      zoomLevel: 5,
       uniqueCities: [],
       searchQuery: '',
       sortByCountry: 'default', // Default value for sorting by country dropdown
@@ -537,11 +540,14 @@ export default {
         this.sortByLastTransaction = 'default';
         this.mapCenter = this.centers.countries[newValue].coords;
         this.zoomLevel = this.centers.countries[newValue].zoom;
-        if (!this.isMobile && this.mapCenter.length > 0) {
-          this.$refs.mapView.centerOnTarget(this.mapCenter, this.zoomLevel);
-        }
       } else {
-        this.uniqueCities = self.allCities
+        this.uniqueCities = self.allCities;
+        this.mapCenter = defaultCenter;
+        this.zoomLevel = 5;
+      }
+
+      if (!this.isMobile && this.mapCenter.length > 0) {
+        this.$refs.mapView.centerOnTarget(this.mapCenter, this.zoomLevel);
       }
     },
     sortByCity(newValue, oldValue) {

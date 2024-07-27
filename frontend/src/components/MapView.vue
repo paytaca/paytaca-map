@@ -37,7 +37,7 @@ export default {
   },
   methods: {
     loadMap() {
-      this.map = L.map(this.$refs.map).setView(defaultCenter, 8);
+      this.map = L.map(this.$refs.map).setView(defaultCenter, 5);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(this.map);
