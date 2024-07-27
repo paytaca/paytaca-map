@@ -2,7 +2,6 @@
   <div class="grid h-full md:h-auto md:grid-cols-2 bg-bg-dark">
     <!-- Left Section: Logos with Descriptions -->
     <div id="list" class="p-4 overflow-y-scroll h-screen sm:h-screen" ref="logosContainer">
-
       <!-- Search Bar -->
       <input
         v-model="searchQuery"
@@ -115,6 +114,40 @@ export default {
           'Lapu-Lapu City'
         ]
       },
+      centers: {
+        countries: {
+          'Hong Kong': {
+            coords: [22.3160643, 114.1821685],
+            zoom: 10
+          },
+          'Philippines': {
+            coords: [11.2441900, 124.9987370],
+            zoom: 8
+          }
+        },
+        cities: {
+          'Hong Kong': {
+            coords: [22.3160643, 114.1821685],
+            zoom: 11
+          },
+          'Tacloban City': {
+            coords: [11.2441900, 124.9987370],
+            zoom: 12.5
+          },
+          'Ormoc City': {
+            coords: [11.0117503, 124.6089470],
+            zoom: 12.5
+          },
+          'Cebu City': {
+            coords: [10.3049350, 123.8968473],
+            zoom: 11
+          },
+          'Lapu-Lapu City': {
+            coords: [10.3146879, 123.9700083],
+            zoom: 12.5
+          }
+        }
+      },
       allCities: [
         'Hong Kong',
         'Tacloban City',
@@ -122,6 +155,8 @@ export default {
         'Cebu City',
         'Lapu-Lapu City'
       ],
+      mapCenter: [],
+      zoomLevel: null,
       uniqueCities: [],
       searchQuery: '',
       sortByCountry: 'default', // Default value for sorting by country dropdown
@@ -289,6 +324,13 @@ export default {
           console.error('Error fetching categories:', error);
         });
     },
+    getGoogleMapLink(merchant) {
+      if (merchant.gmap_business_link) {
+        return merchant.gmap_business_link
+      } else {
+        return `https://www.google.com/maps?q=${merchant.latitude},${merchant.longitude}`
+      }
+    },
     showPopup(merchant) {
       
       if (this.isMobile) {
@@ -344,18 +386,16 @@ export default {
         popupContent += `<p>Last transaction: ${timeText}</p>`;
       }
       
-      // Include Google Maps link if available
-      if (merchant.gmap_business_link) {
-        popupContent += `<a href="${merchant.gmap_business_link}" target="_blank">View in Google Map</a>`;
-      }
-      
+      // Include link to Google Map
+      popupContent += `<a href="${this.getGoogleMapLink(merchant)}" target="_blank">View in Google Map</a>`;
+
       popupContent += `</div></div></div>`;
       
       // Open popup at merchant coordinates with the popup content
       this.$refs.mapView.openPopup(merchant.latitude, merchant.longitude, popupContent);
       
       // Center the map on the merchant coordinates
-      this.$refs.mapView.setCenter(merchant.latitude, merchant.longitude);
+      this.$refs.mapView.centerOnTarget([merchant.latitude, merchant.longitude], 17.5);
     },
     handleScroll() {
       const container = this.$refs.logosContainer;
@@ -402,11 +442,6 @@ export default {
     showListView() {
       this.currentView = 'list';
     },
-    showMapView() {
-      // Toggle the map view regardless of screen size
-      this.currentView = 'map';
-      this.$refs.mapView.loadMap();
-    },
     toggleMapView() {
       // Toggle between 'list' and 'map' views
       this.currentView = this.currentView === 'map' ? 'list' : 'map';
@@ -421,6 +456,10 @@ export default {
       } else {
         listElement.style.display = 'none';
         mapElement.style.display = 'block';
+      }
+
+      if (this.isMobile && this.mapCenter.length > 0) {
+        this.$refs.mapView.centerOnTarget(this.mapCenter, this.zoomLevel);
       }
     },
     filterByLastTransaction(transactionDate) {
@@ -496,6 +535,11 @@ export default {
         this.uniqueCities = this.citiesByCountry[newValue]
         this.sortByCategory = 'default';
         this.sortByLastTransaction = 'default';
+        this.mapCenter = this.centers.countries[newValue].coords;
+        this.zoomLevel = this.centers.countries[newValue].zoom;
+        if (!this.isMobile && this.mapCenter.length > 0) {
+          this.$refs.mapView.centerOnTarget(this.mapCenter, this.zoomLevel);
+        }
       } else {
         this.uniqueCities = self.allCities
       }
@@ -504,6 +548,11 @@ export default {
       if (newValue !== 'default') {
         this.sortByCategory = 'default';
         this.sortByLastTransaction = 'default';
+        this.mapCenter = this.centers.cities[newValue].coords;
+        this.zoomLevel = this.centers.cities[newValue].zoom;
+        if (!this.isMobile && this.mapCenter.length > 0) {
+          this.$refs.mapView.centerOnTarget(this.mapCenter, this.zoomLevel);
+        }
       }
     },
     sortByCategory(newValue, oldValue) {

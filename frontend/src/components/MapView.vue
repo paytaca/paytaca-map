@@ -12,6 +12,10 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import 'leaflet.markercluster/dist/leaflet.markercluster';
 import image from "../assets/marker_pin.png";
 
+
+// Default map center is Tacloban City
+const defaultCenter = [11.2441900, 124.9987370];
+
 export default {
   name: 'MapView',
   props: {
@@ -33,7 +37,7 @@ export default {
   },
   methods: {
     loadMap() {
-      this.map = L.map(this.$refs.map).setView([11.2441900, 124.9987370], 8);
+      this.map = L.map(this.$refs.map).setView(defaultCenter, 8);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(this.map);
@@ -76,6 +80,13 @@ export default {
           timeText = minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`;
         }
 
+        let merchantLocation = '';
+        if (merchant.city) {
+          merchantLocation = `${merchant.city}, ${merchant.country}`;
+        } else if (merchant.town) {
+          merchantLocation = `${merchant.town}, ${merchant.province}, ${merchant.country}`;
+        }
+
         const customIcon = L.icon({
           iconUrl: image,
           iconSize: [35, 48],
@@ -93,17 +104,26 @@ export default {
                   <h3 class="font-semibold">${merchant.name}</h3>
                   <img src="${merchant.logo}" alt="${merchant.name} Logo" class="h-16 w-16 rounded-full">
               </div>
-              <p>${merchant.location}, ${merchant.city}, ${merchant.country}</p>
+              <p>${merchantLocation}</p>
               <p>Last transaction: ${timeText}</p>
-              <a href="${merchant.gmap_business_link}" target="_blank" class="text-blue-500 hover:underline">View in Google Map</a>
+              <a href="${ this.getGoogleMapLink(merchant) }" target="_blank" class="text-blue-500 hover:underline">View in Google Map</a>
           </div>
           `);
         this.markerClusterGroup.addLayer(marker);
       });
     },
-    setCenter(latitude, longitude) {
-      const zoomLevel = 17.5; 
-      this.map.setView([latitude, longitude], zoomLevel, { animate: true, duration: 1 }); 
+    getGoogleMapLink(merchant) {
+      if (merchant.gmap_business_link) {
+        return merchant.gmap_business_link
+      } else {
+        return `https://www.google.com/maps?q=${merchant.latitude},${merchant.longitude}`
+      }
+    },
+    centerOnTarget(coordinates, zoomLevel) {
+      if (coordinates.length == 0) {
+        coordinates = defaultCenter;
+      } 
+      this.map.setView(coordinates, zoomLevel, { animate: true, duration: 1.5 }); 
     },
     openPopup(latitude, longitude, content) {
       const popup = L.popup()
