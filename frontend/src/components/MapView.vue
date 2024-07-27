@@ -102,7 +102,7 @@ export default {
       });
     },
     setCenter(latitude, longitude) {
-      const zoomLevel = window.innerWidth < 768 ? 10 : 17.5; 
+      const zoomLevel = 17.5; 
       this.map.setView([latitude, longitude], zoomLevel, { animate: true, duration: 1 }); 
     },
     openPopup(latitude, longitude, content) {

@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from main.models import Merchant, Location, Vault, Logo, Category
 import dateutil.parser as parser
+from django.utils import timezone
 import time, requests
 import logging
 
@@ -22,20 +23,20 @@ def _save_merchant(merchant_data):
         gmap_business_link=merchant_data['gmap_business_link'],
         last_transaction_date=last_transaction_date,
         receiving_pubkey=merchant_data['receiving_pubkey'],
-        receiving_address=merchant_data['receiving_address']
+        receiving_address=merchant_data['receiving_address'],
+        last_update=timezone.now()
     )
     
     location_data = merchant_data['location']
     Location.objects.create(
         merchant=merchant,
-        landmark=location_data['landmark'].strip(),
-        location=location_data['location'].strip(),
-        street=location_data['street'].strip(),
-        town=location_data['town'].strip(),
-        city=location_data['city'].strip(),
-        province=location_data['province'].strip(),
-        state=location_data['state'].strip(),
-        country=location_data['country'].strip(),
+        landmark=location_data['landmark'],
+        street=location_data['street'],
+        town=location_data['town'],
+        city=location_data['city'],
+        province=location_data['province'],
+        state=location_data['state'],
+        country=location_data['country'],
         longitude=float(location_data['longitude']),
         latitude=float(location_data['latitude'])
     )
@@ -100,16 +101,17 @@ def _update_merchant(merchant_data):
     if location_data:
         Location.objects.update_or_create(
             merchant=merchant,
-            landmark=location_data['landmark'].strip(),
-            location=location_data['location'].strip(),
-            street=location_data['street'].strip(),
-            town=location_data['town'].strip(),
-            city=location_data['city'].strip(),
-            province=location_data['province'].strip(),
-            state=location_data['state'].strip(),
-            country=location_data['country'].strip(),
-            longitude=float(location_data['longitude']),
-            latitude=float(location_data['latitude'])
+            defaults={
+                'landmark': location_data['landmark'],
+                'street': location_data['street'],
+                'town': location_data['town'],
+                'city': location_data['city'],
+                'province': location_data['province'],
+                'state': location_data['state'],
+                'country': location_data['country'],
+                'longitude': float(location_data['longitude']),
+                'latitude': float(location_data['latitude'])
+            }
         )
 
     # Update vault
@@ -117,8 +119,10 @@ def _update_merchant(merchant_data):
         vault_data = merchant_data['vault']
         Vault.objects.update_or_create(
             merchant=merchant,
-            address=vault_data['address'],
-            token_address=vault_data['token_address']
+            defaults={
+                'address': vault_data['address'],
+                'token_address': vault_data['token_address']
+            }
         )
 
     # Update logo
@@ -136,7 +140,9 @@ def _update_merchant(merchant_data):
                 Logo.objects.update_or_create(
                     merchant=merchant,
                     size=size,
-                    url=url
+                    defaults={
+                        'url': url
+                    }
                 )
     
     # Update category
@@ -144,13 +150,18 @@ def _update_merchant(merchant_data):
         category_data = merchant_data['category']
         Category.objects.update_or_create(
             merchant=merchant,
-            category=category_data
+            defaults={
+                'category': category_data
+            }
         )
+
+    merchant.last_update = timezone.now()
+    merchant.save()
 
     logger.info(f'Updated: {merchant.name}')
 
 
-def _fetch_merchants():
+def _fetch_merchants(check_last_update=True):
     source_url = 'https://watchtower.cash/api/paytacapos/merchants/?active=true&verified=true&has_pagination=false'
     resp = requests.get(source_url)
     if resp.status_code == 200:
@@ -160,17 +171,20 @@ def _fetch_merchants():
             merchant_check = Merchant.objects.filter(watchtower_merchant_id=merchant_data['id'])
             if merchant_check.exists():
                 proceed_update = False
-                merchant = merchant_check.last()
-                if merchant_data['last_update']:
+                if check_last_update:
+                    merchant = merchant_check.last()
                     if merchant_data['last_update']:
-                        if merchant.last_update:
-                            _last_update = parser.parse(merchant_data['last_update'])
-                            if merchant.last_update < _last_update:
+                        if merchant_data['last_update']:
+                            if merchant.last_update:
+                                _last_update = parser.parse(merchant_data['last_update'])
+                                if merchant.last_update < _last_update:
+                                    proceed_update = True
+                            else:
                                 proceed_update = True
                         else:
                             proceed_update = True
-                    else:
-                        proceed_update = True
+                else:
+                    proceed_update = True
                 if proceed_update:
                     _update_merchant(merchant_data)
             else:

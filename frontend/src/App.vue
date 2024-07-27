@@ -48,13 +48,18 @@
       <!-- Grid for logos with descriptions -->
       <div class="mt-2 grid grid-cols-1 md:grid-cols-2 w-85 md-270 lg-255 h-auto md-auto">
         <!-- Logos with descriptions -->
-        <div v-for="(merchant, index) in paginatedMerchants" :key="merchant.id" class="flex flex-col p-2 m-2 rounded-2xl bg-gray-light" :class="{ 'pointer-events-none': isMobile }" @click="showPopup(merchant)">
+        <div v-for="(merchant, index) in paginatedMerchants" :key="merchant.id" class="flex flex-col p-2 m-2 rounded-2xl bg-gray-light" @click="showPopup(merchant)">
           <!-- Check if merchant.logo is defined before accessing its url property -->
           <div class="h-full">
-            <img v-if="merchant.logo" :src="merchant.logo" :alt="merchant.name + ' Logo'" class="m-auto sm:h-auto md:h-20 w-20 md-50 lg-75 object-fill cursor-pointer float-right">
+            <img v-if="merchant.logo" :src="merchant.logo" :alt="merchant.name + ' Logo'" class="m-auto sm:h-auto md:h-20 w-20 md-50 lg-75 object-fill cursor-pointer float-right" style="padding-left: 12px;">
             <div class="text-sm md:text-xs">
               <h3 class="text-lg font-semibold italic">{{ merchant.name }}</h3>
-              <p class="text-gray-800">{{ merchant.city }}, {{ merchant.country }}</p>
+              <template v-if="merchant.town">
+                <p class="text-gray-800">{{ merchant.town }}, {{ merchant.province }}, {{ merchant.country }}</p>
+              </template>
+              <template v-else>
+                <p class="text-gray-800">{{ merchant.city }}, {{ merchant.country }}</p>
+              </template>
               <p class="text-gray-800">Last transaction: {{ formatDate(merchant.last_transaction_date) }}</p>
             </div>
           </div>
@@ -75,7 +80,7 @@
 
     <!-- Button to toggle map visibility -->
     <div class="fixed bottom-4 left-4 md:left-8 md:bottom-8 md:hidden" style="z-index: 9999;">
-      <button @click="toggleMapView" class="px-4 py-2 ml-2 bg-gray-light text-gray-dark rounded-md focus:outline-none focus:ring focus:ring-gray-300">
+      <button @click="toggleMapView" class="px-4 py-2 ml-2 bg-gray-light text-gray-dark rounded-md focus:outline-none focus:ring focus:ring-gray-300" style="border: 2px solid gray;">
         {{ currentView === 'map' ? 'Show List' : 'Show Map' }}
       </button>
     </div>
@@ -233,7 +238,10 @@ export default {
             const location = locationMap.get(merchant.id);
             if (location) {
               merchant.location = location.location;
+              merchant.town = location.town;
               merchant.city = location.city;
+              merchant.province = location.province;
+              merchant.state = location.state;
               merchant.country = location.country;
               merchant.latitude = location.latitude;
               merchant.longitude = location.longitude;
@@ -282,6 +290,11 @@ export default {
         });
     },
     showPopup(merchant) {
+      
+      if (this.isMobile) {
+        this.toggleMapView();
+      }
+
       const transactionDate = new Date(merchant.last_transaction_date);
       const currentDate = new Date();
       const timeDifference = currentDate - transactionDate;
@@ -320,8 +333,10 @@ export default {
       popupContent += `</div><div>`;
       
       // Include merchant information if available
-      if (merchant.location && merchant.city && merchant.country) {
-        popupContent += `<p>${merchant.location}, ${merchant.city}, ${merchant.country}</p>`;
+      if (merchant.city) {
+        popupContent += `<p>${merchant.city}, ${merchant.country}</p>`;
+      } else if (merchant.town) {
+        popupContent += `<p>${merchant.town}, ${merchant.province}, ${merchant.country}</p>`;
       }
       
       // Include last transaction time if available
@@ -390,6 +405,7 @@ export default {
     showMapView() {
       // Toggle the map view regardless of screen size
       this.currentView = 'map';
+      this.$refs.mapView.loadMap();
     },
     toggleMapView() {
       // Toggle between 'list' and 'map' views
