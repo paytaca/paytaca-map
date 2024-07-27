@@ -31,7 +31,10 @@ def _save_merchant(merchant_data):
         landmark=location_data['landmark'].strip(),
         location=location_data['location'].strip(),
         street=location_data['street'].strip(),
+        town=location_data['town'].strip(),
         city=location_data['city'].strip(),
+        province=location_data['province'].strip(),
+        state=location_data['state'].strip(),
         country=location_data['country'].strip(),
         longitude=float(location_data['longitude']),
         latitude=float(location_data['latitude'])
@@ -94,16 +97,20 @@ def _update_merchant(merchant_data):
 
     # Update location
     location_data = merchant_data['location']
-    Location.objects.update_or_create(
-        merchant=merchant,
-        landmark=location_data['landmark'],
-        location=location_data['location'],
-        street=location_data['street'],
-        city=location_data['city'],
-        country=location_data['country'],
-        longitude=float(location_data['longitude']),
-        latitude=float(location_data['latitude'])
-    )
+    if location_data:
+        Location.objects.update_or_create(
+            merchant=merchant,
+            landmark=location_data['landmark'].strip(),
+            location=location_data['location'].strip(),
+            street=location_data['street'].strip(),
+            town=location_data['town'].strip(),
+            city=location_data['city'].strip(),
+            province=location_data['province'].strip(),
+            state=location_data['state'].strip(),
+            country=location_data['country'].strip(),
+            longitude=float(location_data['longitude']),
+            latitude=float(location_data['latitude'])
+        )
 
     # Update vault
     if merchant_data['vault']:
