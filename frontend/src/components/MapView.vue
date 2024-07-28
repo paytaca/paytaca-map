@@ -43,7 +43,10 @@ export default {
       }).addTo(this.map);
 
       // Initialize marker cluster group
-      this.markerClusterGroup = L.markerClusterGroup();
+      this.markerClusterGroup = L.markerClusterGroup({
+        disableClusteringAtZoom: 16,
+        maxClusterRadius: 20
+      });
       this.map.addLayer(this.markerClusterGroup);
     },
     updateMarkers(merchants) {
