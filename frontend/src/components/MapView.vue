@@ -44,8 +44,9 @@ export default {
 
       // Initialize marker cluster group
       this.markerClusterGroup = L.markerClusterGroup({
-        disableClusteringAtZoom: 16,
-        maxClusterRadius: 20
+        maxClusterRadius: 20,
+        chunkedLoading: true,
+        animate: true
       });
       this.map.addLayer(this.markerClusterGroup);
     },
