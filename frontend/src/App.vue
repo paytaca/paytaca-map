@@ -178,6 +178,8 @@ export default {
     this.fetchCategories(); // Fetch categories on component mount
     this.uniqueCities = self.allCities;
     this.$refs.logosContainer.addEventListener('scroll', this.handleScroll);
+  },
+  created () {
     if (this.isMobile) {
       const mapElement = document.getElementById('map');
       mapElement.style.display = 'none';

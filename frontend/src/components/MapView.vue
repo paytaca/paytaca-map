@@ -24,7 +24,7 @@ export default {
       default: () => [],
     },
   },
-  mounted() {
+  mounted () {
     this.loadMap();
   },
   watch: {
@@ -49,6 +49,12 @@ export default {
         animate: true
       });
       this.map.addLayer(this.markerClusterGroup);
+
+      // Ensure map is properly displayed after initialization
+      const vm = this
+      setTimeout(() => {
+        vm.map.invalidateSize();
+      }, 100);
     },
     updateMarkers(merchants) {
       // Clear existing markers
