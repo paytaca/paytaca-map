@@ -5,8 +5,6 @@ class MerchantsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Merchant
         exclude = [
-            'receiving_address',
-            'receiving_pubkey',
             'test_shop',
             'watchtower_merchant_id'
         ]

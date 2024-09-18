@@ -107,7 +107,7 @@ export default {
     return {
       merchants: [],
       citiesByCountry: {
-        'Hong Kong': [
+        'China': [
           'Hong Kong'
         ],
         'Philippines': [
@@ -119,7 +119,7 @@ export default {
       },
       centers: {
         countries: {
-          'Hong Kong': {
+          'China': {
             coords: [22.3160643, 114.1821685],
             zoom: 9.5
           },

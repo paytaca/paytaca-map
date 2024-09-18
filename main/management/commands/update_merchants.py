@@ -32,8 +32,6 @@ def _save_merchant(merchant_data):
         description=merchant_data['description'],
         gmap_business_link=merchant_data['gmap_business_link'],
         last_transaction_date=last_transaction_date,
-        receiving_pubkey=merchant_data['receiving_pubkey'],
-        receiving_address=merchant_data['receiving_address'],
         last_update=timezone.now()
     )
     
@@ -78,7 +76,7 @@ def _save_merchant(merchant_data):
 
     if merchant_data['category']:
         category_data = merchant_data['category']
-        Category.objects.create_or_create(
+        Category.objects.get_or_create(
             merchant=merchant,
             category=category_data
         )
@@ -159,8 +157,6 @@ def _update_merchant(merchant_data):
     merchant.description = merchant_data['description']
     merchant.gmap_business_link = merchant_data['gmap_business_link']
     merchant.last_transaction_date = last_transaction_date
-    merchant.receiving_pubkey = merchant_data['receiving_pubkey']
-    merchant.receiving_address = merchant_data['receiving_address']
 
     merchant.last_update = timezone.now()
     merchant.save()

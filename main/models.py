@@ -7,8 +7,6 @@ class Merchant(models.Model):
     description = models.TextField(blank=True, null=True)
     gmap_business_link = models.URLField(blank=True, null=True)
     last_transaction_date = models.DateTimeField(blank=True, null=True)
-    receiving_pubkey = models.CharField(max_length=255, blank=True, null=True)
-    receiving_address = models.CharField(max_length=255, blank=True, null=True)
     last_update = models.DateTimeField(null=True, blank=True)
     test_shop = models.BooleanField(default=False)
 
