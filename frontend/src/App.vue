@@ -133,6 +133,10 @@ export default {
             coords: [22.3160643, 114.1821685],
             zoom: 11
           },
+          'Makati City': {
+            coords: [14.5595224, 121.0011915],
+            zoom: 12.5
+          },
           'Tacloban City': {
             coords: [11.2441900, 124.9987370],
             zoom: 12.5
@@ -153,6 +157,7 @@ export default {
       },
       allCities: [
         'Hong Kong',
+        'Makati City',
         'Tacloban City',
         'Ormoc City',
         'Cebu City',
