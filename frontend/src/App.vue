@@ -111,10 +111,11 @@ export default {
           'Hong Kong'
         ],
         'Philippines': [
-          'Tacloban City',
-          'Ormoc City',
+          'Makati City',
           'Cebu City',
-          'Lapu-Lapu City'
+          'Lapu-Lapu City',
+          'Tacloban City',
+          'Ormoc City'
         ]
       },
       centers: {
@@ -158,10 +159,10 @@ export default {
       allCities: [
         'Hong Kong',
         'Makati City',
-        'Tacloban City',
-        'Ormoc City',
         'Cebu City',
-        'Lapu-Lapu City'
+        'Lapu-Lapu City',
+        'Tacloban City',
+        'Ormoc City'
       ],
       mapCenter: defaultCenter,
       zoomLevel: 5,
