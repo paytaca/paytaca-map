@@ -110,6 +110,9 @@ export default {
         'China': [
           'Hong Kong'
         ],
+        'Taiwan': [
+          'Kaohsiung City'
+        ],
         'Philippines': [
           'Makati City',
           'Cebu City',
@@ -120,19 +123,27 @@ export default {
       },
       centers: {
         countries: {
+          'Philippines': {
+            coords: [11.2441900, 124.9987370],
+            zoom: 6
+          },
           'China': {
             coords: [22.3160643, 114.1821685],
             zoom: 9.5
           },
-          'Philippines': {
-            coords: [11.2441900, 124.9987370],
-            zoom: 6
+          'Taiwan': {
+            coords: [23.7381627, 120.994431],
+            zoom: 8
           }
         },
         cities: {
           'Hong Kong': {
             coords: [22.3160643, 114.1821685],
             zoom: 11
+          },
+          'Kaohsiung City': {
+            coords: [23.067879, 120.029294],
+            zoom: 9
           },
           'Makati City': {
             coords: [14.5595224, 121.0011915],
@@ -158,6 +169,7 @@ export default {
       },
       allCities: [
         'Hong Kong',
+        'Kaohsiung City',
         'Makati City',
         'Cebu City',
         'Lapu-Lapu City',
