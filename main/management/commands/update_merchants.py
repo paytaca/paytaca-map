@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from main.models import Merchant, Location, Vault, Logo, Category
+from main.models import Merchant, Location, Logo, Category
 import dateutil.parser as parser
 from django.utils import timezone
 import time, requests
@@ -49,14 +49,6 @@ def _save_merchant(merchant_data):
         latitude=float(location_data['latitude'])
     )
 
-    if merchant_data['vault']:
-        vault_data = merchant_data['vault']
-        Vault.objects.create(
-            merchant=merchant,
-            address=vault_data['address'],
-            token_address=vault_data['token_address']
-        )
-
     logos_data = merchant_data['logos']
     for size, url in logos_data.items():
         if size == '120x120':
@@ -74,7 +66,7 @@ def _save_merchant(merchant_data):
                     url=url
                 )
 
-    if merchant_data['category']:
+    if 'category' in merchant_data.keys():
         category_data = merchant_data['category']
         Category.objects.get_or_create(
             merchant=merchant,
@@ -106,17 +98,6 @@ def _update_merchant(merchant_data):
             }
         )
 
-    # Update vault
-    if merchant_data['vault']:
-        vault_data = merchant_data['vault']
-        Vault.objects.update_or_create(
-            merchant=merchant,
-            defaults={
-                'address': vault_data['address'],
-                'token_address': vault_data['token_address']
-            }
-        )
-
     # Update logo
     logos_data = merchant_data['logos']
     for size, url in logos_data.items():
@@ -138,14 +119,15 @@ def _update_merchant(merchant_data):
                 )
     
     # Update category
-    if merchant_data['category']:
+    if 'category' in merchant_data.keys():
         category_data = merchant_data['category']
-        Category.objects.update_or_create(
-            merchant=merchant,
-            defaults={
-                'category': category_data
-            }
-        )
+        if category_data:
+            Category.objects.update_or_create(
+                merchant=merchant,
+                defaults={
+                    'category': category_data
+                }
+            )
 
     # Update merchant details
     last_transaction_date_str = merchant_data['last_transaction_date']
@@ -176,7 +158,7 @@ def _fetch_merchants(check_last_update=True):
                 merchant = merchant_check.last()
                 proceed_update = False
                 if check_last_update:
-                    if merchant_data['last_update']:
+                    if 'last_update' in merchant_data.keys():
                         if merchant_data['last_update']:
                             if merchant.last_update:
                                 _last_update = parser.parse(merchant_data['last_update'])

@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from main.models import Merchant, Location, Category, Vault, Logo
+from main.models import Merchant, Location, Category, Logo
 
 class Command(BaseCommand):
     help = 'Erases all existing records'
@@ -9,5 +9,4 @@ class Command(BaseCommand):
         Merchant.objects.all().delete()
         Category.objects.all().delete()
         Location.objects.all().delete()
-        Vault.objects.all().delete()
         Logo.objects.all().delete()

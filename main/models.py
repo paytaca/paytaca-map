@@ -36,11 +36,6 @@ class Category(models.Model):
     class Meta:
         verbose_name_plural = 'Categories'
 
-class Vault(models.Model):
-    merchant = models.OneToOneField(Merchant, on_delete=models.CASCADE) 
-    address = models.CharField(max_length=255, null=True)
-    token_address = models.CharField(max_length=255, null=True)
-
 class Logo(models.Model):
     merchant = models.OneToOneField(Merchant, on_delete=models.CASCADE) 
     size = models.CharField(max_length=10, null=True)

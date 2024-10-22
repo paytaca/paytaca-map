@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Location, Logo, Vault, Merchant, Category
+from .models import Location, Logo, Merchant, Category
 # Register your models here.
 
 
@@ -30,15 +30,6 @@ class LogoAdmin(admin.ModelAdmin):
     ]
 
 admin.site.register(Logo, LogoAdmin)
-
-
-class VaultAdmin(admin.ModelAdmin):
-    list_display = [
-        'merchant',
-        'address'
-    ]
-
-admin.site.register(Vault, VaultAdmin)
 
 
 class CategoryAdmin(admin.ModelAdmin):
