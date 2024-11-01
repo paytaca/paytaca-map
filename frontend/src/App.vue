@@ -119,14 +119,13 @@ export default {
           'Lapu-Lapu City',
           'Tacloban City',
           'Ormoc City'
+        ],
+        'Australia': [
+          'Townsville'
         ]
       },
       centers: {
         countries: {
-          'Philippines': {
-            coords: [11.2441900, 124.9987370],
-            zoom: 6
-          },
           'China': {
             coords: [22.3160643, 114.1821685],
             zoom: 9.5
@@ -134,7 +133,15 @@ export default {
           'Taiwan': {
             coords: [23.7381627, 120.994431],
             zoom: 8
-          }
+          },
+          'Philippines': {
+            coords: [11.2441900, 124.9987370],
+            zoom: 6
+          },
+          'Australia': {
+            coords: [-24.3481652, 136.9810528],
+            zoom: 5
+          },
         },
         cities: {
           'Hong Kong': {
@@ -164,6 +171,10 @@ export default {
           'Lapu-Lapu City': {
             coords: [10.3146879, 123.9700083],
             zoom: 12.5
+          },
+          'Townsville': {
+            coords: [-19.282662, 146.7704892],
+            zoom: 11.5
           }
         }
       },
@@ -174,7 +185,8 @@ export default {
         'Cebu City',
         'Lapu-Lapu City',
         'Tacloban City',
-        'Ormoc City'
+        'Ormoc City',
+        'Townsville'
       ],
       mapCenter: defaultCenter,
       zoomLevel: 5,
