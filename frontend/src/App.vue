@@ -95,8 +95,9 @@ import moment from 'moment';
 
 const DOMAIN = 'https://map.paytaca.com'
 
-// Default map center is Tacloban City
-const defaultCenter = [11.2441900, 124.9987370];
+// Default map center
+// const defaultCenter = [11.2441900, 124.9987370]; // Tacloban City
+const defaultCenter = [-2.745453205711577, 129.97266776311113]; // Custom
 
 export default {
   name: 'App',
@@ -296,7 +297,6 @@ export default {
       if (this.merchantsFilter) {
         url += '?filter_by_id=' + this.merchantsFilter
       }
-      console.log('URL:', url)
       axios.get(url)
         .then(response => {
           const merchants = response.data;
@@ -585,7 +585,7 @@ export default {
       } else {
         this.uniqueCities = self.allCities;
         this.mapCenter = defaultCenter;
-        this.zoomLevel = 5;
+        this.zoomLevel = 3.5;
       }
 
       if (!this.isMobile && this.mapCenter.length > 0) {

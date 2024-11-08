@@ -13,8 +13,9 @@ import 'leaflet.markercluster/dist/leaflet.markercluster';
 import image from "../assets/marker_pin.png";
 
 
-// Default map center is Tacloban City
-const defaultCenter = [11.2441900, 124.9987370];
+// Default map center
+// const defaultCenter = [11.2441900, 124.9987370]; // Tacloban City
+const defaultCenter = [-2.745453205711577, 129.97266776311113]; // Custom
 
 export default {
   name: 'MapView',
@@ -37,7 +38,7 @@ export default {
   },
   methods: {
     loadMap() {
-      this.map = L.map(this.$refs.map).setView(defaultCenter, 5);
+      this.map = L.map(this.$refs.map).setView(defaultCenter, 3.5);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(this.map);
