@@ -200,7 +200,8 @@ export default {
       pageSize: 15,
       categoriesMap: new Map(), // Map to store categories for each merchant
       reachedEnd: false, // Flag to indicate whether the end of scroll is reached
-      currentView: 'list'
+      currentView: 'list',
+      merchantsFilter: null
     };
   },
   mounted() {
@@ -210,6 +211,10 @@ export default {
     this.$refs.logosContainer.addEventListener('scroll', this.handleScroll);
   },
   created () {
+    let urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.has('merchants')) {
+      this.merchantsFilter = urlParams.get('merchants')
+    }
     if (this.isMobile) {
       const mapElement = document.getElementById('map');
       mapElement.style.display = 'none';
@@ -287,7 +292,12 @@ export default {
   },
   methods: {
     fetchMerchants() {
-      axios.get(DOMAIN + '/api/merchants/')
+      let url = DOMAIN + '/api/merchants/'
+      if (this.merchantsFilter) {
+        url += '?filter_by_id=' + this.merchantsFilter
+      }
+      console.log('URL:', url)
+      axios.get(url)
         .then(response => {
           const merchants = response.data;
           this.fetchLocations(merchants);
