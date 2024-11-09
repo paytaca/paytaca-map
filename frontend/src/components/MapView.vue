@@ -14,8 +14,8 @@ import image from "../assets/marker_pin.png";
 
 
 // Default map center
-// const defaultCenter = [11.2441900, 124.9987370]; // Tacloban City
-const defaultCenter = [-2.745453205711577, 129.97266776311113]; // Custom
+const defaultCenter = [11.2441900, 124.9987370]; // Tacloban City
+// const defaultCenter = [-2.745453205711577, 129.97266776311113]; // Custom
 
 export default {
   name: 'MapView',

@@ -96,8 +96,8 @@ import moment from 'moment';
 const DOMAIN = 'https://map.paytaca.com'
 
 // Default map center
-// const defaultCenter = [11.2441900, 124.9987370]; // Tacloban City
-const defaultCenter = [-2.745453205711577, 129.97266776311113]; // Custom
+const defaultCenter = [11.2441900, 124.9987370]; // Tacloban City
+// const defaultCenter = [-2.745453205711577, 129.97266776311113]; // Custom
 
 export default {
   name: 'App',
@@ -377,6 +377,8 @@ export default {
       }
     },
     showPopup(merchant) {
+
+      this.zoomLevel = 17.5
       
       if (this.isMobile) {
         this.toggleMapView();
@@ -440,7 +442,7 @@ export default {
       this.$refs.mapView.openPopup(merchant.latitude, merchant.longitude, popupContent);
       
       // Center the map on the merchant coordinates
-      this.$refs.mapView.centerOnTarget([merchant.latitude, merchant.longitude], 17.5);
+      this.$refs.mapView.centerOnTarget([merchant.latitude, merchant.longitude], this.zoomLevel);
     },
     handleScroll() {
       const container = this.$refs.logosContainer;
