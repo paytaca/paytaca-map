@@ -112,7 +112,8 @@ export default {
           'Hong Kong'
         ],
         'Taiwan': [
-          'Kaohsiung City'
+          'Kaohsiung City',
+          'Tainan City'
         ],
         'Philippines': [
           'Makati City',
@@ -153,6 +154,10 @@ export default {
             coords: [23.067879, 120.029294],
             zoom: 9
           },
+          'Tainan City': {
+            coords: [23.0110272, 120.2192543],
+            zoom: 9
+          },
           'Makati City': {
             coords: [14.5595224, 121.0011915],
             zoom: 12.5
@@ -182,6 +187,7 @@ export default {
       allCities: [
         'Hong Kong',
         'Kaohsiung City',
+        'Tainan City',
         'Makati City',
         'Cebu City',
         'Lapu-Lapu City',
