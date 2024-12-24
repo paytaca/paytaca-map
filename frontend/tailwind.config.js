@@ -3,7 +3,7 @@
 // @ts-ignore
 
 // Export the configuration object
-module.exports = {
+export default {
   // Specify the files Tailwind should analyze for generating utility classes
   content: [
     "./index.html", // HTML file(s) to analyze

@@ -390,7 +390,9 @@ export default {
         this.toggleMapView();
       }
 
+      console.log('X', merchant.last_transaction_date)
       const transactionDate = new Date(merchant.last_transaction_date);
+      console.log('Y', transactionDate)
       const currentDate = new Date();
       const timeDifference = currentDate - transactionDate;
       let timeText = '';

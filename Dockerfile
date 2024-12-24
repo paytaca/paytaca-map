@@ -1,4 +1,4 @@
-FROM nikolaik/python-nodejs:python3.10-nodejs22-slim
+FROM nikolaik/python-nodejs:python3.10-nodejs20-slim
 
 RUN apt-key adv --refresh-keys --keyserver keyserver.ubuntu.com
 RUN apt-get update -y
