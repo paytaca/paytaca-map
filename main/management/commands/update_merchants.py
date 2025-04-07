@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from main.models import Merchant, Location, Logo, Category
+from main.models import Merchant
 import dateutil.parser as parser
 from django.utils import timezone
 import time, requests
@@ -25,6 +25,10 @@ def _save_merchant(merchant_data):
     last_transaction_date_str = merchant_data['last_transaction_date']
     last_transaction_date = parse_last_transaction_date(last_transaction_date_str)
 
+    location_data = merchant_data['location']
+    logos_data = merchant_data['logos']
+    logo_120x120 = logos_data.get('120x120') if logos_data else None
+
     merchant = Merchant.objects.create(
         watchtower_merchant_id=merchant_data['id'],
         name=merchant_data['name'],
@@ -32,12 +36,8 @@ def _save_merchant(merchant_data):
         description=merchant_data['description'],
         gmap_business_link=merchant_data['gmap_business_link'],
         last_transaction_date=last_transaction_date,
-        last_update=timezone.now()
-    )
-    
-    location_data = merchant_data['location']
-    Location.objects.create(
-        merchant=merchant,
+        last_update=timezone.now(),
+        # Location fields
         landmark=location_data['landmark'],
         street=location_data['street'],
         town=location_data['town'],
@@ -46,32 +46,13 @@ def _save_merchant(merchant_data):
         state=location_data['state'],
         country=location_data['country'],
         longitude=float(location_data['longitude']),
-        latitude=float(location_data['latitude'])
+        latitude=float(location_data['latitude']),
+        # Logo fields
+        logo_size='120x120' if logo_120x120 else None,
+        logo_url=logo_120x120,
+        # Category field
+        category=merchant_data.get('category')
     )
-
-    logos_data = merchant_data['logos']
-    for size, url in logos_data.items():
-        if size == '120x120':
-            # Check if a logo with size 120x120 already exists for this merchant
-            existing_logo = Logo.objects.filter(merchant=merchant, size=size).first()
-            if existing_logo:
-                # Update the existing logo entry
-                existing_logo.url = url
-                existing_logo.save()
-            else:
-                # Create a new logo entry
-                Logo.objects.create(
-                    merchant=merchant,
-                    size=size,
-                    url=url
-                )
-
-    if 'category' in merchant_data.keys():
-        category_data = merchant_data['category']
-        Category.objects.get_or_create(
-            merchant=merchant,
-            category=category_data
-        )
 
     logger.info(f'Saved: {merchant.name}')
 
@@ -83,54 +64,28 @@ def _update_merchant(merchant_data):
     # Update location
     location_data = merchant_data['location']
     if location_data:
-        Location.objects.update_or_create(
-            merchant=merchant,
-            defaults={
-                'landmark': location_data['landmark'],
-                'street': location_data['street'],
-                'town': location_data['town'],
-                'city': location_data['city'],
-                'province': location_data['province'],
-                'state': location_data['state'],
-                'country': location_data['country'],
-                'longitude': float(location_data['longitude']),
-                'latitude': float(location_data['latitude'])
-            }
-        )
+        merchant.landmark = location_data['landmark']
+        merchant.street = location_data['street']
+        merchant.town = location_data['town']
+        merchant.city = location_data['city']
+        merchant.province = location_data['province']
+        merchant.state = location_data['state']
+        merchant.country = location_data['country']
+        merchant.longitude = float(location_data['longitude'])
+        merchant.latitude = float(location_data['latitude'])
 
     # Update logo
     logos_data = merchant_data['logos']
-    for size, url in logos_data.items():
-        if size == '120x120':
-            # Check if a logo with size 120x120 already exists for this merchant
-            existing_logo = Logo.objects.filter(merchant=merchant, size=size).first()
-            if existing_logo:
-                # Update the existing logo entry
-                existing_logo.url = url
-                existing_logo.save()
-            else:
-                # Create a new logo entry
-                Logo.objects.update_or_create(
-                    merchant=merchant,
-                    size=size,
-                    defaults={
-                        'url': url
-                    }
-                )
+    logo_120x120 = logos_data.get('120x120') if logos_data else None
+    if logo_120x120:
+        merchant.logo_size = '120x120'
+        merchant.logo_url = logo_120x120
     
     # Update category
-    if 'category' in merchant_data.keys():
-        category_data = merchant_data['category']
-        if category_data:
-            Category.objects.update_or_create(
-                merchant=merchant,
-                defaults={
-                    'category': category_data
-                }
-            )
+    if 'category' in merchant_data:
+        merchant.category = merchant_data['category']
 
     # Update merchant details
-    last_transaction_date_str = merchant_data['last_transaction_date']
     last_transaction_date_str = merchant_data['last_transaction_date']
     last_transaction_date = parse_last_transaction_date(last_transaction_date_str)
 
@@ -139,7 +94,6 @@ def _update_merchant(merchant_data):
     merchant.description = merchant_data['description']
     merchant.gmap_business_link = merchant_data['gmap_business_link']
     merchant.last_transaction_date = last_transaction_date
-
     merchant.last_update = timezone.now()
     merchant.save()
 
@@ -152,7 +106,6 @@ def _fetch_merchants(check_last_update=True):
     if resp.status_code == 200:
         merchants = resp.json()
         for merchant_data in merchants:
-
             merchant_check = Merchant.objects.filter(watchtower_merchant_id=merchant_data['id'])
             if merchant_check.exists():
                 merchant = merchant_check.last()
