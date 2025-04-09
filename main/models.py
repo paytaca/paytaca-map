@@ -23,12 +23,12 @@ class Merchant(models.Model):
 
     # Location fields
     landmark = models.CharField(max_length=255, blank=True, null=True)
-    location = models.CharField(max_length=255, null=True)
-    street = models.CharField(max_length=255, null=True)
-    town = models.CharField(max_length=255, null=True)
-    city = models.CharField(max_length=255, null=True)
-    province = models.CharField(max_length=255, null=True)
-    state = models.CharField(max_length=255, null=True)
+    location = models.CharField(max_length=255, null=True, blank=True)
+    street = models.CharField(max_length=255, null=True, blank=True)
+    town = models.CharField(max_length=255, null=True, blank=True)
+    city = models.CharField(max_length=255, null=True, blank=True)
+    province = models.CharField(max_length=255, null=True, blank=True)
+    state = models.CharField(max_length=255, null=True, blank=True)
     country = models.CharField(max_length=255, null=True, db_index=True)
     longitude = models.DecimalField(max_digits=20, decimal_places=10, null=True)
     latitude = models.DecimalField(max_digits=20, decimal_places=10, null=True)
