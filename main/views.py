@@ -8,7 +8,7 @@ class MerchantListView(APIView):
     def get(self, request):
         filter_by_id = request.query_params.get("filter_by_id")
         category_id = request.query_params.get("category_id")
-        merchants = Merchant.objects.filter(test_shop=False)
+        merchants = Merchant.objects.with_effective_date().filter(test_shop=False)
         if filter_by_id:
             merchant_ids = [int(id) for id in filter_by_id.split(",") if id.isdigit()]
             merchants = merchants.filter(id__in=merchant_ids)

@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models import F
+from django.db.models.functions import Coalesce
 
 class Category(models.Model):
     name = models.CharField(max_length=255, unique=True, db_index=True)
@@ -10,6 +12,12 @@ class Category(models.Model):
     class Meta:
         verbose_name_plural = "Categories"
         ordering = ['name']
+
+class MerchantQuerySet(models.QuerySet):
+    def with_effective_date(self):
+        return self.annotate(
+            effective_date=Coalesce('last_transaction_date', 'last_update')
+        ).order_by('-effective_date')
 
 class Merchant(models.Model):
     name = models.CharField(max_length=255, db_index=True)
@@ -40,8 +48,10 @@ class Merchant(models.Model):
     logo_size = models.CharField(max_length=10, null=True)
     logo_url = models.URLField(null=True)
 
+    objects = MerchantQuerySet.as_manager()
+
     def __str__(self):
         return self.name
 
     class Meta:
-        ordering = ['-last_update', '-last_transaction_date']
+        ordering = ['-last_transaction_date', '-last_update']
