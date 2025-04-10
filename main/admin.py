@@ -10,28 +10,27 @@ class CategoryAdmin(admin.ModelAdmin):
 class MerchantAdmin(admin.ModelAdmin):
     list_display = [
         'name',
-        'category',
         'city',
         'country',
+        'get_categories',
         'test_shop',
         'last_transaction_date'
     ]
     list_filter = [
         'test_shop',
-        'category',
         'country',
-        'city'
+        'city',
+        'categories'
     ]
     search_fields = [
         'name',
-        'category__name',
         'city',
         'country',
         'description'
     ]
     fieldsets = (
         ('Basic Information', {
-            'fields': ('name', 'category', 'description', 'website_url', 'gmap_business_link', 'test_shop')
+            'fields': ('name', 'categories', 'description', 'website_url', 'gmap_business_link', 'test_shop')
         }),
         ('Location', {
             'fields': (
@@ -46,3 +45,7 @@ class MerchantAdmin(admin.ModelAdmin):
             'fields': ('last_transaction_date', 'last_update')
         }),
     )
+
+    def get_categories(self, obj):
+        return ", ".join([category.name for category in obj.categories.all()])
+    get_categories.short_description = 'Categories'

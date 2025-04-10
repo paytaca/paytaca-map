@@ -4,14 +4,17 @@ from .models import Merchant, Category
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'name', 'description']
+        fields = ['id', 'name']
 
 class MerchantsSerializer(serializers.ModelSerializer):
-    category = CategorySerializer(read_only=True)
-    
+    categories = serializers.SerializerMethodField()
+
     class Meta:
         model = Merchant
         exclude = [
             'test_shop',
-            'watchtower_merchant_id'
+            'watchtower_merchant_id',
         ]
+
+    def get_categories(self, obj):
+        return CategorySerializer(obj.categories.all(), many=True).data

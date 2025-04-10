@@ -34,7 +34,7 @@ class Merchant(models.Model):
     latitude = models.DecimalField(max_digits=20, decimal_places=10, null=True)
 
     # Category field
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
+    categories = models.ManyToManyField(Category, blank=True)
 
     # Logo fields
     logo_size = models.CharField(max_length=10, null=True)
@@ -44,5 +44,4 @@ class Merchant(models.Model):
         return self.name
 
     class Meta:
-        ordering = ['-last_transaction_date']
-
+        ordering = ['-last_update', '-last_transaction_date']

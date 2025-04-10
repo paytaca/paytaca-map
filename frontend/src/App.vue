@@ -9,7 +9,6 @@
         placeholder="Search merchants..."
         class="w-full px-4 py-2 mb-4 rounded-lg bg-gray-light text-gray-dark focus:outline-none"
       />
-
       <!-- Flex container for dropdowns -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-justify sm:text-sm">
         <!-- Dropdown for sorting by country -->
@@ -27,7 +26,7 @@
         <!-- Dropdown for sorting by category -->
         <select v-model="sortByCategory" class="w-full px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
           <option value="default">Category: All</option>
-          <option v-for="category in uniqueCategories" :key="category" :value="category">{{ category }}</option>
+          <option v-for="category in categoriesList" :key="category" :value="category.id">{{ category.name }}</option>
         </select>
 
         <!-- Dropdown for sorting by last transaction date -->
@@ -67,7 +66,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
-              {{ merchant.category?.name === 'Hotels / Resorts by Hiverooms' ? 'Book Now' : 'Visit Website' }}
+              {{ merchant.categories?.some(cat => cat.name === 'Hotels / Resorts by Hiverooms') ? 'Book Now' : 'Visit Website' }}
             </a>
           </p>
         </div>
@@ -219,7 +218,7 @@ export default {
       sortByLastTransaction: 'default', // Default value for sorting by last transaction dropdown
       currentPage: 1,
       pageSize: 15,
-      categoriesMap: new Map(), // Map to store categories for each merchant
+      categoriesList: [], // List to store categories
       reachedEnd: false, // Flag to indicate whether the end of scroll is reached
       currentView: 'list',
       merchantsFilter: null
@@ -230,6 +229,7 @@ export default {
     this.fetchCategories(); // Fetch categories on component mount
     this.uniqueCities = self.allCities;
     this.$refs.logosContainer.addEventListener('scroll', this.handleScroll);
+    console.log("Scroll event listener added.");
   },
   created () {
     let urlParams = new URLSearchParams(window.location.search)
@@ -240,9 +240,8 @@ export default {
       const mapElement = document.getElementById('map');
       mapElement.style.display = 'none';
     }
-    console.log("Scroll event listener added.");
   },
-  beforeDestroy() {
+  beforeUnmount() {
     this.$refs.logosContainer.removeEventListener('scroll', this.handleScroll);
     console.log("Scroll event listener removed.");
   },
@@ -262,15 +261,11 @@ export default {
         // Check if the merchant matches the selected city
         const matchesCity = this.sortByCity === 'default' || merchant.city === this.sortByCity;
 
-        // Check if the merchant matches the selected category
-        const matchesCategory = this.sortByCategory === 'default' ||
-          (this.categoriesMap.has(merchant.id) && this.categoriesMap.get(merchant.id).includes(this.sortByCategory));
-
         // Check if the merchant matches the selected last transaction filter
         const matchesLastTransaction = this.filterByLastTransaction(merchant.last_transaction_date);
 
         // Return true only if all filters match
-        return matchesSearchQuery && matchesCountry && matchesCity && matchesCategory && matchesLastTransaction;
+        return matchesSearchQuery && matchesCountry && matchesCity && matchesLastTransaction;
       });
     },
 
@@ -283,17 +278,6 @@ export default {
         }
       });
       return Array.from(countries).sort(); // Sort the country names alphabetically
-    },
-    // List of unique categories for category dropdown options
-    uniqueCategories() {
-      const categories = new Set();
-      this.merchants.forEach(merchant => {
-        const merchantCategories = this.categoriesMap.get(merchant.id);
-        if (merchantCategories) {
-          merchantCategories.forEach(category => categories.add(category));
-        }
-      });
-      return Array.from(categories).sort(); // Sort the category names alphabetically
     },
     // Paginated merchants based on filtered results
     paginatedMerchants() {
@@ -314,9 +298,21 @@ export default {
   methods: {
     fetchMerchants() {
       let url = DOMAIN + '/api/merchants/'
+      const params = new URLSearchParams()
+      
       if (this.merchantsFilter) {
-        url += '?filter_by_id=' + this.merchantsFilter
+        params.append('filter_by_id', this.merchantsFilter)
       }
+      
+      if (this.sortByCategory !== 'default') {
+        params.append('category_id', this.sortByCategory)
+      }
+      
+      const queryString = params.toString()
+      if (queryString) {
+        url += '?' + queryString
+      }
+      
       axios.get(url)
         .then(response => {
           const merchants = response.data;
@@ -378,12 +374,10 @@ export default {
       axios.get(DOMAIN + '/api/categories/')
         .then(response => {
           const categories = response.data;
-          categories.forEach(category => {
-            if (!this.categoriesMap.has(category.merchant)) {
-              this.categoriesMap.set(category.merchant, []);
-            }
-            this.categoriesMap.get(category.merchant).push(category.category);
-          });
+          this.categoriesList = categories.map(category => ({
+            id: category.id,
+            name: category.name
+          }));
         })
         .catch(error => {
           console.error('Error fetching categories:', error);
@@ -462,7 +456,7 @@ export default {
 
       // Include website link if available
       if (merchant.website_url) {
-        const buttonText = merchant.category?.name === 'Hotels / Resorts by Hiverooms' ? 'Book Now' : 'Visit Website';
+        const buttonText = merchant.categories?.some(cat => cat.name === 'Hotels / Resorts by Hiverooms') ? 'Book Now' : 'Visit Website';
         popupContent += `<div class="mt-3"><a href="${merchant.website_url}" target="_blank" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 border border-blue-700 shadow-sm">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -645,6 +639,7 @@ export default {
         this.sortByCountry = 'default';
         this.sortByCity = 'default';
         this.sortByLastTransaction = 'default';
+        this.fetchMerchants();
       }
     },
     sortByLastTransaction(newValue, oldValue) {
