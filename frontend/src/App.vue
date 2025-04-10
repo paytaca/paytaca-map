@@ -11,27 +11,27 @@
       />
 
       <!-- Flex container for dropdowns -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-justify sm:text-sm">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-justify sm:text-sm">
         <!-- Dropdown for sorting by country -->
-        <select v-model="sortByCountry" class="px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
+        <select v-model="sortByCountry" class="w-full px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
           <option value="default">Country: All</option>
           <option v-for="country in uniqueCountries" :key="country" :value="country">{{ country }}</option>
         </select>
 
         <!-- Dropdown for sorting by city -->
-        <select v-model="sortByCity" class="px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
+        <select v-model="sortByCity" class="w-full px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
           <option value="default">City: All</option>
           <option v-for="city in (uniqueCities || allCities)" :key="city" :value="city">{{ city }}</option>
         </select>
 
-        <!-- Dropdown for sorting by category
-        <select v-model="sortByCategory" class="px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
+        <!-- Dropdown for sorting by category -->
+        <select v-model="sortByCategory" class="w-full px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
           <option value="default">Category: All</option>
           <option v-for="category in uniqueCategories" :key="category" :value="category">{{ category }}</option>
-        </select> -->
+        </select>
 
         <!-- Dropdown for sorting by last transaction date -->
-        <select v-model="sortByLastTransaction" class="px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
+        <select v-model="sortByLastTransaction" class="w-full px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
           <option value="default">Last Transaction: All</option>
           <option value="24hours">Within last 24 hours</option>
           <option value="1week">Within last 1 week</option>
@@ -59,9 +59,17 @@
               <template v-else>
                 <p class="text-gray-800">{{ merchant.city }}, {{ merchant.country }}</p>
               </template>
-              <p class="text-gray-800">Last transaction: {{ formatDate(merchant.last_transaction_date) }}</p>
+              <p class="text-gray-800" v-if="merchant.last_transaction_date">Last transaction: {{ formatDate(merchant.last_transaction_date) }}</p>
             </div>
           </div>
+          <p class="mt-1 text-gray-800" v-if="merchant.website_url">
+            <a :href="merchant.website_url" target="_blank" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 border border-blue-700 shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              {{ merchant.category?.name === 'Hotels / Resorts by Hiverooms' ? 'Book Now' : 'Visit Website' }}
+            </a>
+          </p>
         </div>
       </div>
 
@@ -412,18 +420,20 @@ export default {
       const minutes = Math.floor(timeDifference / (1000 * 60));
 
       // Choose the appropriate time unit based on the duration
-      if (years > 0) {
-        timeText = years === 1 ? '1 year ago' : `${years} years ago`;
-      } else if (months > 0) {
-        timeText = months === 1 ? '1 month ago' : `${months} months ago`;
-      } else if (weeks > 0) {
-        timeText = weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
-      } else if (days > 0) {
-        timeText = days === 1 ? '1 day ago' : `${days} days ago`;
-      } else if (hours > 0) {
-        timeText = hours === 1 ? '1 hour ago' : `${hours} hours ago`;
-      } else {
-        timeText = minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`;
+      if (merchant.last_transaction_date) {
+        if (years > 0) {
+          timeText = years === 1 ? '1 year ago' : `${years} years ago`;
+        } else if (months > 0) {
+          timeText = months === 1 ? '1 month ago' : `${months} months ago`;
+        } else if (weeks > 0) {
+          timeText = weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
+        } else if (days > 0) {
+          timeText = days === 1 ? '1 day ago' : `${days} days ago`;
+        } else if (hours > 0) {
+          timeText = hours === 1 ? '1 hour ago' : `${hours} hours ago`;
+        } else {
+          timeText = minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`;
+        }
       }
 
       let popupContent = `<div class="rounded-lg"><div class="flex items-center justify-between"><h3 class='font-semibold'>${merchant.name}</h3>`;
@@ -441,7 +451,7 @@ export default {
       } else if (merchant.town) {
         popupContent += `<p>${merchant.town}, ${merchant.province}, ${merchant.country}</p>`;
       }
-      
+       
       // Include last transaction time if available
       if (timeText) {
         popupContent += `<p>Last transaction: ${timeText}</p>`;
@@ -449,6 +459,17 @@ export default {
       
       // Include link to Google Map
       popupContent += `<a href="${this.getGoogleMapLink(merchant)}" target="_blank">View in Google Map</a>`;
+
+      // Include website link if available
+      if (merchant.website_url) {
+        const buttonText = merchant.category?.name === 'Hotels / Resorts by Hiverooms' ? 'Book Now' : 'Visit Website';
+        popupContent += `<div class="mt-3"><a href="${merchant.website_url}" target="_blank" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 border border-blue-700 shadow-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+          ${buttonText}
+        </a></div>`;
+      }
 
       popupContent += `</div></div></div>`;
       
