@@ -1,9 +1,17 @@
 from django.db import models
 from django.db.models import F
 from django.db.models.functions import Coalesce
+from django.core.validators import RegexValidator
 
 class Category(models.Model):
     name = models.CharField(max_length=255, unique=True, db_index=True)
+    short_name = models.CharField(max_length=50, unique=True, db_index=True, null=True, blank=True, validators=[
+        RegexValidator(
+            regex='^[a-zA-Z0-9]+$',
+            message='Short name must contain only alphanumeric characters with no spaces',
+            code='invalid_short_name'
+        )
+    ])
     description = models.TextField(blank=True, null=True)
 
     def __str__(self):
@@ -14,6 +22,7 @@ class Category(models.Model):
         ordering = ['name']
 
 class MerchantQuerySet(models.QuerySet):
+    
     def with_effective_date(self):
         return self.annotate(
             effective_date=Coalesce('last_transaction_date', 'last_update')

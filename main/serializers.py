@@ -4,7 +4,7 @@ from .models import Merchant, Category
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'short_name']
 
 class MerchantsSerializer(serializers.ModelSerializer):
     categories = serializers.SerializerMethodField()

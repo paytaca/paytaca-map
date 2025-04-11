@@ -66,7 +66,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
-              {{ merchant.categories?.some(cat => cat.name === 'Hotels / Resorts by Hiverooms') ? 'Book Now' : 'Visit Website' }}
+              {{ merchant.categories?.some(cat => cat.short_name === 'hiverooms') ? 'Book Now' : 'Visit Website' }}
             </a>
           </p>
         </div>
@@ -224,22 +224,32 @@ export default {
       merchantsFilter: null
     };
   },
-  mounted() {
-    this.fetchMerchants();
-    this.fetchCategories(); // Fetch categories on component mount
+  async mounted() {
+    await this.fetchCategories(); // Fetch categories on component mount
     this.uniqueCities = self.allCities;
     this.$refs.logosContainer.addEventListener('scroll', this.handleScroll);
     console.log("Scroll event listener added.");
-  },
-  created () {
+    
+    if (this.isMobile) {
+      const mapElement = document.getElementById('map');
+      if (mapElement) {
+        mapElement.style.display = 'none';
+      }
+    }
+
     let urlParams = new URLSearchParams(window.location.search)
     if (urlParams.has('merchants')) {
       this.merchantsFilter = urlParams.get('merchants')
     }
-    if (this.isMobile) {
-      const mapElement = document.getElementById('map');
-      mapElement.style.display = 'none';
+    if (urlParams.has('category')) {
+      const categoryShortName = urlParams.get('category')
+      // Find the category in categoriesList by short_name
+      const category = this.categoriesList.find(cat => cat.short_name === categoryShortName)
+      if (category) {
+        this.sortByCategory = category.id
+      }
     }
+    await this.fetchMerchants();
   },
   beforeUnmount() {
     this.$refs.logosContainer.removeEventListener('scroll', this.handleScroll);
@@ -371,16 +381,19 @@ export default {
         });
     },
     fetchCategories() {
-      axios.get(DOMAIN + '/api/categories/')
+      return axios.get(DOMAIN + '/api/categories/')
         .then(response => {
           const categories = response.data;
           this.categoriesList = categories.map(category => ({
             id: category.id,
-            name: category.name
+            name: category.name,
+            short_name: category.short_name
           }));
+          return this.categoriesList; // Return the categories for await
         })
         .catch(error => {
           console.error('Error fetching categories:', error);
+          return []; // Return empty array on error
         });
     },
     getGoogleMapLink(merchant) {
@@ -456,7 +469,7 @@ export default {
 
       // Include website link if available
       if (merchant.website_url) {
-        const buttonText = merchant.categories?.some(cat => cat.name === 'Hotels / Resorts by Hiverooms') ? 'Book Now' : 'Visit Website';
+        const buttonText = merchant.categories?.some(cat => cat.short_name === 'hiverooms') ? 'Book Now' : 'Visit Website';
         popupContent += `<div class="mt-3"><a href="${merchant.website_url}" target="_blank" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 border border-blue-700 shadow-sm">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -605,7 +618,7 @@ export default {
         this.sortByLastTransaction = 'default';
       }
     },
-    sortByCountry(newValue, oldValue) {
+    sortByCountry(newValue) {
       this.sortByCity = 'default'
       if (newValue !== 'default') {
         this.uniqueCities = this.citiesByCountry[newValue]
@@ -623,7 +636,7 @@ export default {
         this.$refs.mapView.centerOnTarget(this.mapCenter, this.zoomLevel);
       }
     },
-    sortByCity(newValue, oldValue) {
+    sortByCity(newValue) {
       if (newValue !== 'default') {
         this.sortByCategory = 'default';
         this.sortByLastTransaction = 'default';
@@ -634,15 +647,15 @@ export default {
         }
       }
     },
-    sortByCategory(newValue, oldValue) {
+    sortByCategory(newValue) {
       if (newValue !== 'default') {
         this.sortByCountry = 'default';
         this.sortByCity = 'default';
         this.sortByLastTransaction = 'default';
-        this.fetchMerchants();
       }
+      this.fetchMerchants();
     },
-    sortByLastTransaction(newValue, oldValue) {
+    sortByLastTransaction(newValue) {
       if (newValue !== 'default') {
         this.sortByCountry = 'default';
         this.sortByCity = 'default';

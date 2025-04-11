@@ -8,12 +8,15 @@ class MerchantListView(APIView):
     def get(self, request):
         filter_by_id = request.query_params.get("filter_by_id")
         category_id = request.query_params.get("category_id")
+        category_short_name = request.query_params.get("category")
         merchants = Merchant.objects.with_effective_date().filter(test_shop=False)
         if filter_by_id:
             merchant_ids = [int(id) for id in filter_by_id.split(",") if id.isdigit()]
             merchants = merchants.filter(id__in=merchant_ids)
         if category_id:
             merchants = merchants.filter(categories__id=category_id)
+        if category_short_name:
+            merchants = merchants.filter(categories__short_name=category_short_name)
         serializer = MerchantsSerializer(merchants, many=True)
         return Response(serializer.data)
 
@@ -44,7 +47,7 @@ class CategoryListAPIView(APIView):
         return Response([{
             'id': category.id,
             'name': category.name,
-            'description': category.description
+            'short_name': category.short_name
         } for category in categories])
 
 
