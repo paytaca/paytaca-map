@@ -12,25 +12,25 @@
       <!-- Flex container for dropdowns -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-justify sm:text-sm">
         <!-- Dropdown for sorting by country -->
-        <select v-model="sortByCountry" class="w-full px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
+        <select v-model="filterByCountry" class="w-full px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
           <option value="default">Country: All</option>
           <option v-for="country in uniqueCountries" :key="country" :value="country">{{ country }}</option>
         </select>
 
         <!-- Dropdown for sorting by city -->
-        <select v-model="sortByCity" class="w-full px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
+        <select v-model="filterByCity" class="w-full px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
           <option value="default">City: All</option>
           <option v-for="city in (uniqueCities || allCities)" :key="city" :value="city">{{ city }}</option>
         </select>
 
         <!-- Dropdown for sorting by category -->
-        <select v-model="sortByCategory" class="w-full px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
+        <select v-model="filterByCategory" class="w-full px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
           <option value="default">Category: All</option>
           <option v-for="category in categoriesList" :key="category" :value="category.id">{{ category.name }}</option>
         </select>
 
         <!-- Dropdown for sorting by last transaction date -->
-        <select v-model="sortByLastTransaction" class="w-full px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
+        <select v-model="filterByLastTransaction" class="w-full px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
           <option value="default">Last Transaction: All</option>
           <option value="24hours">Within last 24 hours</option>
           <option value="1week">Within last 1 week</option>
@@ -212,10 +212,10 @@ export default {
       zoomLevel: 5,
       uniqueCities: [],
       searchQuery: '',
-      sortByCountry: 'default', // Default value for sorting by country dropdown
-      sortByCity: 'default', // Default value for sorting by city dropdown
-      sortByCategory: 'default', // Default value for sorting by category dropdown
-      sortByLastTransaction: 'default', // Default value for sorting by last transaction dropdown
+      filterByCountry: 'default', // Default value for filtering by country dropdown
+      filterByCity: 'default', // Default value for filtering by city dropdown
+      filterByCategory: 'default', // Default value for filtering by category dropdown
+      filterByLastTransaction: 'default', // Default value for filtering by last transaction dropdown
       currentPage: 1,
       pageSize: 15,
       categoriesList: [], // List to store categories
@@ -246,7 +246,7 @@ export default {
       // Find the category in categoriesList by short_name
       const category = this.categoriesList.find(cat => cat.short_name === categoryShortName)
       if (category) {
-        this.sortByCategory = category.id
+        this.filterByCategory = category.id
       }
     }
     await this.fetchMerchants();
@@ -266,13 +266,13 @@ export default {
         const matchesSearchQuery = !this.searchQuery || merchant.name.toLowerCase().includes(this.searchQuery.toLowerCase());
 
         // Check if the merchant matches the selected country
-        const matchesCountry = this.sortByCountry === 'default' || merchant.country === this.sortByCountry;
+        const matchesCountry = this.filterByCountry === 'default' || merchant.country === this.filterByCountry;
 
         // Check if the merchant matches the selected city
-        const matchesCity = this.sortByCity === 'default' || merchant.city === this.sortByCity;
+        const matchesCity = this.filterByCity === 'default' || merchant.city === this.filterByCity;
 
         // Check if the merchant matches the selected last transaction filter
-        const matchesLastTransaction = this.filterByLastTransaction(merchant.last_transaction_date);
+        const matchesLastTransaction = this.checkLastTransaction(merchant.last_transaction_date);
 
         // Return true only if all filters match
         return matchesSearchQuery && matchesCountry && matchesCity && matchesLastTransaction;
@@ -314,8 +314,8 @@ export default {
         params.append('filter_by_id', this.merchantsFilter)
       }
       
-      if (this.sortByCategory !== 'default') {
-        params.append('category_id', this.sortByCategory)
+      if (this.filterByCategory !== 'default') {
+        params.append('category_id', this.filterByCategory)
       }
       
       const queryString = params.toString()
@@ -551,8 +551,8 @@ export default {
         this.$refs.mapView.centerOnTarget(this.mapCenter, this.zoomLevel);
       }
     },
-    filterByLastTransaction(transactionDate) {
-      if (this.sortByLastTransaction === 'default') {
+    checkLastTransaction(transactionDate) {
+      if (this.filterByLastTransaction === 'default') {
         return true; // Return true for all merchants if no filter applied
       }
 
@@ -560,7 +560,7 @@ export default {
       const currentDate = new Date();
       const timeDifference = currentDate - date;
 
-      switch (this.sortByLastTransaction) {
+      switch (this.filterByLastTransaction) {
         case '24hours':
           return timeDifference < 24 * 60 * 60 * 1000; // Last 24 hours
         case '1week':
@@ -612,18 +612,15 @@ export default {
         this.reachedEnd = false; // Reset the flag when search query changes
 
         // Reset all dropdowns when search query changes
-        this.sortByCountry = 'default';
-        this.sortByCity = 'default';
-        this.sortByCategory = 'default';
-        this.sortByLastTransaction = 'default';
+        this.filterByCountry = 'default';
+        this.filterByCity = 'default';
+        this.filterByCategory = 'default';
+        this.filterByLastTransaction = 'default';
       }
     },
-    sortByCountry(newValue) {
-      this.sortByCity = 'default'
+    filterByCountry(newValue) {
       if (newValue !== 'default') {
         this.uniqueCities = this.citiesByCountry[newValue]
-        this.sortByCategory = 'default';
-        this.sortByLastTransaction = 'default';
         this.mapCenter = this.centers.countries[newValue].coords;
         this.zoomLevel = this.centers.countries[newValue].zoom;
       } else {
@@ -636,10 +633,8 @@ export default {
         this.$refs.mapView.centerOnTarget(this.mapCenter, this.zoomLevel);
       }
     },
-    sortByCity(newValue) {
+    filterByCity(newValue) {
       if (newValue !== 'default') {
-        this.sortByCategory = 'default';
-        this.sortByLastTransaction = 'default';
         this.mapCenter = this.centers.cities[newValue].coords;
         this.zoomLevel = this.centers.cities[newValue].zoom;
         if (!this.isMobile && this.mapCenter.length > 0) {
@@ -647,19 +642,15 @@ export default {
         }
       }
     },
-    sortByCategory(newValue) {
+    filterByCategory(newValue) {
       if (newValue !== 'default') {
-        this.sortByCountry = 'default';
-        this.sortByCity = 'default';
-        this.sortByLastTransaction = 'default';
+        this.fetchMerchants();
       }
-      this.fetchMerchants();
     },
-    sortByLastTransaction(newValue) {
+    filterByLastTransaction(newValue) {
       if (newValue !== 'default') {
-        this.sortByCountry = 'default';
-        this.sortByCity = 'default';
-        this.sortByCategory = 'default';
+        // Keep other filters active, just update the last transaction filter
+        this.fetchMerchants();
       }
     },
   },
