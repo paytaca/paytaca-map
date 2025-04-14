@@ -62,10 +62,12 @@ def _save_merchant(merchant_data):
         latitude=float(location_data['latitude']),
         # Logo fields
         logo_size='120x120' if logo_120x120 else None,
-        logo_url=logo_120x120,
-        # Category field
-        category=category
+        logo_url=logo_120x120
     )
+
+    # Add category after creating the merchant
+    if category:
+        merchant.categories.add(category)
 
     logger.info(f'Saved: {merchant.name}')
 
@@ -96,7 +98,10 @@ def _update_merchant(merchant_data):
     
     # Update category
     if 'category' in merchant_data:
-        merchant.category = _get_or_create_category(merchant_data['category'])
+        category = _get_or_create_category(merchant_data['category'])
+        if category:
+            merchant.categories.clear()  # Clear existing categories
+            merchant.categories.add(category)
 
     # Update merchant details
     last_transaction_date_str = merchant_data['last_transaction_date']
