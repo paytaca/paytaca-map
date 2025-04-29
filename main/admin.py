@@ -14,10 +14,12 @@ class MerchantAdmin(admin.ModelAdmin):
         'country',
         'get_categories',
         'test_shop',
+        'verified',
         'last_transaction_date'
     ]
     list_filter = [
         'test_shop',
+        'verified',
         'country',
         'city',
         'categories'
@@ -30,7 +32,7 @@ class MerchantAdmin(admin.ModelAdmin):
     ]
     fieldsets = (
         ('Basic Information', {
-            'fields': ('name', 'categories', 'description', 'website_url', 'gmap_business_link', 'test_shop')
+            'fields': ('name', 'categories', 'description', 'website_url', 'gmap_business_link', 'test_shop', 'verified')
         }),
         ('Location', {
             'fields': (

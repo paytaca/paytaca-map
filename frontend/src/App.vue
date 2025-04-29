@@ -41,17 +41,26 @@
       </div>
 
       <!-- Text view for displaying the number of search results -->
-      <p class="text-center text-gray-700 mt-3">{{ filteredMerchants.length }} merchants</p>
+      <div class="flex justify-between items-center mb-4 mt-4 px-3">
+        <p class="text-gray-700 text-lg">{{ filteredMerchants.length }} merchants</p>
+        <div class="flex items-center space-x-2">
+          <input type="checkbox" id="showUnverified" v-model="showUnverified" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+          <label for="showUnverified" class="text-gray-700 text-md">Show Unverified</label>
+        </div>
+      </div>
 
       <!-- Grid for logos with descriptions -->
       <div class="mt-2 grid grid-cols-1 md:grid-cols-2 w-85 md-270 lg-255 h-auto md-auto">
         <!-- Logos with descriptions -->
-        <div v-for="(merchant, index) in paginatedMerchants" :key="merchant.id" class="flex flex-col p-2 m-2 rounded-2xl bg-gray-light" @click="showPopup(merchant)">
+        <div v-for="(merchant, index) in paginatedMerchants" :key="merchant.id" 
+          class="flex flex-col p-2 m-2 rounded-2xl bg-gray-light"
+          :style="showUnverified ? (merchant.verified ? 'border-top: 4px solid #10B981' : 'border-top: 4px solid #EF4444') : ''"
+          @click="showPopup(merchant)">
           <!-- Check if merchant.logo is defined before accessing its url property -->
           <div class="h-full">
             <img v-if="merchant.logo" :src="merchant.logo" :alt="merchant.name + ' Logo'" class="m-auto sm:h-auto md:h-20 w-20 md-50 lg-75 object-fill cursor-pointer float-right" style="padding-left: 12px;">
             <div class="text-sm md:text-xs">
-              <h3 class="text-lg font-semibold italic">{{ merchant.name }}</h3>
+              <h3 class="text-lg font-semibold italic line-clamp-2">{{ merchant.name }}</h3>
               <template v-if="merchant.town">
                 <p class="text-gray-800">{{ merchant.town }}, {{ merchant.province }}, {{ merchant.country }}</p>
               </template>
@@ -62,8 +71,8 @@
             </div>
           </div>
           <p class="mt-1 text-gray-800" v-if="merchant.website_url">
-            <a :href="merchant.website_url" target="_blank" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 border border-blue-700 shadow-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <a :href="merchant.website_url" target="_blank" class="inline-flex items-center px-2 py-1 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 border border-blue-700 shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
               {{ merchant.categories?.some(cat => cat.short_name === 'hiverooms') ? 'Book Now' : 'Visit Website' }}
@@ -221,7 +230,8 @@ export default {
       categoriesList: [], // List to store categories
       reachedEnd: false, // Flag to indicate whether the end of scroll is reached
       currentView: 'list',
-      merchantsFilter: null
+      merchantsFilter: null,
+      showUnverified: false
     };
   },
   async mounted() {
@@ -274,8 +284,11 @@ export default {
         // Check if the merchant matches the selected last transaction filter
         const matchesLastTransaction = this.checkLastTransaction(merchant.last_transaction_date);
 
+        // Check verification status
+        const matchesVerification = this.showUnverified || merchant.verified;
+
         // Return true only if all filters match
-        return matchesSearchQuery && matchesCountry && matchesCity && matchesLastTransaction;
+        return matchesSearchQuery && matchesCountry && matchesCity && matchesLastTransaction && matchesVerification;
       });
     },
 

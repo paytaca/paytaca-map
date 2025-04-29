@@ -37,6 +37,7 @@ class Merchant(models.Model):
     last_transaction_date = models.DateTimeField(blank=True, null=True)
     last_update = models.DateTimeField(null=True, blank=True)
     test_shop = models.BooleanField(default=False)
+    verified = models.BooleanField(default=False)
 
     # Location fields
     landmark = models.CharField(max_length=255, blank=True, null=True)

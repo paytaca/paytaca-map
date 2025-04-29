@@ -37,6 +37,7 @@ def _save_merchant(merchant_data):
         gmap_business_link=merchant_data['gmap_business_link'],
         last_transaction_date=last_transaction_date,
         last_update=timezone.now(),
+        verified=merchant_data.get('verified', False),
         # Location fields
         landmark=location_data['landmark'],
         street=location_data['street'],
@@ -95,7 +96,7 @@ def _update_merchant(merchant_data):
 
 
 def _fetch_merchants(check_last_update=True):
-    source_url = 'https://watchtower.cash/api/paytacapos/merchants/?active=true&verified=true&has_pagination=false'
+    source_url = 'https://watchtower.cash/api/paytacapos/merchants/?active=true&has_pagination=false'
     resp = requests.get(source_url)
     if resp.status_code == 200:
         merchants = resp.json()
