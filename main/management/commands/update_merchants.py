@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from main.models import Merchant, Category
+from main.models import Merchant
 import dateutil.parser as parser
 from django.utils import timezone
 import time, requests
@@ -19,16 +19,6 @@ def parse_last_transaction_date(datetime_string):
     return last_transaction_date
 
 
-def _get_or_create_category(category_name):
-    if not category_name:
-        return None
-    category, created = Category.objects.get_or_create(
-        name=category_name,
-        defaults={'description': f'Category for {category_name}'}
-    )
-    return category
-
-
 def _save_merchant(merchant_data):
     logger.info(merchant_data)
 
@@ -38,9 +28,6 @@ def _save_merchant(merchant_data):
     location_data = merchant_data['location']
     logos_data = merchant_data['logos']
     logo_120x120 = logos_data.get('120x120') if logos_data else None
-
-    # Get or create category
-    category = _get_or_create_category(merchant_data.get('category'))
 
     merchant = Merchant.objects.create(
         watchtower_merchant_id=merchant_data['id'],
@@ -64,10 +51,6 @@ def _save_merchant(merchant_data):
         logo_size='120x120' if logo_120x120 else None,
         logo_url=logo_120x120
     )
-
-    # Add category after creating the merchant
-    if category:
-        merchant.categories.add(category)
 
     logger.info(f'Saved: {merchant.name}')
 
@@ -95,13 +78,6 @@ def _update_merchant(merchant_data):
     if logo_120x120:
         merchant.logo_size = '120x120'
         merchant.logo_url = logo_120x120
-    
-    # Update category
-    if 'category' in merchant_data:
-        category = _get_or_create_category(merchant_data['category'])
-        if category:
-            merchant.categories.clear()  # Clear existing categories
-            merchant.categories.add(category)
 
     # Update merchant details
     last_transaction_date_str = merchant_data['last_transaction_date']
