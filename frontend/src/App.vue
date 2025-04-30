@@ -504,8 +504,12 @@ export default {
     },
     handleScroll() {
       const container = this.$refs.logosContainer;
-      // Check if the user has scrolled to the bottom of the container
-      if (container.scrollTop + container.clientHeight >= container.scrollHeight) {
+      // Add a small buffer (10px) to ensure we trigger before reaching absolute bottom
+      const scrollPosition = container.scrollTop + container.clientHeight;
+      const scrollHeight = container.scrollHeight - 10;
+      
+      // Check if we've scrolled to the bottom (with buffer)
+      if (scrollPosition >= scrollHeight) {
         // Load more merchants
         console.log("Reached bottom of container. Loading more merchants...");
         this.loadMoreMerchants();
@@ -526,19 +530,6 @@ export default {
       // Check if all merchants are loaded
       if (this.pageSize >= this.filteredMerchants.length) {
         this.reachedEnd = true; // Set the flag to indicate the end of scroll
-      }
-
-      // For smaller screens (SM), automatically load more merchants when reaching the bottom
-      if (window.innerWidth < 320) { // Adjust the breakpoint as needed
-        const container = this.$refs.logosContainer;
-        // Check if the user has scrolled to the bottom of the container
-        if (container.scrollTop + container.clientHeight >= container.scrollHeight) {
-          // Load more merchants
-          console.log("Reached bottom of container. Loading more merchants...");
-          // Update the loading flag to false before calling loadMoreMerchants() recursively
-          this.loading = false;
-          this.loadMoreMerchants();
-        }
       }
 
       // Reset loading flag to false after loading is complete
