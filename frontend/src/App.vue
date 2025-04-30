@@ -1,36 +1,36 @@
 <template>
-  <div class="grid h-full md:h-auto md:grid-cols-2 bg-bg-dark">
+  <div class="grid h-full md:h-auto md:grid-cols-2 bg-slate-700">
     <!-- Left Section: Logos with Descriptions -->
-    <div id="list" class="p-4 overflow-y-scroll h-screen sm:h-screen" ref="logosContainer">
+    <div id="list" class="p-6 overflow-y-scroll h-screen sm:h-screen" ref="logosContainer">
       <!-- Search Bar -->
       <input
         v-model="searchQuery"
         type="text"
         placeholder="Search merchants..."
-        class="w-full px-4 py-2 mb-4 rounded-lg bg-gray-light text-gray-dark focus:outline-none"
+        class="w-full px-4 py-3 mb-6 rounded-lg bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200"
       />
       <!-- Flex container for dropdowns -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-justify sm:text-sm">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-justify sm:text-sm mb-6">
         <!-- Dropdown for sorting by country -->
-        <select v-model="filterByCountry" class="w-full px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
+        <select v-model="filterByCountry" class="w-full px-4 py-2 rounded-lg bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200">
           <option value="default">Country: All</option>
           <option v-for="country in uniqueCountries" :key="country" :value="country">{{ country }}</option>
         </select>
 
         <!-- Dropdown for sorting by city -->
-        <select v-model="filterByCity" class="w-full px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
+        <select v-model="filterByCity" class="w-full px-4 py-2 rounded-lg bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200">
           <option value="default">City: All</option>
           <option v-for="city in (uniqueCities || allCities)" :key="city" :value="city">{{ city }}</option>
         </select>
 
         <!-- Dropdown for sorting by category -->
-        <select v-model="filterByCategory" class="w-full px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
+        <select v-model="filterByCategory" class="w-full px-4 py-2 rounded-lg bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200">
           <option value="default">Category: All</option>
           <option v-for="category in categoriesList" :key="category" :value="category.id">{{ category.name }}</option>
         </select>
 
         <!-- Dropdown for sorting by last transaction date -->
-        <select v-model="filterByLastTransaction" class="w-full px-4 py-2 rounded-lg bg-gray-light text-gray-dark focus:outline-none">
+        <select v-model="filterByLastTransaction" class="w-full px-4 py-2 rounded-lg bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200">
           <option value="default">Last Transaction: All</option>
           <option value="24hours">Within last 24 hours</option>
           <option value="1week">Within last 1 week</option>
@@ -41,11 +41,11 @@
       </div>
 
       <!-- Text view for displaying the number of search results -->
-      <div class="flex justify-between items-center mb-4 mt-4 px-3">
-        <p class="text-gray-700 text-lg">{{ filteredMerchants.length }} merchants</p>
+      <div class="flex justify-between items-center mb-6 px-3">
+        <p class="text-white text-lg font-medium">{{ filteredMerchants.length }} merchants</p>
         <div class="flex items-center space-x-2">
-          <input type="checkbox" id="showUnverified" v-model="showUnverified" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-          <label for="showUnverified" class="text-gray-700 text-md">Show Unverified</label>
+          <input type="checkbox" id="showUnverified" v-model="showUnverified" class="rounded border-gray-300 text-blue-500 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+          <label for="showUnverified" class="text-white text-md">Show Unverified</label>
         </div>
       </div>
 
@@ -53,25 +53,25 @@
       <div class="mt-2 grid grid-cols-1 md:grid-cols-2 w-85 md-270 lg-255 h-auto md-auto">
         <!-- Logos with descriptions -->
         <div v-for="(merchant, index) in paginatedMerchants" :key="merchant.id" 
-          class="flex flex-col p-2 m-2 rounded-2xl bg-gray-light"
+          class="flex flex-col p-4 m-2 rounded-lg bg-slate-300 hover:bg-gray-100 transition-all duration-300 transform hover:scale-[1.02] shadow-sm border border-gray-200"
           :style="showUnverified ? (merchant.verified ? 'border-top: 4px solid #10B981' : 'border-top: 4px solid #EF4444') : ''"
           @click="showPopup(merchant)">
           <!-- Check if merchant.logo is defined before accessing its url property -->
           <div class="h-full">
             <img v-if="merchant.logo" :src="merchant.logo" :alt="merchant.name + ' Logo'" class="m-auto sm:h-auto md:h-20 w-20 md-50 lg-75 object-fill cursor-pointer float-right" style="padding-left: 12px;">
             <div class="text-sm md:text-xs">
-              <h3 class="text-lg font-semibold italic line-clamp-2">{{ merchant.name }}</h3>
+              <h3 class="text-lg font-semibold text-gray-900">{{ merchant.name }}</h3>
               <template v-if="merchant.town">
-                <p class="text-gray-800">{{ merchant.town }}, {{ merchant.province }}, {{ merchant.country }}</p>
+                <p class="text-gray-600">{{ merchant.town }}, {{ merchant.province }}, {{ merchant.country }}</p>
               </template>
               <template v-else>
-                <p class="text-gray-800">{{ merchant.city }}, {{ merchant.country }}</p>
+                <p class="text-gray-600">{{ merchant.city }}, {{ merchant.country }}</p>
               </template>
-              <p class="text-gray-800" v-if="merchant.last_transaction_date">Last transaction: {{ formatDate(merchant.last_transaction_date) }}</p>
+              <p class="text-gray-600" v-if="merchant.last_transaction_date">Last transaction: {{ formatDate(merchant.last_transaction_date) }}</p>
             </div>
           </div>
-          <p class="mt-1 text-gray-800" v-if="merchant.website_url">
-            <a :href="merchant.website_url" target="_blank" class="inline-flex items-center px-2 py-1 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 border border-blue-700 shadow-sm">
+          <p class="mt-2 text-white" v-if="merchant.website_url">
+            <a :href="merchant.website_url" target="_blank" class="inline-flex items-center px-3 py-2 text-xs font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
@@ -82,7 +82,7 @@
       </div>
 
       <!-- "You reached the end" text -->
-      <div v-if="reachedEnd" class="flex items-center justify-center mt-4 text-gray-700">
+      <div v-if="reachedEnd" class="flex items-center justify-center mt-4 text-gray-500">
         <p>You reached the end</p>
       </div>
 
@@ -95,8 +95,11 @@
 
     <!-- Button to toggle map visibility -->
     <div class="fixed bottom-4 left-4 md:left-8 md:bottom-8 md:hidden" style="z-index: 9999;">
-      <button @click="toggleMapView" class="px-4 py-2 ml-2 bg-gray-light text-gray-dark rounded-md focus:outline-none focus:ring focus:ring-gray-300" style="border: 2px solid gray;">
-        {{ currentView === 'map' ? 'Show List' : 'Show Map' }}
+      <button @click="toggleMapView" class="px-6 py-3 ml-2 bg-blue-500 text-white rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-200 shadow-md font-semibold text-lg inline-flex items-center">
+        <svg v-if="currentView === 'map'" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        {{ currentView === 'map' ? 'Back to List' : 'Show Map' }}
       </button>
     </div>
 
@@ -483,8 +486,8 @@ export default {
       // Include website link if available
       if (merchant.website_url) {
         const buttonText = merchant.categories?.some(cat => cat.short_name === 'hiverooms') ? 'Book Now' : 'Visit Website';
-        popupContent += `<div class="mt-3"><a href="${merchant.website_url}" target="_blank" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 border border-blue-700 shadow-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        popupContent += `<div class="mt-3"><a href="${merchant.website_url}" target="_blank" class="inline-flex items-center px-3 py-2 text-xs font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200" style="color: white;">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
           </svg>
           ${buttonText}
@@ -731,9 +734,9 @@ button:hover {
   color: #000;
 }
 
-button:hover:not(:disabled) {
+/* button:hover:not(:disabled) {
   background-color: #e2e8f0;
-}
+} */
 
 /* Active button styles */
 button:active:not(:disabled) {
