@@ -55,8 +55,8 @@ class Merchant(models.Model):
     categories = models.ManyToManyField(Category, blank=True)
 
     # Logo fields
-    logo_size = models.CharField(max_length=10, null=True)
-    logo_url = models.URLField(null=True)
+    logo_size = models.CharField(blank=True, max_length=10, null=True)
+    logo_url = models.URLField(blank=True, null=True)
 
     objects = MerchantQuerySet.as_manager()
 
