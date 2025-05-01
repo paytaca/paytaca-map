@@ -506,7 +506,7 @@ export default {
       const container = this.$refs.logosContainer;
       // Add a small buffer (10px) to ensure we trigger before reaching absolute bottom
       const scrollPosition = container.scrollTop + container.clientHeight;
-      const scrollHeight = container.scrollHeight - 10;
+      const scrollHeight = container.scrollHeight - 100;
       
       // Check if we've scrolled to the bottom (with buffer)
       if (scrollPosition >= scrollHeight) {
