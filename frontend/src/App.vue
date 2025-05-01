@@ -81,6 +81,16 @@
         </div>
       </div>
 
+      <!-- Load More Button -->
+      <div v-if="!reachedEnd && filteredMerchants.length > pageSize" class="flex justify-center mt-6 mb-4">
+        <button 
+          @click="loadMoreMerchants" 
+          class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-200"
+        >
+          Load More Merchants
+        </button>
+      </div>
+
       <!-- "You reached the end" text -->
       <div v-if="reachedEnd" class="flex items-center justify-center mt-4 text-gray-500">
         <p>You reached the end</p>
