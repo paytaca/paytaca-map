@@ -50,7 +50,7 @@
       </div>
 
       <!-- Grid for logos with descriptions -->
-      <div class="mt-2 grid grid-cols-1 md:grid-cols-2 w-85 md-270 lg-255 h-auto md-auto">
+      <div v-if="!isLoading" class="mt-2 grid grid-cols-1 md:grid-cols-2 w-85 md-270 lg-255 h-auto md-auto">
         <!-- Logos with descriptions -->
         <div v-for="(merchant, index) in paginatedMerchants" :key="merchant.id" 
           class="flex flex-col p-4 m-2 rounded-lg bg-slate-300 hover:bg-gray-100 transition-all duration-300 transform hover:scale-[1.02] shadow-sm border border-gray-200"
@@ -81,8 +81,13 @@
         </div>
       </div>
 
+      <!-- Loading Spinner -->
+      <div v-if="isLoading" class="flex justify-center items-center h-64">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+
       <!-- Load More Button -->
-      <div v-if="!reachedEnd && filteredMerchants.length > pageSize" class="flex justify-center mt-6 mb-4">
+      <div v-if="!reachedEnd && filteredMerchants.length > pageSize && initialRenderComplete" class="flex justify-center mt-6 mb-4">
         <button 
           @click="loadMoreMerchants" 
           class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-200"
@@ -104,7 +109,7 @@
     </div>
 
     <!-- Button to toggle map visibility -->
-    <div class="fixed bottom-4 left-4 md:left-8 md:bottom-8 md:hidden" style="z-index: 9999;">
+    <div v-if="initialRenderComplete" class="fixed bottom-4 left-4 md:left-8 md:bottom-8 md:hidden" style="z-index: 9999;">
       <button @click="toggleMapView" class="px-6 py-3 ml-2 bg-blue-500 text-white rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-200 shadow-md font-semibold text-lg inline-flex items-center">
         <svg v-if="currentView === 'map'" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -244,7 +249,9 @@ export default {
       reachedEnd: false, // Flag to indicate whether the end of scroll is reached
       currentView: 'list',
       merchantsFilter: null,
-      showUnverified: false
+      showUnverified: false,
+      isLoading: true,
+      initialRenderComplete: false // Add new state variable
     };
   },
   async mounted() {
@@ -349,6 +356,7 @@ export default {
         url += '?' + queryString
       }
       
+      this.isLoading = true; // Set loading state to true before API call
       axios.get(url)
         .then(response => {
           const merchants = response.data;
@@ -356,6 +364,7 @@ export default {
         })
         .catch(error => {
           console.error('Error fetching merchants:', error);
+          this.isLoading = false; // Set loading state to false on error
         });
     },
     fetchLocations(merchants) {
@@ -384,6 +393,7 @@ export default {
         })
         .catch(error => {
           console.error('Error fetching locations:', error);
+          this.isLoading = false; // Set loading state to false on error
         });
     },
     fetchLogos() {
@@ -401,9 +411,18 @@ export default {
             const logos = logoMap.get(merchant.id);
             merchant.logo = logos ? logos[0] : null;
           });
+          this.isLoading = false;
+          // Use nextTick to ensure DOM is updated before showing the button
+          this.$nextTick(() => {
+            setTimeout(() => {
+              this.initialRenderComplete = true;
+            }, 100); // Small delay to ensure smooth transition
+          });
         })
         .catch(error => {
           console.error('Error fetching logos:', error);
+          this.isLoading = false;
+          this.initialRenderComplete = true; // Still show content even if there's an error
         });
     },
     fetchCategories() {
