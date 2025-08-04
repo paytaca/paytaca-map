@@ -110,24 +110,26 @@ export default {
 
         const marker = L.marker([latitude, longitude], { icon: customIcon })
           .bindPopup(`
-          <div class="sm:w-full rounded-lg">
+          <div class="rounded-lg">
               <div class="flex items-center justify-between">
-                  <h3 class="font-semibold">${merchant.name}</h3>
+                  <h3 class="text-lg font-semibold text-gray-900">${merchant.name}</h3>
                   <img src="${merchant.logo}" alt="${merchant.name} Logo" class="h-16 w-16 rounded-full">
               </div>
-              <p>${merchantLocation}</p>
-              ${merchant.last_transaction_date ? `<p>Last transaction: ${timeText}</p>` : ''}
-              <a href="${ this.getGoogleMapLink(merchant) }" target="_blank" class="text-blue-500 hover:underline">View in Google Map</a>
-              ${merchant.website_url ? `
-                <p class="mt-2">
-                  <a href="${merchant.website_url}" target="_blank" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 border border-blue-700 shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                    ${merchant.category?.name === 'Hotels / Resorts by Hiverooms' ? 'Book Now' : 'Visit Website'}
-                  </a>
-                </p>
-              ` : ''}
+              <div class="text-sm md:text-xs">
+                  <p class="text-gray-600">${merchantLocation}</p>
+                  ${merchant.last_transaction_date ? `<p class="text-gray-600">Last transaction: ${timeText}</p>` : ''}
+                  <a href="${ this.getGoogleMapLink(merchant) }" target="_blank" class="text-blue-500 hover:underline">View in Google Map</a>
+                  ${merchant.website_url ? `
+                    <p class="mt-2">
+                      <a href="${merchant.website_url}" target="_blank" class="inline-flex items-center px-3 py-2 text-xs font-medium text-white bg-red-500 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        ${merchant.category?.name === 'Hotels / Resorts by Hiverooms' ? 'Book Now' : 'Visit Website'}
+                      </a>
+                    </p>
+                  ` : ''}
+              </div>
           </div>
           `);
         this.markerClusterGroup.addLayer(marker);

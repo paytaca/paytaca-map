@@ -46,8 +46,8 @@ def _save_merchant(merchant_data):
         province=location_data['province'],
         state=location_data['state'],
         country=location_data['country'],
-        longitude=float(location_data['longitude']),
-        latitude=float(location_data['latitude']),
+        longitude=float(location_data['longitude']) if location_data['longitude'] is not None else None,
+        latitude=float(location_data['latitude']) if location_data['latitude'] is not None else None,
         # Logo fields
         logo_size='120x120' if logo_120x120 else None,
         logo_url=logo_120x120
@@ -70,8 +70,8 @@ def _update_merchant(merchant_data):
         merchant.province = location_data['province']
         merchant.state = location_data['state']
         merchant.country = location_data['country']
-        merchant.longitude = float(location_data['longitude'])
-        merchant.latitude = float(location_data['latitude'])
+        merchant.longitude = float(location_data['longitude']) if location_data['longitude'] is not None else None
+        merchant.latitude = float(location_data['latitude']) if location_data['latitude'] is not None else None
 
     # Update logo
     logos_data = merchant_data['logos']
