@@ -70,18 +70,18 @@
               <p class="text-gray-600" v-if="merchant.last_transaction_date">Last transaction: {{ formatDate(merchant.last_transaction_date) }}</p>
             </div>
           </div>
-          <p class="mt-2 text-white flex items-center space-x-3">
-            <a v-if="getGoogleMapLink(merchant)" :href="getGoogleMapLink(merchant)" target="_blank" class="inline-flex items-center text-green-400 hover:text-green-300 transition-colors duration-200" title="View in Google Maps">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-              </svg>
-            </a>
-            <a v-if="merchant.website_url" :href="merchant.website_url" target="_blank" class="inline-flex items-center text-blue-400 hover:text-blue-300 transition-colors duration-200" title="Visit Website">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-              </svg>
-            </a>
-          </p>
+                      <p class="mt-2 text-white flex items-center space-x-3">
+              <a v-if="getGoogleMapLink(merchant)" :href="getGoogleMapLink(merchant)" target="_blank" class="inline-flex items-center text-green-400 hover:text-green-300 transition-colors duration-200" title="View in Google Maps">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 drop-shadow-lg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+              </a>
+              <a v-if="merchant.website_url" :href="merchant.website_url" target="_blank" class="inline-flex items-center text-blue-400 hover:text-blue-300 transition-colors duration-200" title="Visit Website">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 drop-shadow-lg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                </svg>
+              </a>
+            </p>
         </div>
       </div>
 
