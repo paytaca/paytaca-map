@@ -231,11 +231,12 @@ export default {
       return Array.from(countries).sort(); // Sort the country names alphabetically
     },
     
-    // List of unique cities for city dropdown options (from all merchants)
+    // List of unique cities for city dropdown options (filtered by selected country)
     uniqueCities() {
       const cities = new Set();
       this.merchants.forEach(merchant => {
-        if (merchant.city) {
+        // Only include cities from the selected country, or all cities if no country is selected
+        if (merchant.city && (this.filterByCountry === 'default' || merchant.country === this.filterByCountry)) {
           cities.add(merchant.city);
         }
         // if (merchant.town) {
