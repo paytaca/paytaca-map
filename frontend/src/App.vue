@@ -231,16 +231,16 @@ export default {
       return Array.from(countries).sort(); // Sort the country names alphabetically
     },
     
-    // List of unique cities for city dropdown options (from filtered merchants)
+    // List of unique cities for city dropdown options (from all merchants)
     uniqueCities() {
       const cities = new Set();
-      this.filteredMerchants.forEach(merchant => {
+      this.merchants.forEach(merchant => {
         if (merchant.city) {
           cities.add(merchant.city);
         }
-        if (merchant.town) {
-          cities.add(merchant.town);
-        }
+        // if (merchant.town) {
+        //   cities.add(merchant.town);
+        // }
       });
       return Array.from(cities).sort(); // Sort the city names alphabetically
     },
