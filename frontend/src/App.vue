@@ -511,9 +511,11 @@ export default {
         mapElement.style.display = 'block';
       }
 
-      if (this.isMobile && this.mapCenter.length > 0) {
-        this.$refs.mapView.centerOnTarget(this.mapCenter, this.zoomLevel);
+      if (this.isMobile && this.currentView === 'map') {
+        // When switching to map view on mobile, fit the viewport properly
+        this.$refs.mapView.fitViewportWhenVisible();
       }
+      // Don't update map when switching to list view - let it stay where it is
     },
     checkLastTransaction(transactionDate) {
       if (this.filterByLastTransaction === 'default') {
@@ -591,13 +593,21 @@ export default {
         // Reset city filter when country changes
         this.filterByCity = 'default';
         
-        // Don't center the map here - let the MapView component auto-fit to markers
+        // Only update map if map view is currently active
+        if (this.currentView === 'map' && !this.isMobile) {
+          this.$refs.mapView.centerOnTarget(this.mapCenter, this.zoomLevel);
+        }
       } else {
         this.mapCenter = defaultCenter;
         this.zoomLevel = 3.5;
         
         // Reset city filter when country is reset to default
         this.filterByCity = 'default';
+        
+        // Only update map if map view is currently active
+        if (this.currentView === 'map' && !this.isMobile) {
+          this.$refs.mapView.centerOnTarget(this.mapCenter, this.zoomLevel);
+        }
       }
     },
     filterByCity(newValue) {
@@ -606,7 +616,10 @@ export default {
         this.mapCenter = defaultCenter;
         this.zoomLevel = 3.5;
         
-        // Don't center the map here - let the MapView component auto-fit to markers
+        // Only update map if map view is currently active
+        if (this.currentView === 'map' && !this.isMobile) {
+          this.$refs.mapView.centerOnTarget(this.mapCenter, this.zoomLevel);
+        }
       }
     },
     filterByCategory(newValue) {

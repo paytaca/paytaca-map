@@ -1,5 +1,5 @@
 <template>
-  <div class="map-container w-full h-full">
+  <div class="map-container w-full h-screen">
     <div ref="map" class="w-full h-full"></div>
   </div>
 </template>
@@ -25,6 +25,11 @@ export default {
       default: () => [],
     },
   },
+  data() {
+    return {
+      initialLoadComplete: false,
+    };
+  },
   mounted () {
     this.loadMap();
   },
@@ -38,7 +43,8 @@ export default {
   },
   methods: {
     loadMap() {
-      this.map = L.map(this.$refs.map).setView(defaultCenter, 3.5);
+      // Initialize map without setting a specific view initially
+      this.map = L.map(this.$refs.map);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(this.map);
@@ -55,6 +61,18 @@ export default {
       const vm = this
       setTimeout(() => {
         vm.map.invalidateSize();
+        
+        // Check if we should fit to markers or use default view
+        if (this.merchants && this.merchants.length > 0) {
+          // If merchants exist, fit to them directly
+          vm.fitMapToMarkers();
+        } else {
+          // Only use default center if no merchants are available
+          vm.map.setView(defaultCenter, 3.5, { animate: false });
+        }
+        
+        // Mark initial load as complete
+        vm.initialLoadComplete = true;
       }, 100);
     },
     updateMarkers(merchants) {
@@ -148,8 +166,8 @@ export default {
         this.markerClusterGroup.addLayer(marker);
       });
 
-      // Auto-fit map bounds to show all markers if there are any
-      if (merchants.length > 0) {
+      // Only auto-fit to markers if this is not the initial load
+      if (merchants.length > 0 && this.initialLoadComplete) {
         this.fitMapToMarkers();
       }
     },
@@ -171,6 +189,43 @@ export default {
         .setLatLng([latitude, longitude])
         .setContent(content);
       popup.openOn(this.map);
+    },
+    fitMapToViewport() {
+      // Get the map container dimensions
+      const container = this.$refs.map;
+      const containerHeight = container.clientHeight;
+      
+      // Use a more direct approach to fill the viewport
+      // Start with a reasonable zoom level and adjust based on container size
+      let zoomLevel = 4; // Start with zoom level 4
+      
+      // If container is tall, increase zoom to fill vertical space
+      if (containerHeight > 600) {
+        zoomLevel = 5;
+      }
+      if (containerHeight > 800) {
+        zoomLevel = 6;
+      }
+      if (containerHeight > 1000) {
+        zoomLevel = 7;
+      }
+      
+      // Center the map and set the calculated zoom
+      this.map.setView(defaultCenter, zoomLevel, { animate: false });
+    },
+    
+    // Public method to fit viewport when map becomes visible (e.g., on mobile)
+    fitViewportWhenVisible() {
+      // Wait a bit for the map to be fully visible and rendered
+      setTimeout(() => {
+        // If there are merchants, fit to them directly
+        if (this.merchants && this.merchants.length > 0) {
+          this.fitMapToMarkers();
+        } else {
+          // Only use default center if no merchants are available
+          this.map.setView(defaultCenter, 3.5, { animate: false });
+        }
+      }, 200);
     },
     fitMapToMarkers() {
       // Get all markers from the cluster group
@@ -196,6 +251,12 @@ export default {
 <style scoped>
 .map-container {
   width: 100%;
-  height: 100%;
+  height: 100vh;
+  min-height: 100vh;
+}
+
+.map-container .leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
 }
 </style>
