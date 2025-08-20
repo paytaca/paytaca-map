@@ -12,13 +12,23 @@
       <!-- Flex container for dropdowns -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-justify sm:text-sm mb-6">
         <!-- Dropdown for sorting by country -->
-        <select v-model="filterByCountry" class="w-full px-4 py-2 rounded-lg bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200">
+        <select 
+          v-model="filterByCountry" 
+          :disabled="showNearbyOnly"
+          class="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border transition-all duration-200"
+          :class="showNearbyOnly ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-gray-50 text-gray-900 border-gray-200 hover:border-gray-300'"
+        >
           <option value="default">Country: All</option>
           <option v-for="country in uniqueCountries" :key="country" :value="country">{{ country }}</option>
         </select>
 
         <!-- Dropdown for sorting by city -->
-        <select v-model="filterByCity" class="w-full px-4 py-2 rounded-lg bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200">
+        <select 
+          v-model="filterByCity" 
+          :disabled="showNearbyOnly"
+          class="w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 border transition-all duration-200"
+          :class="showNearbyOnly ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-gray-50 text-gray-900 border-gray-200 hover:border-gray-300'"
+        >
           <option value="default">City: All</option>
           <option v-for="city in uniqueCities" :key="city" :value="city">{{ city }}</option>
         </select>
@@ -38,6 +48,13 @@
           <option value="3months">Within last 3 months</option>
           <option value="more">More than 3 months ago</option>
         </select>
+      </div>
+      
+      <!-- Note about disabled filters when nearby is active -->
+      <div v-if="showNearbyOnly" class="text-center mb-4">
+        <p class="text-gray-400 text-xs">
+          ℹ️ Country and city filters are disabled when showing nearby merchants
+        </p>
       </div>
 
       <!-- Filter buttons -->
