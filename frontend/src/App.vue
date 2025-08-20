@@ -40,13 +40,55 @@
         </select>
       </div>
 
-      <!-- Text view for displaying the number of search results -->
-      <div class="flex justify-between items-center mb-6 px-3">
-        <p class="text-white text-lg font-medium">{{ filteredMerchants.length }} merchants</p>
-        <div class="flex items-center space-x-2">
-          <input type="checkbox" id="showUnverified" v-model="showUnverified" class="rounded border-gray-300 text-blue-500 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-          <label for="showUnverified" class="text-white text-md">Show Unverified</label>
+      <!-- Filter buttons -->
+      <div class="flex items-center justify-center space-x-4 mb-4">
+        <!-- Show Merchants Near Me Button -->
+        <div class="flex space-x-2">
+          <button 
+            v-if="!showNearbyOnly"
+            @click="showMerchantsNearMe" 
+            class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200"
+            :disabled="isGettingLocation"
+          >
+            <svg v-if="!isGettingLocation" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <div v-if="isGettingLocation" class="animate-spin rounded-full h-4 w-4 inline mr-2 border-t-2 border-b-2 border-white"></div>
+            {{ isGettingLocation ? 'Getting Location...' : 'Show Merchants Near Me' }}
+          </button>
+          
+          <!-- Clear Nearby Filter Button -->
+          <button 
+            v-if="showNearbyOnly"
+            @click="clearNearbyFilter" 
+            class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Clear Nearby Filter
+          </button>
         </div>
+        
+        <button 
+          @click="toggleUnverifiedFilter" 
+          class="px-4 py-2 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200"
+          :class="showUnverified ? 'text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-500' : 'text-blue-600 bg-blue-100 hover:bg-blue-200 focus:ring-blue-500'"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {{ showUnverified ? 'Hide Unverified Merchants' : 'Show Unverified Merchants' }}
+        </button>
+      </div>
+
+      <!-- Merchants count and status -->
+      <div class="text-center mb-6">
+        <p class="text-white text-lg font-medium">{{ filteredMerchants.length }} merchants</p>
+        <p v-if="showNearbyOnly && userLocation" class="text-green-400 text-sm mt-1">
+          📍 Showing merchants within 10km of your location
+        </p>
       </div>
 
       <!-- Grid for logos with descriptions -->
@@ -160,7 +202,10 @@ export default {
       merchantsFilter: null,
       showUnverified: false,
       isLoading: true,
-      initialRenderComplete: false // Add new state variable
+      initialRenderComplete: false, // Add new state variable
+      isGettingLocation: false, // Track location permission state
+      userLocation: null, // Store user's current location
+      showNearbyOnly: false // Track if we're showing nearby merchants only
     };
   },
   async mounted() {
@@ -197,7 +242,7 @@ export default {
     isMobile () {
       return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768
     },
-    // Filtered merchants based on search query, country, category, and last transaction date
+    // Filtered merchants based on search query, country, category, last transaction date, and nearby location
     filteredMerchants() {
       return this.merchants.filter(merchant => {
         // Check if the merchant matches the search query
@@ -215,8 +260,20 @@ export default {
         // Check verification status
         const matchesVerification = this.showUnverified || merchant.verified;
 
+        // Check if merchant is within 10km radius when showing nearby merchants
+        let matchesNearby = true;
+        if (this.showNearbyOnly && this.userLocation && merchant.latitude && merchant.longitude) {
+          const distance = this.calculateDistance(
+            this.userLocation.latitude, 
+            this.userLocation.longitude, 
+            merchant.latitude, 
+            merchant.longitude
+          );
+          matchesNearby = distance <= 10; // Within 10km
+        }
+
         // Return true only if all filters match
-        return matchesSearchQuery && matchesCountry && matchesCity && matchesLastTransaction && matchesVerification;
+        return matchesSearchQuery && matchesCountry && matchesCity && matchesLastTransaction && matchesVerification && matchesNearby;
       });
     },
 
@@ -569,6 +626,89 @@ export default {
       } else {
         return minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`;
       }
+    },
+    
+    // Calculate distance between two coordinates using Haversine formula
+    calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371; // Earth's radius in kilometers
+      const dLat = this.deg2rad(lat2 - lat1);
+      const dLon = this.deg2rad(lon2 - lon1);
+      const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const distance = R * c; // Distance in kilometers
+      return distance;
+    },
+    
+    // Convert degrees to radians
+    deg2rad(deg) {
+      return deg * (Math.PI/180);
+    },
+    
+    // Show merchants within 10km of user location
+    showMerchantsNearMe() {
+      this.isGettingLocation = true;
+      
+      if (!navigator.geolocation) {
+        alert('Geolocation is not supported by this browser.');
+        this.isGettingLocation = false;
+        return;
+      }
+      
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          this.userLocation = { latitude, longitude };
+          this.showNearbyOnly = true;
+          
+          // Reset other filters when showing nearby merchants
+          this.filterByCountry = 'default';
+          this.filterByCity = 'default';
+          this.filterByCategory = 'default';
+          this.filterByLastTransaction = 'default';
+          
+          this.isGettingLocation = false;
+        },
+        (error) => {
+          this.isGettingLocation = false;
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              alert('Location permission denied. Please enable location access in your browser settings.');
+              break;
+            case error.POSITION_UNAVAILABLE:
+              alert('Location information unavailable. Please try again.');
+              break;
+            case error.TIMEOUT:
+              alert('Location request timed out. Please try again.');
+              break;
+            default:
+              alert('An unknown error occurred while getting your location.');
+              break;
+          }
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
+        }
+      );
+    },
+    
+    // Clear the nearby filter and show all merchants
+    clearNearbyFilter() {
+      this.showNearbyOnly = false;
+      this.userLocation = null;
+      this.filterByCountry = 'default';
+      this.filterByCity = 'default';
+      this.filterByCategory = 'default';
+      this.filterByLastTransaction = 'default';
+    },
+    
+    // Toggle the unverified merchants filter
+    toggleUnverifiedFilter() {
+      this.showUnverified = !this.showUnverified;
     }
   },
   watch: {
@@ -583,6 +723,9 @@ export default {
         this.filterByCity = 'default';
         this.filterByCategory = 'default';
         this.filterByLastTransaction = 'default';
+        // Also reset nearby filter when search query changes
+        this.showNearbyOnly = false;
+        this.userLocation = null;
       }
     },
     filterByCountry(newValue) {
