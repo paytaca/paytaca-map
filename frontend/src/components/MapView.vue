@@ -120,7 +120,7 @@ export default {
           <div class="rounded-lg">
               <div class="flex items-center justify-between">
                   <h3 class="text-lg font-semibold text-gray-900">${merchant.name}</h3>
-                  <img src="${merchant.logo}" alt="${merchant.name} Logo" class="h-16 w-16 rounded-full">
+                  ${merchant.logo ? `<img src="${merchant.logo}" alt="${merchant.name} Logo" class="h-16 w-16 rounded-full">` : ''}
               </div>
               <div class="text-sm md:text-xs">
                   <p class="text-gray-600">${merchantLocation}</p>
