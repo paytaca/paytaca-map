@@ -9,7 +9,15 @@ class MerchantListView(APIView):
         filter_by_id = request.query_params.get("filter_by_id")
         category_id = request.query_params.get("category_id")
         category_short_name = request.query_params.get("category")
-        merchants = Merchant.objects.with_effective_date().filter(test_shop=False)
+        merchants = Merchant.objects.with_effective_date().filter(test_shop=False).exclude(name__regex=r'(^|\s)Test(\s|$)')
+        
+        # Debug: Check if Test merchants are still there
+        test_merchants = merchants.filter(name__regex=r'(^|\s)Test(\s|$)')
+        if test_merchants.exists():
+            print(f"WARNING: Found {test_merchants.count()} merchants with 'Test' in name after exclusion")
+            for merchant in test_merchants:
+                print(f"  - {merchant.name}")
+        
         if filter_by_id:
             merchant_ids = [int(id) for id in filter_by_id.split(",") if id.isdigit()]
             merchants = merchants.filter(id__in=merchant_ids)
