@@ -20,7 +20,7 @@
         <!-- Dropdown for sorting by city -->
         <select v-model="filterByCity" class="w-full px-4 py-2 rounded-lg bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200">
           <option value="default">City: All</option>
-          <option v-for="city in (uniqueCities || allCities)" :key="city" :value="city">{{ city }}</option>
+          <option v-for="city in uniqueCities" :key="city" :value="city">{{ city }}</option>
         </select>
 
         <!-- Dropdown for sorting by category -->
@@ -145,103 +145,8 @@ export default {
   data() {
     return {
       merchants: [],
-      citiesByCountry: {
-        'China': [
-          'Hong Kong'
-        ],
-        'Taiwan': [
-          'Kaohsiung City',
-          'Tainan City',
-          'New Taipei City'
-        ],
-        'Philippines': [
-          'Makati City',
-          'Cebu City',
-          'Lapu-Lapu City',
-          'Tacloban City',
-          'Ormoc City'
-        ],
-        'Australia': [
-          'Townsville'
-        ]
-      },
-      centers: {
-        countries: {
-          'China': {
-            coords: [22.3160643, 114.1821685],
-            zoom: 9.5
-          },
-          'Taiwan': {
-            coords: [23.7381627, 120.994431],
-            zoom: 8
-          },
-          'Philippines': {
-            coords: [11.2441900, 124.9987370],
-            zoom: 6
-          },
-          'Australia': {
-            coords: [-24.3481652, 136.9810528],
-            zoom: 5
-          },
-        },
-        cities: {
-          'Hong Kong': {
-            coords: [22.3160643, 114.1821685],
-            zoom: 11
-          },
-          'Kaohsiung City': {
-            coords: [23.067879, 120.029294],
-            zoom: 9
-          },
-          'Tainan City': {
-            coords: [23.0110272, 120.2192543],
-            zoom: 9
-          },
-          'New Taipei City': {
-            coords: [25.0600467, 121.4635565],
-            zoom: 9
-          },
-          'Makati City': {
-            coords: [14.5595224, 121.0011915],
-            zoom: 12.5
-          },
-          'Tacloban City': {
-            coords: [11.2441900, 124.9987370],
-            zoom: 12.5
-          },
-          'Ormoc City': {
-            coords: [11.0117503, 124.6089470],
-            zoom: 12.5
-          },
-          'Cebu City': {
-            coords: [10.3049350, 123.8968473],
-            zoom: 11
-          },
-          'Lapu-Lapu City': {
-            coords: [10.3146879, 123.9700083],
-            zoom: 12.5
-          },
-          'Townsville': {
-            coords: [-19.282662, 146.7704892],
-            zoom: 11.5
-          }
-        }
-      },
-      allCities: [
-        'Hong Kong',
-        'Kaohsiung City',
-        'Tainan City',
-        'New Taipei City',
-        'Makati City',
-        'Cebu City',
-        'Lapu-Lapu City',
-        'Tacloban City',
-        'Ormoc City',
-        'Townsville'
-      ],
       mapCenter: defaultCenter,
       zoomLevel: 5,
-      uniqueCities: [],
       searchQuery: '',
       filterByCountry: 'default', // Default value for filtering by country dropdown
       filterByCity: 'default', // Default value for filtering by city dropdown
@@ -260,7 +165,6 @@ export default {
   },
   async mounted() {
     await this.fetchCategories(); // Fetch categories on component mount
-    this.uniqueCities = self.allCities;
     this.$refs.logosContainer.addEventListener('scroll', this.handleScroll);
     console.log("Scroll event listener added.");
     
@@ -325,6 +229,20 @@ export default {
         }
       });
       return Array.from(countries).sort(); // Sort the country names alphabetically
+    },
+    
+    // List of unique cities for city dropdown options (from filtered merchants)
+    uniqueCities() {
+      const cities = new Set();
+      this.filteredMerchants.forEach(merchant => {
+        if (merchant.city) {
+          cities.add(merchant.city);
+        }
+        if (merchant.town) {
+          cities.add(merchant.town);
+        }
+      });
+      return Array.from(cities).sort(); // Sort the city names alphabetically
     },
     // Paginated merchants based on filtered results
     paginatedMerchants() {
@@ -429,6 +347,7 @@ export default {
           this.initialRenderComplete = true; // Still show content even if there's an error
         });
     },
+
     fetchCategories() {
       return axios.get(DOMAIN + '/api/categories/')
         .then(response => {
@@ -665,26 +584,29 @@ export default {
     },
     filterByCountry(newValue) {
       if (newValue !== 'default') {
-        this.uniqueCities = this.citiesByCountry[newValue]
-        this.mapCenter = this.centers.countries[newValue].coords;
-        this.zoomLevel = this.centers.countries[newValue].zoom;
-      } else {
-        this.uniqueCities = self.allCities;
+        // For any country selection, use default values and let MapView auto-fit to markers
         this.mapCenter = defaultCenter;
         this.zoomLevel = 3.5;
-      }
-
-      if (!this.isMobile && this.mapCenter.length > 0) {
-        this.$refs.mapView.centerOnTarget(this.mapCenter, this.zoomLevel);
+        
+        // Reset city filter when country changes
+        this.filterByCity = 'default';
+        
+        // Don't center the map here - let the MapView component auto-fit to markers
+      } else {
+        this.mapCenter = defaultCenter;
+        this.zoomLevel = 3.5;
+        
+        // Reset city filter when country is reset to default
+        this.filterByCity = 'default';
       }
     },
     filterByCity(newValue) {
       if (newValue !== 'default') {
-        this.mapCenter = this.centers.cities[newValue].coords;
-        this.zoomLevel = this.centers.cities[newValue].zoom;
-        if (!this.isMobile && this.mapCenter.length > 0) {
-          this.$refs.mapView.centerOnTarget(this.mapCenter, this.zoomLevel);
-        }
+        // For any city selection, use default values and let MapView auto-fit to markers
+        this.mapCenter = defaultCenter;
+        this.zoomLevel = 3.5;
+        
+        // Don't center the map here - let the MapView component auto-fit to markers
       }
     },
     filterByCategory(newValue) {

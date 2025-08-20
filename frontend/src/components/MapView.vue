@@ -31,7 +31,6 @@ export default {
   watch: {
     merchants: {
       handler(newMerchants) {
-        console.log(newMerchants);
         this.updateMarkers(newMerchants);
       },
       deep: true,
@@ -148,6 +147,11 @@ export default {
           `);
         this.markerClusterGroup.addLayer(marker);
       });
+
+      // Auto-fit map bounds to show all markers if there are any
+      if (merchants.length > 0) {
+        this.fitMapToMarkers();
+      }
     },
     getGoogleMapLink(merchant) {
       if (merchant.gmap_business_link) {
@@ -167,6 +171,23 @@ export default {
         .setLatLng([latitude, longitude])
         .setContent(content);
       popup.openOn(this.map);
+    },
+    fitMapToMarkers() {
+      // Get all markers from the cluster group
+      const markers = this.markerClusterGroup.getLayers();
+      
+      if (markers.length > 0) {
+        // Create a group of all markers to calculate bounds
+        const group = L.featureGroup(markers);
+        
+        // Fit the map to show all markers with some padding
+        this.map.fitBounds(group.getBounds(), {
+          padding: [20, 20], // Add 20px padding around the bounds
+          maxZoom: 12, // Limit maximum zoom to prevent over-zooming
+          animate: true,
+          duration: 1.5
+        });
+      }
     },
   },
 };
