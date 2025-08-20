@@ -31,6 +31,7 @@ export default {
   watch: {
     merchants: {
       handler(newMerchants) {
+        console.log(newMerchants);
         this.updateMarkers(newMerchants);
       },
       deep: true,
@@ -107,6 +108,12 @@ export default {
         // Fetch latitude and longitude from the related Location object
         const latitude = parseFloat(merchant.latitude);
         const longitude = parseFloat(merchant.longitude);
+
+        // Skip merchants with invalid coordinates
+        if (isNaN(latitude) || isNaN(longitude)) {
+          console.warn(`Skipping merchant "${merchant.name}" - invalid coordinates: lat=${merchant.latitude}, lng=${merchant.longitude}`);
+          return;
+        }
 
         const marker = L.marker([latitude, longitude], { icon: customIcon })
           .bindPopup(`
