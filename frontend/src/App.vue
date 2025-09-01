@@ -140,6 +140,11 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                 </svg>
               </a>
+              <span v-if="hasCashbackCampaign(merchant)" 
+                    class="gift-icon inline-flex items-center text-yellow-400 animate-gift cursor-pointer" 
+                    title="Click to view cashback details"
+                    :ref="`gift-${merchant.id}`"
+                    @click.stop="showCashbackDialog(merchant)">🎁</span>
             </p>
         </div>
       </div>
@@ -179,6 +184,284 @@
         </svg>
         {{ currentView === 'map' ? 'Back to List' : 'Show Map' }}
       </button>
+    </div>
+
+    <!-- Cashback Campaign Dialog -->
+    <div v-if="showCashbackModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
+      <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <!-- Dialog Header -->
+        <div class="flex items-center justify-between p-6 border-b border-gray-200">
+          <div class="flex items-center space-x-3">
+            <span class="text-2xl">🎁</span>
+            <h3 class="text-lg font-semibold text-gray-900">Cashback Campaign</h3>
+          </div>
+          <button 
+            @click="closeCashbackDialog" 
+            class="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Dialog Content -->
+        <div class="p-6">
+          <div v-if="selectedCashbackCampaign" class="space-y-4">
+            <!-- Merchant Info -->
+            <div class="flex items-center space-x-3 pb-4 border-b border-gray-200">
+              <img v-if="selectedMerchant?.logo" :src="selectedMerchant.logo" :alt="selectedMerchant?.name + ' Logo'" class="w-12 h-12 rounded-full object-cover">
+              <div>
+                <h4 class="font-semibold text-gray-900">{{ selectedMerchant?.name }}</h4>
+                <p class="text-sm text-gray-600">{{ selectedMerchant?.city }}, {{ selectedMerchant?.country }}</p>
+              </div>
+            </div>
+
+            <!-- Campaign Details -->
+            <div class="space-y-3">
+              
+
+
+              <!-- Cashback Percentages -->
+              <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div class="text-center">
+                  <p class="text-lg font-semibold text-green-800 mb-2">
+                    Get up to {{ Math.round(selectedCashbackCampaign.campaign.first_cashback_percentage * 100) }}% cashback! 😍
+                  </p>
+                  <p class="text-sm text-green-700">
+                    Maximum cashback: <span class="font-semibold">{{ convertSatsToBCH(selectedCashbackCampaign.campaign.per_transaction_cashback_limit) }} BCH</span>
+                    <span v-if="convertSatsToLocalCurrency(selectedCashbackCampaign.campaign.per_transaction_cashback_limit)" class="text-xs text-gray-600 ml-1">
+                      (≈ PHP {{ convertSatsToLocalCurrency(selectedCashbackCampaign.campaign.per_transaction_cashback_limit) }})
+                    </span>
+                  </p>
+                  <div v-if="!selectedCashbackCampaign.campaign.is_one_time_claim" class="mt-3 pt-3 border-t border-green-200">
+                    <p class="text-sm text-green-700">
+                      Succeeding transactions: {{ Math.round(selectedCashbackCampaign.campaign.succeeding_cashback_percentage * 100) }}% cashback
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <!-- Limits Toggle -->
+                <button 
+                  @click="showLimits = !showLimits" 
+                  class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
+                >
+                  <svg v-if="!showLimits" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <svg v-if="showLimits" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  {{ showLimits ? 'Hide limits' : 'Subject to pre-defined limits' }}
+                </button>
+
+                <!-- How to Avail Button -->
+                <button 
+                  @click="showHowToAvail = !showHowToAvail" 
+                  class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 border border-green-600 rounded-lg hover:bg-green-700 hover:border-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200"
+                >
+                  <svg v-if="!showHowToAvail" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <svg v-if="showHowToAvail" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  {{ showHowToAvail ? 'Hide instructions' : 'How to avail' }}
+                </button>
+              </div>
+
+              <!-- How to Avail Instructions -->
+              <div v-if="showHowToAvail" class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                <!-- Reserved Campaign Message -->
+                <div v-if="selectedCashbackCampaign.campaign.customer_reserved_claim" class="text-center">
+                  <div class="flex items-center justify-center mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-orange-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <h6 class="font-medium text-orange-900">Campaign Reserved</h6>
+                  </div>
+                  <div class="text-sm text-orange-800 space-y-2">
+                    <p>
+                      This one-time cashback promo has been reserved<span v-if="selectedCashbackCampaign.campaign.reserved_customer?.address"> for 
+                      <span class="font-mono text-xs bg-orange-100 px-2 py-1 rounded">{{ truncateAddress(selectedCashbackCampaign.campaign.reserved_customer.address) }}</span></span>.
+                    </p>
+                    <p v-if="reservationCountdown">
+                      This reservation expires in <span class="font-semibold">{{ reservationCountdown }}</span>.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Available Campaign Instructions -->
+                <div v-else>
+                  <h6 class="font-medium text-blue-900 mb-3">How to Claim Your Cashback</h6>
+                  <div class="space-y-3 text-sm text-blue-800">
+                    <div class="flex items-start">
+                      <div class="flex-shrink-0 w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                        <span class="text-xs font-bold text-blue-700">1</span>
+                      </div>
+                      <p>
+                        If the campaign is still active, cashback applies automatically after paying with BCH through Paytaca. The cashback is sent immediately after payment.
+                      </p>
+                    </div>
+                    
+                    <!-- One-time claim reservation option -->
+                    <div v-if="selectedCashbackCampaign.campaign.is_one_time_claim" class="mt-4 pt-3 border-t border-blue-200">
+                      <div class="flex items-start mb-3">
+                        <div class="flex-shrink-0 w-6 h-6 bg-orange-200 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                          <span class="text-xs font-bold text-orange-700">2</span>
+                        </div>
+                        <p class="text-sm text-blue-800">
+                          Since this is a one-time claim campaign, there is a reservation option, which will reserve the promo for you for 6 hours. You must transact within this period to claim the cashback.
+                        </p>
+                      </div>
+                      
+                      <!-- Reservation Button -->
+                      <div class="ml-9">
+                        <button 
+                          v-if="!showReservationForm"
+                          @click="showReservationForm = true" 
+                          class="inline-flex items-center px-3 py-2 text-xs font-medium text-white bg-orange-600 border border-orange-600 rounded-lg hover:bg-orange-700 hover:border-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all duration-200"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Reserve Now
+                        </button>
+                        
+                        <!-- Reservation Form -->
+                        <div v-if="showReservationForm" class="space-y-3">
+                          <div>
+                            <label class="block text-xs font-medium text-blue-900 mb-1">BCH Receiving Address in Paytaca</label>
+                            <input 
+                              v-model="bchAddress"
+                              type="text" 
+                              placeholder="Enter your BCH address"
+                              class="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            />
+                          </div>
+                          <div class="flex space-x-2">
+                            <button 
+                              @click="submitReservation" 
+                              class="inline-flex items-center px-3 py-2 text-xs font-medium text-white bg-green-600 border border-green-600 rounded-lg hover:bg-green-700 hover:border-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                              </svg>
+                              Submit Reservation
+                            </button>
+                            <button 
+                              @click="showReservationForm = false; bchAddress = ''" 
+                              class="inline-flex items-center px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Limits -->
+              <div v-if="showLimits" class="grid grid-cols-1 gap-3">
+                <!-- Campaign Type with Explanatory Notes -->
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                  <div class="flex items-start justify-between mb-2">
+                    <div class="flex-1">
+                      <div class="text-sm font-medium text-gray-700">Campaign Type</div>
+                      <div class="text-xs text-gray-600 mt-1">
+                        <span v-if="selectedCashbackCampaign.campaign.is_one_time_claim">
+                          This campaign can only be claimed once.
+                        </span>
+                        <span v-else>
+                          Multiple claims are possible until any of the other set limits is reached.
+                        </span>
+                      </div>
+                    </div>
+                    <div class="text-right ml-3">
+                      <span class="text-sm font-semibold" :class="selectedCashbackCampaign.campaign.is_one_time_claim ? 'text-orange-600' : 'text-green-600'">
+                        {{ selectedCashbackCampaign.campaign.is_one_time_claim ? 'One-Time Claim' : 'Regular' }}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <!-- Succeeding Claims Note for Regular Campaigns -->
+                  <div v-if="!selectedCashbackCampaign.campaign.is_one_time_claim" class="mt-2 pt-2 border-t border-gray-200">
+                    <div class="text-xs text-gray-600">
+                      <span class="font-medium">Note:</span> Any succeeding claim by the same customer, the cashback percentage is reduced to 
+                      <span class="font-semibold text-green-600">{{ Math.round(selectedCashbackCampaign.campaign.succeeding_cashback_percentage * 100) }}%</span>.
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                      <div class="text-sm font-medium text-blue-800">Per Transaction Limit</div>
+                      <div class="text-xs text-gray-600 mt-1">Maximum cashback you can get in a single transaction</div>
+                    </div>
+                    <div class="text-right ml-3">
+                      <div class="text-sm font-semibold text-blue-600">{{ convertSatsToBCH(selectedCashbackCampaign.campaign.per_transaction_cashback_limit) }} BCH</div>
+                      <div v-if="convertSatsToLocalCurrency(selectedCashbackCampaign.campaign.per_transaction_cashback_limit)" class="text-xs text-gray-600">
+                        ≈ PHP {{ convertSatsToLocalCurrency(selectedCashbackCampaign.campaign.per_transaction_cashback_limit) }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                      <div class="text-sm font-medium text-blue-800">Per Customer Limit</div>
+                      <div class="text-xs text-gray-600 mt-1">Maximum cashback you can claim in this entire campaign</div>
+                    </div>
+                    <div class="text-right ml-3">
+                      <div class="text-sm font-semibold text-blue-600">{{ convertSatsToBCH(selectedCashbackCampaign.campaign.per_customer_cashback_limit) }} BCH</div>
+                      <div v-if="convertSatsToLocalCurrency(selectedCashbackCampaign.campaign.per_customer_cashback_limit)" class="text-xs text-gray-600">
+                        ≈ PHP {{ convertSatsToLocalCurrency(selectedCashbackCampaign.campaign.per_customer_cashback_limit) }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                      <div class="text-sm font-medium text-blue-800">Per Merchant Limit</div>
+                      <div class="text-xs text-gray-600 mt-1">Total cashback pool for all customers in this campaign</div>
+                    </div>
+                    <div class="text-right ml-3">
+                      <div class="text-sm font-semibold text-blue-600">{{ convertSatsToBCH(selectedCashbackCampaign.campaign.per_merchant_cashback_limit) }} BCH</div>
+                      <div v-if="convertSatsToLocalCurrency(selectedCashbackCampaign.campaign.per_merchant_cashback_limit)" class="text-xs text-gray-600">
+                        ≈ PHP {{ convertSatsToLocalCurrency(selectedCashbackCampaign.campaign.per_merchant_cashback_limit) }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dialog Footer -->
+        <div class="flex items-center justify-end space-x-3 p-6 border-t border-gray-200">
+          <button 
+            @click="closeCashbackDialog" 
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors duration-200"
+          >
+            Close
+          </button>
+          <button 
+            v-if="selectedMerchant?.website_url"
+            @click="visitMerchantWebsite" 
+            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+          >
+            Visit Website
+          </button>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -222,7 +505,19 @@ export default {
       initialRenderComplete: false, // Add new state variable
       isGettingLocation: false, // Track location permission state
       userLocation: null, // Store user's current location
-      showNearbyOnly: false // Track if we're showing nearby merchants only
+      showNearbyOnly: false, // Track if we're showing nearby merchants only
+      cashbackCampaigns: [], // Store cashback campaign data
+      giftObserver: null, // Intersection Observer for gift icons
+      showCashbackModal: false, // Control cashback dialog visibility
+      selectedCashbackCampaign: null, // Selected campaign data
+      selectedMerchant: null, // Selected merchant data
+      showLimits: false, // Control limits visibility in dialog
+      showHowToAvail: false, // Control how to avail instructions visibility
+      showReservationForm: false, // Control reservation form visibility
+      bchAddress: '', // Store BCH address for reservation
+      bchExchangeRate: null, // Store BCH exchange rate
+      reservationCountdown: null, // Store reservation countdown
+      countdownInterval: null // Store interval for countdown timer
     };
   },
   async mounted() {
@@ -250,11 +545,19 @@ export default {
       }
     }
     await this.fetchMerchants();
+    await this.fetchCashbackCampaigns(); // Fetch cashback campaigns on component mount
+    await this.fetchBCHExchangeRate(); // Fetch BCH exchange rate
+    this.setupGiftObserver(); // Setup intersection observer for gift icons
   },
-  beforeUnmount() {
-    this.$refs.logosContainer.removeEventListener('scroll', this.handleScroll);
-    console.log("Scroll event listener removed.");
-  },
+      beforeUnmount() {
+      this.$refs.logosContainer.removeEventListener('scroll', this.handleScroll);
+      console.log("Scroll event listener removed.");
+      
+      // Clean up intersection observer
+      if (this.giftObserver) {
+        this.giftObserver.disconnect();
+      }
+    },
   computed: {
     isMobile () {
       return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768
@@ -413,6 +716,8 @@ export default {
           this.$nextTick(() => {
             setTimeout(() => {
               this.initialRenderComplete = true;
+              // Observe gift icons after initial render
+              this.observeGiftIcons();
             }, 100); // Small delay to ensure smooth transition
           });
         })
@@ -437,6 +742,17 @@ export default {
         .catch(error => {
           console.error('Error fetching categories:', error);
           return []; // Return empty array on error
+        });
+    },
+    fetchCashbackCampaigns() {
+      return axios.get('https://engagementhub.paytaca.com/api/cashback/campaignmerchant/get_merchants_under_campaigns/')
+        .then(response => {
+          this.cashbackCampaigns = response.data;
+          console.log('Cashback campaigns fetched:', this.cashbackCampaigns);
+        })
+        .catch(error => {
+          console.error('Error fetching cashback campaigns:', error);
+          this.cashbackCampaigns = []; // Set empty array on error
         });
     },
     getGoogleMapLink(merchant) {
@@ -617,6 +933,8 @@ export default {
       }
     },
     formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      
       const date = new Date(dateString);
       const currentDate = new Date();
       const timeDifference = currentDate - date;
@@ -643,6 +961,17 @@ export default {
       } else {
         return minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`;
       }
+    },
+    
+    // Format date for display (not relative time)
+    formatDisplayDate(dateString) {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
     },
     
     // Calculate distance between two coordinates using Haversine formula
@@ -726,6 +1055,234 @@ export default {
     // Toggle the unverified merchants filter
     toggleUnverifiedFilter() {
       this.showUnverified = !this.showUnverified;
+    },
+
+    // Check if a merchant has a cashback campaign
+    hasCashbackCampaign(merchant) {
+      if (!merchant.watchtower_merchant_id) return false;
+      return this.cashbackCampaigns.some(campaign => {
+        // Check if merchant ID matches
+        if (campaign.merchant_id !== merchant.watchtower_merchant_id) return false;
+        
+        // For one-time claim campaigns, check if it hasn't been claimed
+        if (campaign.campaign.is_one_time_claim) {
+          return !campaign.campaign.has_been_claimed;
+        }
+        
+        // For regular campaigns, check if end period hasn't expired
+        if (campaign.campaign.end_period) {
+          const endDate = new Date(campaign.campaign.end_period);
+          const currentDate = new Date();
+          return endDate > currentDate;
+        }
+        
+        // If no end period, campaign is considered active
+        return true;
+      });
+    },
+    
+    // Setup intersection observer for gift icons
+    setupGiftObserver() {
+      if (!window.IntersectionObserver) {
+        console.warn('IntersectionObserver not supported');
+        return;
+      }
+      
+      this.giftObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            // Add animation class when gift icon comes into view
+            entry.target.classList.add('animate-gift');
+          } else {
+            // Remove animation class when gift icon goes out of view
+            entry.target.classList.remove('animate-gift');
+          }
+        });
+      }, {
+        threshold: 0.3, // Trigger when 30% of the element is visible
+        rootMargin: '50px' // Start animation slightly before the element comes into view
+      });
+      
+      // Observe all gift icons after the next DOM update
+      this.$nextTick(() => {
+        this.observeGiftIcons();
+      });
+    },
+    
+    // Observe all gift icons
+    observeGiftIcons() {
+      const giftIcons = document.querySelectorAll('.gift-icon');
+      giftIcons.forEach(icon => {
+        this.giftObserver.observe(icon);
+      });
+    },
+    
+    // Show cashback campaign dialog
+    showCashbackDialog(merchant) {
+      const campaign = this.cashbackCampaigns.find(c => c.merchant_id === merchant.watchtower_merchant_id);
+      if (campaign) {
+        this.selectedCashbackCampaign = campaign;
+        this.selectedMerchant = merchant;
+        this.showCashbackModal = true;
+        this.showLimits = false; // Reset limits visibility
+        this.showHowToAvail = false; // Reset how to avail visibility
+        this.showReservationForm = false; // Reset reservation form visibility
+        this.bchAddress = ''; // Reset BCH address
+        
+        // Start countdown if campaign is reserved
+        if (campaign.campaign.customer_reserved_claim && campaign.campaign.reserved_customer?.date_reserved) {
+          this.startReservationCountdown(campaign.campaign.reserved_customer.date_reserved);
+        }
+        
+        // Prevent body scroll when modal is open
+        document.body.style.overflow = 'hidden';
+      }
+    },
+    
+    // Close cashback campaign dialog
+    closeCashbackDialog() {
+      this.showCashbackModal = false;
+      this.selectedCashbackCampaign = null;
+      this.selectedMerchant = null;
+      this.showLimits = false; // Reset limits visibility
+      this.showHowToAvail = false; // Reset how to avail visibility
+      this.showReservationForm = false; // Reset reservation form visibility
+      this.bchAddress = ''; // Reset BCH address
+      
+      // Clear countdown timer
+      this.clearReservationCountdown();
+      
+      // Restore body scroll
+      document.body.style.overflow = 'auto';
+    },
+    
+    // Visit merchant website from dialog
+    visitMerchantWebsite() {
+      if (this.selectedMerchant?.website_url) {
+        window.open(this.selectedMerchant.website_url, '_blank');
+      }
+    },
+    
+    // Submit reservation for one-time claim campaign
+    async submitReservation() {
+      if (!this.bchAddress.trim()) {
+        alert('Please enter your BCH receiving address');
+        return;
+      }
+      
+      try {
+        const payload = {
+          merchant_id: this.selectedMerchant.watchtower_merchant_id,
+          customer_address: this.bchAddress.trim()
+        };
+        
+        console.log('Submitting reservation:', payload);
+        
+        const response = await axios.post('https://engagementhub.paytaca.com/api/cashback/customerclaim/', payload);
+        
+        console.log('Reservation response:', response.data);
+        
+        // Show success message
+        alert('Reservation submitted successfully! The promo is reserved for you for 6 hours.');
+        
+        // Reset form
+        this.showReservationForm = false;
+        this.bchAddress = '';
+        
+      } catch (error) {
+        console.error('Error submitting reservation:', error);
+        
+        // Show error message
+        if (error.response && error.response.data) {
+          alert(`Reservation failed: ${error.response.data.message || 'Unknown error occurred'}`);
+        } else {
+          alert('Reservation failed. Please try again later.');
+        }
+      }
+    },
+    
+    // Fetch BCH exchange rate
+    async fetchBCHExchangeRate() {
+      try {
+        const response = await axios.get('https://watchtower.cash/api/bch-prices/?currencies=PHP');
+        if (response.data && response.data.length > 0) {
+          this.bchExchangeRate = parseFloat(response.data[0].price_value);
+          console.log('BCH Exchange Rate:', this.bchExchangeRate);
+        }
+      } catch (error) {
+        console.error('Error fetching BCH exchange rate:', error);
+        this.bchExchangeRate = null;
+      }
+    },
+    
+    // Convert satoshis to BCH
+    convertSatsToBCH(sats) {
+      if (!sats) return null;
+      
+      // 1 BCH = 100,000,000 satoshis
+      const bchAmount = sats / 100000000;
+      
+      return bchAmount.toFixed(8);
+    },
+    
+    // Start reservation countdown timer
+    startReservationCountdown(dateReserved) {
+      this.clearReservationCountdown(); // Clear any existing timer
+      
+      const updateCountdown = () => {
+        const reservedDate = new Date(dateReserved);
+        const expirationDate = new Date(reservedDate.getTime() + (6 * 60 * 60 * 1000)); // Add 6 hours
+        const currentDate = new Date();
+        const timeDifference = expirationDate - currentDate;
+        
+        if (timeDifference <= 0) {
+          this.reservationCountdown = 'Expired';
+          this.clearReservationCountdown();
+          return;
+        }
+        
+        const hours = Math.floor(timeDifference / (1000 * 60 * 60));
+        const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeDifference % (1000 * 60)) / 1000);
+        
+        this.reservationCountdown = `${hours}h ${minutes}m ${seconds}s`;
+      };
+      
+      // Update immediately
+      updateCountdown();
+      
+      // Update every second
+      this.countdownInterval = setInterval(updateCountdown, 1000);
+    },
+    
+    // Clear reservation countdown timer
+    clearReservationCountdown() {
+      if (this.countdownInterval) {
+        clearInterval(this.countdownInterval);
+        this.countdownInterval = null;
+      }
+      this.reservationCountdown = null;
+    },
+    
+    // Truncate BCH address for display
+    truncateAddress(address) {
+      if (!address) return '';
+      if (address.length <= 15) return address;
+      
+      const prefix = address.substring(0, 16); // "bitcoincash:"
+      const suffix = address.substring(address.length - 4); // last 4 characters
+      return `${prefix}...${suffix}`;
+    },
+    
+    // Convert satoshis to local currency
+    convertSatsToLocalCurrency(sats) {
+      if (!this.bchExchangeRate || !sats) return null;
+      
+      // 1 BCH = 100,000,000 satoshis
+      const bchAmount = sats / 100000000;
+      const localAmount = bchAmount * this.bchExchangeRate;
+      
+      return localAmount.toFixed(2);
     }
   },
   watch: {
@@ -794,6 +1351,15 @@ export default {
         this.fetchMerchants();
       }
     },
+    // Watch for changes in filtered merchants to observe new gift icons
+    filteredMerchants: {
+      handler() {
+        this.$nextTick(() => {
+          this.observeGiftIcons();
+        });
+      },
+      deep: true
+    }
   },
 };
 </script>
@@ -875,6 +1441,66 @@ button:disabled {
 
 .pointer-events-none {
   pointer-events: none;
+}
+
+/* Gift icon animations */
+.gift-icon {
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 0 0 rgba(255, 193, 7, 0));
+}
+
+.gift-icon.animate-gift {
+  animation: giftUnpack 2s ease-in-out infinite;
+}
+
+@keyframes giftUnpack {
+  0% {
+    transform: scale(1) rotate(0deg);
+    filter: drop-shadow(0 0 0 rgba(255, 193, 7, 0));
+  }
+  25% {
+    transform: scale(1.2) rotate(-5deg);
+    filter: drop-shadow(0 0 8px rgba(255, 193, 7, 0.8));
+  }
+  50% {
+    transform: scale(1.1) rotate(5deg);
+    filter: drop-shadow(0 0 12px rgba(255, 193, 7, 1));
+  }
+  75% {
+    transform: scale(1.2) rotate(-3deg);
+    filter: drop-shadow(0 0 8px rgba(255, 193, 7, 0.8));
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    filter: drop-shadow(0 0 0 rgba(255, 193, 7, 0));
+  }
+}
+
+/* Pulsing glow effect */
+.gift-icon.animate-gift::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255, 193, 7, 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: giftGlow 2s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes giftGlow {
+  0%, 100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.5);
+  }
 }
 
 </style>

@@ -13,7 +13,6 @@ class MerchantsSerializer(serializers.ModelSerializer):
         model = Merchant
         exclude = [
             'test_shop',
-            'watchtower_merchant_id',
         ]
 
     def get_categories(self, obj):
