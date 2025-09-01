@@ -517,7 +517,8 @@ export default {
       bchAddress: '', // Store BCH address for reservation
       bchExchangeRate: null, // Store BCH exchange rate
       reservationCountdown: null, // Store reservation countdown
-      countdownInterval: null // Store interval for countdown timer
+      countdownInterval: null, // Store interval for countdown timer
+      pendingMapOperations: null // Store pending map operations for mobile
     };
   },
   async mounted() {
@@ -767,9 +768,18 @@ export default {
       this.zoomLevel = 17.5
       
       if (this.isMobile) {
+        // Store merchant data for delayed execution
+        this.pendingMapOperations = merchant;
         this.toggleMapView();
+        return; // Exit early for mobile
       }
 
+      // For desktop, perform map operations immediately
+      this.performMapOperations(merchant);
+    },
+
+    // Helper method to perform map operations
+    performMapOperations(merchant) {
       console.log('X', merchant.last_transaction_date)
       const transactionDate = new Date(merchant.last_transaction_date);
       console.log('Y', transactionDate)
@@ -1359,6 +1369,21 @@ export default {
         });
       },
       deep: true
+    },
+    
+    // Watch for view changes to handle pending map operations on mobile
+    currentView(newView, oldView) {
+      if (this.isMobile && newView === 'map' && oldView === 'list' && this.pendingMapOperations) {
+        // Wait for map to be ready, then execute pending operations
+        this.$nextTick(() => {
+          setTimeout(() => {
+            if (this.$refs.mapView && this.$refs.mapView.centerOnTarget) {
+              this.performMapOperations(this.pendingMapOperations);
+              this.pendingMapOperations = null; // Clear pending operations
+            }
+          }, 300); // Give map more time to be fully ready
+        });
+      }
     }
   },
 };
