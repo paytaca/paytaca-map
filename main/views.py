@@ -1,5 +1,6 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.db import models
 from .models import Merchant, Category
 from .serializers import MerchantsSerializer
 
@@ -10,6 +11,11 @@ class MerchantListView(APIView):
         category_id = request.query_params.get("category_id")
         category_short_name = request.query_params.get("category")
         merchants = Merchant.objects.with_effective_date().filter(test_shop=False).exclude(name__regex=r'(^|\s)Test(\s|$)')
+        # Exclude merchants without last_transaction_date, except for Hotels/Resorts by Hiverooms category
+        merchants = merchants.filter(
+            models.Q(last_transaction_date__isnull=False) | 
+            models.Q(categories__name='Hotels / Resorts by Hiverooms')
+        )
         
         # Debug: Check if Test merchants are still there
         test_merchants = merchants.filter(name__regex=r'(^|\s)Test(\s|$)')
@@ -31,7 +37,10 @@ class MerchantListView(APIView):
 
 class LocationListAPIView(APIView):
     def get(self, request):
-        merchants = Merchant.objects.filter(test_shop=False)
+        merchants = Merchant.objects.filter(test_shop=False).filter(
+            models.Q(last_transaction_date__isnull=False) | 
+            models.Q(categories__name='Hotels / Resorts by Hiverooms')
+        )
         locations = [{
             'id': merchant.id,
             'merchant': merchant.id,
@@ -61,7 +70,10 @@ class CategoryListAPIView(APIView):
 
 class LogoListAPIView(APIView):
     def get(self, request):
-        merchants = Merchant.objects.filter(test_shop=False)
+        merchants = Merchant.objects.filter(test_shop=False).filter(
+            models.Q(last_transaction_date__isnull=False) | 
+            models.Q(categories__name='Hotels / Resorts by Hiverooms')
+        )
         logos = [{
             'id': merchant.id,
             'merchant': merchant.id,
