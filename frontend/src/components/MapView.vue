@@ -128,7 +128,6 @@ export default {
 
         // Skip merchants with invalid coordinates
         if (isNaN(latitude) || isNaN(longitude)) {
-          console.warn(`Skipping merchant "${merchant.name}" - invalid coordinates: lat=${merchant.latitude}, lng=${merchant.longitude}`);
           return;
         }
 

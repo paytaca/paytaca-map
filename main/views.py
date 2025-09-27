@@ -16,6 +16,8 @@ class MerchantListView(APIView):
             models.Q(last_transaction_date__isnull=False) | 
             models.Q(categories__name='Hotels / Resorts by Hiverooms')
         )
+        # Exclude merchants without longitude and latitude
+        merchants = merchants.filter(longitude__isnull=False, latitude__isnull=False)
         
         # Debug: Check if Test merchants are still there
         test_merchants = merchants.filter(name__regex=r'(^|\s)Test(\s|$)')
@@ -31,6 +33,10 @@ class MerchantListView(APIView):
             merchants = merchants.filter(categories__id=category_id)
         if category_short_name:
             merchants = merchants.filter(categories__short_name=category_short_name)
+        
+        # Ensure unique merchants by ID to prevent duplicates
+        merchants = merchants.distinct()
+        
         serializer = MerchantsSerializer(merchants, many=True)
         return Response(serializer.data)
 
@@ -40,7 +46,7 @@ class LocationListAPIView(APIView):
         merchants = Merchant.objects.filter(test_shop=False).filter(
             models.Q(last_transaction_date__isnull=False) | 
             models.Q(categories__name='Hotels / Resorts by Hiverooms')
-        )
+        ).filter(longitude__isnull=False, latitude__isnull=False).distinct()
         locations = [{
             'id': merchant.id,
             'merchant': merchant.id,
@@ -73,7 +79,7 @@ class LogoListAPIView(APIView):
         merchants = Merchant.objects.filter(test_shop=False).filter(
             models.Q(last_transaction_date__isnull=False) | 
             models.Q(categories__name='Hotels / Resorts by Hiverooms')
-        )
+        ).filter(longitude__isnull=False, latitude__isnull=False).distinct()
         logos = [{
             'id': merchant.id,
             'merchant': merchant.id,

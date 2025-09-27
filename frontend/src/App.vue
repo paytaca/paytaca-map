@@ -101,7 +101,7 @@
       </div>
 
       <!-- Merchants count and status -->
-      <div class="text-center mb-6">
+      <div v-if="!isLoading && !isFetchingMerchants" class="text-center mb-6">
         <p class="text-white text-lg font-medium">{{ filteredMerchants.length }} merchants</p>
         <p v-if="showNearbyOnly && userLocation" class="text-green-400 text-sm mt-1">
           📍 Showing merchants within 10km of your location
@@ -111,7 +111,7 @@
       <!-- Grid for logos with descriptions -->
       <div v-if="!isLoading" class="mt-2 grid grid-cols-1 md:grid-cols-2 w-85 md-270 lg-255 h-auto md-auto">
         <!-- Logos with descriptions -->
-        <div v-for="(merchant, index) in paginatedMerchants" :key="merchant.id" 
+        <div v-for="merchant in paginatedMerchants" :key="merchant.id" 
           class="flex flex-col p-4 m-2 rounded-lg bg-slate-300 hover:bg-gray-100 transition-all duration-300 transform hover:scale-[1.02] shadow-sm border border-gray-200"
           :style="showUnverified ? (merchant.verified ? 'border-top: 4px solid #10B981' : 'border-top: 4px solid #EF4444') : ''"
           @click="showPopup(merchant)">
@@ -155,7 +155,7 @@
       </div>
 
       <!-- Load More Button -->
-      <div v-if="!reachedEnd && filteredMerchants.length > pageSize && initialRenderComplete" class="flex justify-center mt-6 mb-4">
+      <div v-if="!reachedEnd && filteredMerchants.length > pageSize && initialRenderComplete && !isLoading && !isFetchingMerchants" class="flex justify-center mt-6 mb-4">
         <button 
           @click="loadMoreMerchants" 
           class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-200"
@@ -502,6 +502,7 @@ export default {
       merchantsFilter: null,
       showUnverified: false,
       isLoading: true,
+      isFetchingMerchants: false, // Flag to prevent multiple simultaneous merchant fetches
       initialRenderComplete: false, // Add new state variable
       isGettingLocation: false, // Track location permission state
       userLocation: null, // Store user's current location
@@ -518,7 +519,8 @@ export default {
       bchExchangeRate: null, // Store BCH exchange rate
       reservationCountdown: null, // Store reservation countdown
       countdownInterval: null, // Store interval for countdown timer
-      pendingMapOperations: null // Store pending map operations for mobile
+      pendingMapOperations: null, // Store pending map operations for mobile
+      reloadTimeout: null // Store timeout for reloading merchants when all filters are default
     };
   },
   async mounted() {
@@ -558,6 +560,11 @@ export default {
       if (this.giftObserver) {
         this.giftObserver.disconnect();
       }
+      
+      // Clean up timeout
+      if (this.reloadTimeout) {
+        clearTimeout(this.reloadTimeout);
+      }
     },
   computed: {
     isMobile () {
@@ -565,7 +572,12 @@ export default {
     },
     // Filtered merchants based on search query, country, category, last transaction date, and nearby location
     filteredMerchants() {
-      return this.merchants.filter(merchant => {
+      // Don't filter if data is still loading
+      if (this.isLoading || this.isFetchingMerchants) {
+        return this.merchants;
+      }
+      
+      const filtered = this.merchants.filter(merchant => {
         // Check if the merchant matches the search query
         const matchesSearchQuery = !this.searchQuery || merchant.name.toLowerCase().includes(this.searchQuery.toLowerCase());
 
@@ -596,6 +608,9 @@ export default {
         // Return true only if all filters match
         return matchesSearchQuery && matchesCountry && matchesCity && matchesLastTransaction && matchesVerification && matchesNearby;
       });
+      
+      
+      return filtered;
     },
 
     // List of unique countries for country dropdown options
@@ -641,6 +656,11 @@ export default {
   },
   methods: {
     fetchMerchants() {
+      // Prevent multiple simultaneous API calls
+      if (this.isFetchingMerchants) {
+        return;
+      }
+      
       let url = DOMAIN + '/api/merchants/'
       const params = new URLSearchParams()
       
@@ -657,6 +677,7 @@ export default {
         url += '?' + queryString
       }
       
+      this.isFetchingMerchants = true; // Set flag to prevent multiple calls
       this.isLoading = true; // Set loading state to true before API call
       axios.get(url)
         .then(response => {
@@ -666,6 +687,7 @@ export default {
         .catch(error => {
           console.error('Error fetching merchants:', error);
           this.isLoading = false; // Set loading state to false on error
+          this.isFetchingMerchants = false; // Reset flag on error
         });
     },
     fetchLocations(merchants) {
@@ -676,25 +698,33 @@ export default {
           locations.forEach(location => {
             locationMap.set(location.merchant, location);
           });
-          merchants.forEach(merchant => {
+          
+          // Create new merchant objects instead of mutating existing ones
+          const merchantsWithLocations = merchants.map(merchant => {
             const location = locationMap.get(merchant.id);
             if (location) {
-              merchant.location = location.location;
-              merchant.town = location.town;
-              merchant.city = location.city;
-              merchant.province = location.province;
-              merchant.state = location.state;
-              merchant.country = location.country;
-              merchant.latitude = location.latitude;
-              merchant.longitude = location.longitude;
+              return {
+                ...merchant,
+                location: location.location,
+                town: location.town,
+                city: location.city,
+                province: location.province,
+                state: location.state,
+                country: location.country,
+                latitude: location.latitude,
+                longitude: location.longitude
+              };
             }
+            return merchant;
           });
-          this.merchants = merchants;
+          
+          this.merchants = merchantsWithLocations;
           this.fetchLogos();
         })
         .catch(error => {
           console.error('Error fetching locations:', error);
           this.isLoading = false; // Set loading state to false on error
+          this.isFetchingMerchants = false; // Reset flag on error
         });
     },
     fetchLogos() {
@@ -708,11 +738,21 @@ export default {
             }
             logoMap.get(logo.merchant).push(logo.url);
           });
-          this.merchants.forEach(merchant => {
+          
+          // Create new merchant objects instead of mutating existing ones
+          const merchantsWithLogos = this.merchants.map(merchant => {
             const logos = logoMap.get(merchant.id);
-            merchant.logo = logos ? logos[0] : null;
+            return {
+              ...merchant,
+              logo: logos ? logos[0] : null
+            };
           });
+          
+          // Ensure merchants are unique by ID to prevent duplicates
+          const deduplicatedMerchants = this.deduplicateMerchants(merchantsWithLogos);
+          this.merchants = deduplicatedMerchants;
           this.isLoading = false;
+          this.isFetchingMerchants = false; // Reset flag when loading is complete
           // Use nextTick to ensure DOM is updated before showing the button
           this.$nextTick(() => {
             setTimeout(() => {
@@ -725,6 +765,7 @@ export default {
         .catch(error => {
           console.error('Error fetching logos:', error);
           this.isLoading = false;
+          this.isFetchingMerchants = false; // Reset flag on error
           this.initialRenderComplete = true; // Still show content even if there's an error
         });
     },
@@ -749,7 +790,6 @@ export default {
       return axios.get('https://engagementhub.paytaca.com/api/cashback/campaignmerchant/get_merchants_under_campaigns/')
         .then(response => {
           this.cashbackCampaigns = response.data;
-          console.log('Cashback campaigns fetched:', this.cashbackCampaigns);
         })
         .catch(error => {
           console.error('Error fetching cashback campaigns:', error);
@@ -1217,10 +1257,8 @@ export default {
         const response = await axios.get('https://watchtower.cash/api/bch-prices/?currencies=PHP');
         if (response.data && response.data.length > 0) {
           this.bchExchangeRate = parseFloat(response.data[0].price_value);
-          console.log('BCH Exchange Rate:', this.bchExchangeRate);
         }
       } catch (error) {
-        console.error('Error fetching BCH exchange rate:', error);
         this.bchExchangeRate = null;
       }
     },
@@ -1293,6 +1331,38 @@ export default {
       const localAmount = bchAmount * this.bchExchangeRate;
       
       return localAmount.toFixed(2);
+    },
+    
+    // Deduplicate merchants by ID to prevent duplicates
+    deduplicateMerchants(merchants) {
+      const seen = new Set();
+      return merchants.filter(merchant => {
+        if (seen.has(merchant.id)) {
+          return false;
+        }
+        seen.add(merchant.id);
+        return true;
+      });
+    },
+    
+    // Check if all filters are at default values and reload merchants if so
+    checkAndReloadIfAllFiltersDefault() {
+      // Add a small delay to prevent multiple API calls when multiple filters change
+      clearTimeout(this.reloadTimeout);
+      this.reloadTimeout = setTimeout(() => {
+        const allFiltersDefault = 
+          this.filterByCountry === 'default' &&
+          this.filterByCity === 'default' &&
+          this.filterByCategory === 'default' &&
+          this.filterByLastTransaction === 'default' &&
+          !this.showUnverified &&
+          !this.showNearbyOnly &&
+          !this.searchQuery;
+        
+        if (allFiltersDefault && !this.isFetchingMerchants) {
+          this.fetchMerchants();
+        }
+      }, 100);
     }
   },
   watch: {
@@ -1337,6 +1407,9 @@ export default {
           this.$refs.mapView.centerOnTarget(this.mapCenter, this.zoomLevel);
         }
       }
+      
+      // Check if all filters are now default and reload if so
+      this.checkAndReloadIfAllFiltersDefault();
     },
     filterByCity(newValue) {
       if (newValue !== 'default') {
@@ -1349,18 +1422,37 @@ export default {
           this.$refs.mapView.centerOnTarget(this.mapCenter, this.zoomLevel);
         }
       }
+      
+      // Check if all filters are now default and reload if so
+      this.checkAndReloadIfAllFiltersDefault();
     },
-    filterByCategory(newValue) {
-      if (newValue !== 'default') {
+    
+    // Watch for other filter changes
+    filterByCategory(newValue, oldValue) {
+      // Only fetch if the value actually changed and is not being reset
+      if (newValue !== oldValue && newValue !== 'default') {
         this.fetchMerchants();
+      } else if (newValue === 'default') {
+        // Check if all filters are now default and reload if so
+        this.checkAndReloadIfAllFiltersDefault();
       }
     },
-    filterByLastTransaction(newValue) {
-      if (newValue !== 'default') {
-        // Keep other filters active, just update the last transaction filter
+    filterByLastTransaction(newValue, oldValue) {
+      // Only fetch if the value actually changed and is not being reset
+      if (newValue !== oldValue && newValue !== 'default') {
         this.fetchMerchants();
+      } else if (newValue === 'default') {
+        // Check if all filters are now default and reload if so
+        this.checkAndReloadIfAllFiltersDefault();
       }
     },
+    showUnverified() {
+      this.checkAndReloadIfAllFiltersDefault();
+    },
+    showNearbyOnly() {
+      this.checkAndReloadIfAllFiltersDefault();
+    },
+    
     // Watch for changes in filtered merchants to observe new gift icons
     filteredMerchants: {
       handler() {
@@ -1370,6 +1462,7 @@ export default {
       },
       deep: true
     },
+    
     
     // Watch for view changes to handle pending map operations on mobile
     currentView(newView, oldView) {
