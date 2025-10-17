@@ -13,8 +13,9 @@ import 'leaflet.markercluster/dist/leaflet.markercluster';
 import image from "../assets/marker_pin.png";
 
 
-// Default map center
-const defaultCenter = [11.2441900, 124.9987370]; // Tacloban City
+// Default map center - Philippines
+const defaultCenter = [12.8797, 121.7740]; // Center of Philippines
+// const defaultCenter = [11.2441900, 124.9987370]; // Tacloban City
 // const defaultCenter = [-2.745453205711577, 129.97266776311113]; // Custom
 
 export default {
@@ -28,10 +29,15 @@ export default {
   data() {
     return {
       initialLoadComplete: false,
+      isInitialDataLoad: true,
     };
   },
   mounted () {
     this.loadMap();
+    // After 3 seconds, consider initial data load complete
+    setTimeout(() => {
+      this.isInitialDataLoad = false;
+    }, 3000);
   },
   watch: {
     merchants: {
@@ -62,14 +68,8 @@ export default {
       setTimeout(() => {
         vm.map.invalidateSize();
         
-        // Check if we should fit to markers or use default view
-        if (this.merchants && this.merchants.length > 0) {
-          // If merchants exist, fit to them directly
-          vm.fitMapToMarkers();
-        } else {
-          // Only use default center if no merchants are available
-          vm.map.setView(defaultCenter, 3.5, { animate: false });
-        }
+        // Always start with Philippines view on initial load
+        vm.map.setView(defaultCenter, 4, { animate: false });
         
         // Mark initial load as complete
         vm.initialLoadComplete = true;
@@ -165,8 +165,8 @@ export default {
         this.markerClusterGroup.addLayer(marker);
       });
 
-      // Only auto-fit to markers if this is not the initial load
-      if (merchants.length > 0 && this.initialLoadComplete) {
+      // Only auto-fit to markers after initial data load is complete
+      if (merchants.length > 0 && !this.isInitialDataLoad && this.initialLoadComplete) {
         this.fitMapToMarkers();
       }
     },
@@ -222,7 +222,7 @@ export default {
           this.fitMapToMarkers();
         } else {
           // Only use default center if no merchants are available
-          this.map.setView(defaultCenter, 3.5, { animate: false });
+          this.map.setView(defaultCenter, 4, { animate: false });
         }
       }, 200);
     },

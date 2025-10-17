@@ -9,8 +9,62 @@
         placeholder="Search merchants..."
         class="w-full px-4 py-3 mb-6 rounded-lg bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200"
       />
+
+      <!-- Filter buttons -->
+      <div class="flex items-center justify-center gap-2 mb-4 overflow-x-auto">
+        <!-- Show Merchants Near Me Button -->
+        <button 
+          v-if="!showNearbyOnly"
+          @click="showMerchantsNearMe" 
+          class="px-3 md:px-4 py-2 text-xs md:text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 whitespace-nowrap flex-shrink-0"
+          :disabled="isGettingLocation"
+        >
+          <svg v-if="!isGettingLocation" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <div v-if="isGettingLocation" class="animate-spin rounded-full h-4 w-4 inline mr-2 border-t-2 border-b-2 border-white"></div>
+          {{ isGettingLocation ? 'Getting Location...' : 'Merchants Near Me' }}
+        </button>
+        
+        <!-- Clear Nearby Filter Button -->
+        <button 
+          v-if="showNearbyOnly"
+          @click="clearNearbyFilter" 
+          class="px-3 md:px-4 py-2 text-xs md:text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 whitespace-nowrap flex-shrink-0"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          Clear Nearby Filter
+        </button>
+        
+        <button 
+          @click="toggleUnverifiedFilter" 
+          class="px-3 md:px-4 py-2 text-xs md:text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 whitespace-nowrap flex-shrink-0"
+          :class="showUnverified ? 'text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-500' : 'text-blue-600 bg-blue-100 hover:bg-blue-200 focus:ring-blue-500'"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {{ showUnverified ? 'Hide Non-Verified' : 'With Non-Verified' }}
+        </button>
+
+        <!-- More Filters Button -->
+        <button 
+          @click="showFilters = !showFilters" 
+          class="px-3 md:px-4 py-2 text-xs md:text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 whitespace-nowrap flex-shrink-0"
+          :class="showFilters ? 'text-white bg-purple-600 hover:bg-purple-700 focus:ring-purple-500' : 'text-purple-600 bg-purple-100 hover:bg-purple-200 focus:ring-purple-500'"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+          {{ showFilters ? 'Hide Filters' : 'More Filters' }}
+        </button>
+      </div>
+
       <!-- Flex container for dropdowns -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-justify sm:text-sm mb-6">
+      <div v-if="showFilters" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-justify sm:text-sm mb-6">
         <!-- Dropdown for sorting by country -->
         <select 
           v-model="filterByCountry" 
@@ -51,53 +105,10 @@
       </div>
       
       <!-- Note about disabled filters when nearby is active -->
-      <div v-if="showNearbyOnly" class="text-center mb-4">
+      <div v-if="showNearbyOnly && showFilters" class="text-center mb-4">
         <p class="text-gray-400 text-xs">
           ℹ️ Country and city filters are disabled when showing nearby merchants
         </p>
-      </div>
-
-      <!-- Filter buttons -->
-      <div class="flex items-center justify-center space-x-4 mb-4">
-        <!-- Show Merchants Near Me Button -->
-        <div class="flex space-x-2">
-          <button 
-            v-if="!showNearbyOnly"
-            @click="showMerchantsNearMe" 
-            class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200"
-            :disabled="isGettingLocation"
-          >
-            <svg v-if="!isGettingLocation" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <div v-if="isGettingLocation" class="animate-spin rounded-full h-4 w-4 inline mr-2 border-t-2 border-b-2 border-white"></div>
-            {{ isGettingLocation ? 'Getting Location...' : 'Show Merchants Near Me' }}
-          </button>
-          
-          <!-- Clear Nearby Filter Button -->
-          <button 
-            v-if="showNearbyOnly"
-            @click="clearNearbyFilter" 
-            class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-            Clear Nearby Filter
-          </button>
-        </div>
-        
-        <button 
-          @click="toggleUnverifiedFilter" 
-          class="px-4 py-2 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200"
-          :class="showUnverified ? 'text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-500' : 'text-blue-600 bg-blue-100 hover:bg-blue-200 focus:ring-blue-500'"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          {{ showUnverified ? 'Hide Unverified Merchants' : 'Show Unverified Merchants' }}
-        </button>
       </div>
 
       <!-- Merchants count and status -->
@@ -475,8 +486,9 @@ import moment from 'moment';
 
 const DOMAIN = 'https://map.paytaca.com'
 
-// Default map center
-const defaultCenter = [11.2441900, 124.9987370]; // Tacloban City
+// Default map center - Philippines
+const defaultCenter = [12.8797, 121.7740]; // Center of Philippines
+// const defaultCenter = [11.2441900, 124.9987370]; // Tacloban City
 // const defaultCenter = [-2.745453205711577, 129.97266776311113]; // Custom
 
 export default {
@@ -488,7 +500,7 @@ export default {
     return {
       merchants: [],
       mapCenter: defaultCenter,
-      zoomLevel: 5,
+      zoomLevel: 15,
       searchQuery: '',
       filterByCountry: 'default', // Default value for filtering by country dropdown
       filterByCity: 'default', // Default value for filtering by city dropdown
@@ -520,7 +532,8 @@ export default {
       reservationCountdown: null, // Store reservation countdown
       countdownInterval: null, // Store interval for countdown timer
       pendingMapOperations: null, // Store pending map operations for mobile
-      reloadTimeout: null // Store timeout for reloading merchants when all filters are default
+      reloadTimeout: null, // Store timeout for reloading merchants when all filters are default
+      showFilters: false // Control visibility of select filter dropdowns
     };
   },
   async mounted() {
@@ -1386,7 +1399,7 @@ export default {
       if (newValue !== 'default') {
         // For any country selection, use default values and let MapView auto-fit to markers
         this.mapCenter = defaultCenter;
-        this.zoomLevel = 3.5;
+        this.zoomLevel = 4;
         
         // Reset city filter when country changes
         this.filterByCity = 'default';
@@ -1397,7 +1410,7 @@ export default {
         }
       } else {
         this.mapCenter = defaultCenter;
-        this.zoomLevel = 3.5;
+        this.zoomLevel = 4;
         
         // Reset city filter when country is reset to default
         this.filterByCity = 'default';
@@ -1415,7 +1428,7 @@ export default {
       if (newValue !== 'default') {
         // For any city selection, use default values and let MapView auto-fit to markers
         this.mapCenter = defaultCenter;
-        this.zoomLevel = 3.5;
+        this.zoomLevel = 4;
         
         // Only update map if map view is currently active
         if (this.currentView === 'map' && !this.isMobile) {
