@@ -11,7 +11,7 @@
       />
 
       <!-- Filter buttons -->
-      <div class="flex items-center justify-center gap-2 mb-4 overflow-x-auto">
+      <div class="flex items-center justify-start md:justify-center gap-2 mb-4 overflow-x-auto md:overflow-x-visible overflow-y-hidden flex-nowrap md:flex-wrap">
         <!-- Show Merchants Near Me Button -->
         <button 
           v-if="!showNearbyOnly"
@@ -195,6 +195,55 @@
         </svg>
         {{ currentView === 'map' ? 'Back to List' : 'Show Map' }}
       </button>
+    </div>
+
+    <!-- Iframe Browser Dialog -->
+    <div v-if="showIframeDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
+      <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <!-- Dialog Header -->
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center space-x-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+            </svg>
+            <h3 class="text-lg font-semibold text-gray-900">Open in Browser</h3>
+          </div>
+          <button 
+            @click="closeIframeDialog" 
+            class="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Dialog Content -->
+        <div class="mb-6">
+          <p class="text-gray-700 mb-4">
+            To use the location feature, please open this page in your device's default browser.
+          </p>
+          <p class="text-sm text-gray-600">
+            Location services may not work properly when the page is loaded within another app. Opening in your browser will ensure all features work correctly.
+          </p>
+        </div>
+
+        <!-- Dialog Actions -->
+        <div class="flex flex-col sm:flex-row gap-3 justify-end">
+          <button 
+            @click="closeIframeDialog" 
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors duration-200"
+          >
+            Cancel
+          </button>
+          <button 
+            @click="openInBrowser" 
+            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+          >
+            Open in Browser
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Cashback Campaign Dialog -->
@@ -533,7 +582,8 @@ export default {
       countdownInterval: null, // Store interval for countdown timer
       pendingMapOperations: null, // Store pending map operations for mobile
       reloadTimeout: null, // Store timeout for reloading merchants when all filters are default
-      showFilters: false // Control visibility of select filter dropdowns
+      showFilters: false, // Control visibility of select filter dropdowns
+      showIframeDialog: false // Control iframe browser dialog visibility
     };
   },
   async mounted() {
@@ -1056,8 +1106,23 @@ export default {
       return deg * (Math.PI/180);
     },
     
+    // Check if page is loaded in an iframe
+    isInIframe() {
+      try {
+        return window.self !== window.top;
+      } catch (e) {
+        return true;
+      }
+    },
+    
     // Show merchants within 10km of user location
     showMerchantsNearMe() {
+      // Check if we're in an iframe
+      if (this.isInIframe()) {
+        this.showIframeDialog = true;
+        return;
+      }
+      
       this.isGettingLocation = true;
       
       if (!navigator.geolocation) {
@@ -1103,6 +1168,19 @@ export default {
           maximumAge: 60000
         }
       );
+    },
+    
+    // Open page in default browser
+    openInBrowser() {
+      const currentUrl = window.location.href;
+      // Try to open in a new window/tab
+      window.open(currentUrl, '_blank');
+      this.showIframeDialog = false;
+    },
+    
+    // Close iframe dialog
+    closeIframeDialog() {
+      this.showIframeDialog = false;
     },
     
     // Clear the nearby filter and show all merchants
