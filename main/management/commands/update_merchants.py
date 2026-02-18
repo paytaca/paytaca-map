@@ -123,7 +123,7 @@ def _fetch_merchants(check_last_update=True):
                 last_transaction_date = parse_last_transaction_date(last_transaction_date_str)
                 if last_transaction_date:
                     last_transaction_date = parser.parse(last_transaction_date_str)
-                    if merchant.last_transaction_date < last_transaction_date:
+                    if merchant.last_transaction_date and merchant.last_transaction_date < last_transaction_date:
                         proceed_update = True
 
                 if proceed_update:
