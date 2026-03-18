@@ -5,20 +5,15 @@ from django.core.cache import cache
 from django.conf import settings
 from .models import Merchant, Category
 from .serializers import MerchantsSerializer
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 def get_merchants_cache_version():
-    """Get the current cache version for merchants. Increments on data changes."""
+    """Get the current cache version for merchants."""
     version_key = "merchants_cache_version"
     version = cache.get(version_key)
     if version is None:
-        cache.set(version_key, 1, timeout=None)  # Store indefinitely
-        logger.info(f"Created new cache version key")
+        cache.set(version_key, 1, timeout=None)
         return 1
-    logger.info(f"Cache version: {version}")
     return version
 
 
@@ -36,10 +31,7 @@ class MerchantListView(APIView):
         category_id = request.query_params.get("category_id")
         category_short_name = request.query_params.get("category")
 
-        # Get cache version for invalidation support
         cache_version = get_merchants_cache_version()
-
-        # Generate cache key based on query parameters and version
         cache_key = get_cache_key(
             "merchants",
             filter_by_id,
@@ -48,38 +40,26 @@ class MerchantListView(APIView):
             version=cache_version,
         )
 
-        # Try to get from cache first
         cached_data = cache.get(cache_key)
-        logger.info(
-            f"Cache get result for {cache_key}: {type(cached_data)} len={len(cached_data) if cached_data else 0}"
-        )
         if cached_data is not None:
-            logger.info(f"Cache HIT for key: {cache_key}")
             return Response(cached_data)
-
-        logger.info(f"Cache MISS for key: {cache_key}")
 
         merchants = (
             Merchant.objects.with_effective_date()
             .filter(test_shop=False)
             .exclude(name__regex=r"(^|\s)Test(\s|$)")
         )
-        # Exclude merchants without last_transaction_date, except for Hotels/Resorts by Hiverooms category
         merchants = merchants.filter(
             models.Q(last_transaction_date__isnull=False)
             | models.Q(categories__name="Hotels / Resorts by Hiverooms")
         )
-        # Exclude merchants without longitude and latitude
         merchants = merchants.filter(longitude__isnull=False, latitude__isnull=False)
 
-        # Debug: Check if Test merchants are still there
         test_merchants = merchants.filter(name__regex=r"(^|\s)Test(\s|$)")
         if test_merchants.exists():
             print(
-                f"WARNING: Found {test_merchants.count()} merchants with 'Test' in name after exclusion"
+                f"WARNING: Found {test_merchants.count()} merchants with 'Test' in name"
             )
-            for merchant in test_merchants:
-                print(f"  - {merchant.name}")
 
         if filter_by_id:
             merchant_ids = [int(id) for id in filter_by_id.split(",") if id.isdigit()]
@@ -89,16 +69,11 @@ class MerchantListView(APIView):
         if category_short_name:
             merchants = merchants.filter(categories__short_name=category_short_name)
 
-        # Ensure unique merchants by ID to prevent duplicates
         merchants = merchants.distinct()
-
         serializer = MerchantsSerializer(merchants, many=True)
         data = serializer.data
 
-        # Cache the result
         cache.set(cache_key, data, getattr(settings, "MERCHANTS_CACHE_TIMEOUT", 300))
-        logger.info(f"Cached data for key: {cache_key}")
-
         return Response(data)
 
 
