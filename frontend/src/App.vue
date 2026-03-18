@@ -587,7 +587,8 @@ export default {
     };
   },
   async mounted() {
-    await this.fetchCategories(); // Fetch categories on component mount
+    // Fetch all data in parallel for faster initial load
+    this.isLoading = true;
     
     // On mobile, listen to window scroll; on desktop, listen to container scroll
     if (this.isMobile) {
@@ -597,21 +598,28 @@ export default {
     }
     console.log("Scroll event listener added.");
     
-let urlParams = new URLSearchParams(window.location.search)
+    let urlParams = new URLSearchParams(window.location.search)
     if (urlParams.has('merchants')) {
       this.merchantsFilter = urlParams.get('merchants')
     }
+    
+    // Parse category from URL params first (need categories loaded)
+    await this.fetchCategories();
     if (urlParams.has('category')) {
       const categoryShortName = urlParams.get('category')
-      // Find the category in categoriesList by short_name
       const category = this.categoriesList.find(cat => cat.short_name === categoryShortName)
       if (category) {
         this.filterByCategory = category.id
       }
     }
-    await this.fetchMerchants();
-    await this.fetchCashbackCampaigns(); // Fetch cashback campaigns on component mount
-    await this.fetchBCHExchangeRate(); // Fetch BCH exchange rate
+    
+    // Fetch merchants and cashback campaigns in parallel
+    await Promise.all([
+      this.fetchMerchants(),
+      this.fetchCashbackCampaigns(),
+      this.fetchBCHExchangeRate()
+    ]);
+    
     this.setupGiftObserver(); // Setup intersection observer for gift icons
   },
       beforeUnmount() {
@@ -746,78 +754,17 @@ let urlParams = new URLSearchParams(window.location.search)
       
       this.isFetchingMerchants = true; // Set flag to prevent multiple calls
       this.isLoading = true; // Set loading state to true before API call
-      axios.get(url)
+      return axios.get(url)
         .then(response => {
-          const merchants = response.data;
-          this.fetchLocations(merchants);
-        })
-        .catch(error => {
-          console.error('Error fetching merchants:', error);
-          this.isLoading = false; // Set loading state to false on error
-          this.isFetchingMerchants = false; // Reset flag on error
-        });
-    },
-    fetchLocations(merchants) {
-      axios.get(DOMAIN + '/api/locations/')
-        .then(response => {
-          const locations = response.data;
-          const locationMap = new Map();
-          locations.forEach(location => {
-            locationMap.set(location.merchant, location);
-          });
-          
-          // Create new merchant objects instead of mutating existing ones
-          const merchantsWithLocations = merchants.map(merchant => {
-            const location = locationMap.get(merchant.id);
-            if (location) {
-              return {
-                ...merchant,
-                location: location.location,
-                town: location.town,
-                city: location.city,
-                province: location.province,
-                state: location.state,
-                country: location.country,
-                latitude: location.latitude,
-                longitude: location.longitude
-              };
-            }
-            return merchant;
-          });
-          
-          this.merchants = merchantsWithLocations;
-          this.fetchLogos();
-        })
-        .catch(error => {
-          console.error('Error fetching locations:', error);
-          this.isLoading = false; // Set loading state to false on error
-          this.isFetchingMerchants = false; // Reset flag on error
-        });
-    },
-    fetchLogos() {
-      axios.get(DOMAIN + '/api/logos/')
-        .then(response => {
-          const logos = response.data;
-          const logoMap = new Map();
-          logos.forEach(logo => {
-            if (!logoMap.has(logo.merchant)) {
-              logoMap.set(logo.merchant, []);
-            }
-            logoMap.get(logo.merchant).push(logo.url);
-          });
-          
-          // Create new merchant objects instead of mutating existing ones
-          const merchantsWithLogos = this.merchants.map(merchant => {
-            const logos = logoMap.get(merchant.id);
-            return {
-              ...merchant,
-              logo: logos ? logos[0] : null
-            };
-          });
+          // The API already returns location and logo fields directly on merchant objects
+          // Map logo_url to logo for consistency with existing template code
+          const merchants = response.data.map(merchant => ({
+            ...merchant,
+            logo: merchant.logo_url || null
+          }));
           
           // Ensure merchants are unique by ID to prevent duplicates
-          const deduplicatedMerchants = this.deduplicateMerchants(merchantsWithLogos);
-          this.merchants = deduplicatedMerchants;
+          this.merchants = this.deduplicateMerchants(merchants);
           this.isLoading = false;
           this.isFetchingMerchants = false; // Reset flag when loading is complete
           // Use nextTick to ensure DOM is updated before showing the button
@@ -830,10 +777,9 @@ let urlParams = new URLSearchParams(window.location.search)
           });
         })
         .catch(error => {
-          console.error('Error fetching logos:', error);
-          this.isLoading = false;
+          console.error('Error fetching merchants:', error);
+          this.isLoading = false; // Set loading state to false on error
           this.isFetchingMerchants = false; // Reset flag on error
-          this.initialRenderComplete = true; // Still show content even if there's an error
         });
     },
 
