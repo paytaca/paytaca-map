@@ -112,11 +112,33 @@
       </div>
 
       <!-- Merchants count and status -->
-      <div v-if="!isLoading && !isFetchingMerchants" class="text-center mb-6">
-        <p class="text-white text-lg font-medium">{{ filteredMerchants.length }} merchants</p>
+      <div class="text-center mb-6">
+        <p class="text-white text-lg font-medium">
+          <span v-if="isLoading">Loading merchants...</span>
+          <span v-else>{{ filteredMerchants.length }} merchants</span>
+        </p>
         <p v-if="showNearbyOnly && userLocation" class="text-green-400 text-sm mt-1">
           📍 Showing merchants within 10km of your location
         </p>
+      </div>
+
+      <!-- Loading Skeleton -->
+      <div v-if="isLoading" class="mt-2 grid grid-cols-1 md:grid-cols-2 w-85 md-270 lg-255 h-auto md-auto">
+        <div v-for="n in 6" :key="n" 
+          class="flex flex-col p-4 m-2 rounded-lg bg-slate-300 animate-pulse border border-gray-200">
+          <div class="h-full">
+            <div class="w-20 h-20 bg-gray-400 rounded float-right" style="padding-left: 12px;"></div>
+            <div class="text-sm md:text-xs">
+              <div class="h-5 bg-gray-400 rounded w-3/4 mb-2"></div>
+              <div class="h-4 bg-gray-400 rounded w-1/2 mb-1"></div>
+              <div class="h-3 bg-gray-400 rounded w-2/3 mt-2"></div>
+            </div>
+          </div>
+          <div class="mt-2 flex items-center space-x-3 clear-both">
+            <div class="h-5 w-5 bg-gray-400 rounded-full"></div>
+            <div class="h-5 w-5 bg-gray-400 rounded-full"></div>
+          </div>
+        </div>
       </div>
 
       <!-- Grid for logos with descriptions -->
@@ -158,11 +180,6 @@
                     @click.stop="showCashbackDialog(merchant)">🎁</span>
             </p>
         </div>
-      </div>
-
-      <!-- Loading Spinner -->
-      <div v-if="isLoading" class="flex justify-center items-center h-64">
-        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
 
       <!-- Load More Button -->

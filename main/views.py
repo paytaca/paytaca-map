@@ -5,6 +5,9 @@ from django.core.cache import cache
 from django.conf import settings
 from .models import Merchant, Category
 from .serializers import MerchantsSerializer
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def get_merchants_cache_version():
@@ -46,7 +49,10 @@ class MerchantListView(APIView):
         # Try to get from cache first
         cached_data = cache.get(cache_key)
         if cached_data is not None:
+            logger.info(f"Cache HIT for key: {cache_key}")
             return Response(cached_data)
+
+        logger.info(f"Cache MISS for key: {cache_key}")
 
         merchants = (
             Merchant.objects.with_effective_date()
@@ -86,6 +92,7 @@ class MerchantListView(APIView):
 
         # Cache the result
         cache.set(cache_key, data, getattr(settings, "MERCHANTS_CACHE_TIMEOUT", 300))
+        logger.info(f"Cached data for key: {cache_key}")
 
         return Response(data)
 
