@@ -180,8 +180,11 @@ export default {
     centerOnTarget(coordinates, zoomLevel) {
       if (coordinates.length == 0) {
         coordinates = defaultCenter;
-      } 
-      this.map.setView(coordinates, zoomLevel, { animate: true, duration: 1.5 }); 
+      }
+      // Invalidate size first to ensure proper rendering after container becomes visible
+      this.map.invalidateSize();
+      // Use flyTo for smoother transition
+      this.map.flyTo(coordinates, zoomLevel, { animate: true, duration: 1.2 }); 
     },
     openPopup(latitude, longitude, content) {
       const popup = L.popup()

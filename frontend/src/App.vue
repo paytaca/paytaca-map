@@ -979,8 +979,8 @@ export default {
       // Toggle between 'list' and 'map' views
       this.currentView = this.currentView === 'map' ? 'list' : 'map';
 
-      if (this.isMobile && this.currentView === 'map') {
-        // When switching to map view on mobile, fit the viewport properly
+      if (this.isMobile && this.currentView === 'map' && !this.pendingMapOperations) {
+        // When switching to map view on mobile (without pending merchant), fit the viewport properly
         this.$nextTick(() => {
           this.$refs.mapView.fitViewportWhenVisible();
         });
@@ -1526,11 +1526,11 @@ export default {
         // Wait for map to be ready, then execute pending operations
         this.$nextTick(() => {
           setTimeout(() => {
-            if (this.$refs.mapView && this.$refs.mapView.centerOnTarget) {
+            if (this.$refs.mapView && this.$refs.mapView.map) {
               this.performMapOperations(this.pendingMapOperations);
               this.pendingMapOperations = null; // Clear pending operations
             }
-          }, 300); // Give map more time to be fully ready
+          }, 150); // Give map time to be fully ready after invalidateSize
         });
       }
     }
