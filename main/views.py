@@ -15,8 +15,10 @@ def get_merchants_cache_version():
     version_key = "merchants_cache_version"
     version = cache.get(version_key)
     if version is None:
-        cache.set(version_key, 1, None)  # Store indefinitely
+        cache.set(version_key, 1, timeout=None)  # Store indefinitely
+        logger.info(f"Created new cache version key")
         return 1
+    logger.info(f"Cache version: {version}")
     return version
 
 
@@ -48,6 +50,9 @@ class MerchantListView(APIView):
 
         # Try to get from cache first
         cached_data = cache.get(cache_key)
+        logger.info(
+            f"Cache get result for {cache_key}: {type(cached_data)} len={len(cached_data) if cached_data else 0}"
+        )
         if cached_data is not None:
             logger.info(f"Cache HIT for key: {cache_key}")
             return Response(cached_data)
