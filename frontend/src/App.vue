@@ -1,7 +1,7 @@
 <template>
-  <div class="grid h-full md:h-auto md:grid-cols-2 bg-slate-700">
+  <div class="min-h-screen md:grid md:h-auto md:grid-cols-2 bg-slate-700 overflow-x-hidden">
     <!-- Left Section: Logos with Descriptions -->
-    <div id="list" class="p-6 overflow-y-scroll h-screen sm:h-screen" ref="logosContainer">
+    <div id="list" class="p-6 md:overflow-y-scroll md:h-screen" ref="logosContainer">
       <!-- Search Bar -->
       <input
         v-model="searchQuery"
@@ -588,7 +588,13 @@ export default {
   },
   async mounted() {
     await this.fetchCategories(); // Fetch categories on component mount
-    this.$refs.logosContainer.addEventListener('scroll', this.handleScroll);
+    
+    // On mobile, listen to window scroll; on desktop, listen to container scroll
+    if (this.isMobile) {
+      window.addEventListener('scroll', this.handleScroll);
+    } else {
+      this.$refs.logosContainer.addEventListener('scroll', this.handleScroll);
+    }
     console.log("Scroll event listener added.");
     
     if (this.isMobile) {
@@ -616,7 +622,12 @@ export default {
     this.setupGiftObserver(); // Setup intersection observer for gift icons
   },
       beforeUnmount() {
-      this.$refs.logosContainer.removeEventListener('scroll', this.handleScroll);
+      // Remove scroll listener from appropriate target
+      if (this.isMobile) {
+        window.removeEventListener('scroll', this.handleScroll);
+      } else {
+        this.$refs.logosContainer.removeEventListener('scroll', this.handleScroll);
+      }
       console.log("Scroll event listener removed.");
       
       // Clean up intersection observer
@@ -964,16 +975,25 @@ export default {
       this.$refs.mapView.centerOnTarget([merchant.latitude, merchant.longitude], this.zoomLevel);
     },
     handleScroll() {
-      const container = this.$refs.logosContainer;
-      // Add a small buffer (10px) to ensure we trigger before reaching absolute bottom
-      const scrollPosition = container.scrollTop + container.clientHeight;
-      const scrollHeight = container.scrollHeight - 100;
-      
-      // Check if we've scrolled to the bottom (with buffer)
-      if (scrollPosition >= scrollHeight) {
-        // Load more merchants
-        console.log("Reached bottom of container. Loading more merchants...");
-        this.loadMoreMerchants();
+      if (this.isMobile) {
+        // Mobile: use window scroll
+        const scrollPosition = window.scrollY + window.innerHeight;
+        const scrollHeight = document.documentElement.scrollHeight - 100;
+        
+        if (scrollPosition >= scrollHeight) {
+          console.log("Reached bottom of page. Loading more merchants...");
+          this.loadMoreMerchants();
+        }
+      } else {
+        // Desktop: use container scroll
+        const container = this.$refs.logosContainer;
+        const scrollPosition = container.scrollTop + container.clientHeight;
+        const scrollHeight = container.scrollHeight - 100;
+        
+        if (scrollPosition >= scrollHeight) {
+          console.log("Reached bottom of container. Loading more merchants...");
+          this.loadMoreMerchants();
+        }
       }
     },
     loadMoreMerchants() {
