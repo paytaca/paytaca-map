@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen md:grid md:h-auto md:grid-cols-2 bg-slate-700 overflow-x-hidden">
     <!-- Left Section: Logos with Descriptions -->
-    <div id="list" class="p-6 md:overflow-y-scroll md:h-screen" ref="logosContainer">
+    <div id="list" class="p-6 md:overflow-y-scroll md:h-screen" ref="logosContainer" :class="{ 'hidden': isMobile && currentView === 'map' }">
       <!-- Search Bar -->
       <input
         v-model="searchQuery"
@@ -183,7 +183,7 @@
     </div>
 
     <!-- Right Section: Map  -->
-    <div id="map" class="sm:block h-screen w-full">
+    <div id="map" class="h-screen w-full" :class="{ 'hidden': isMobile && currentView === 'list' }">
       <MapView ref="mapView" :merchants="filteredMerchants" />
     </div>
 
@@ -597,14 +597,7 @@ export default {
     }
     console.log("Scroll event listener added.");
     
-    if (this.isMobile) {
-      const mapElement = document.getElementById('map');
-      if (mapElement) {
-        mapElement.style.display = 'none';
-      }
-    }
-
-    let urlParams = new URLSearchParams(window.location.search)
+let urlParams = new URLSearchParams(window.location.search)
     if (urlParams.has('merchants')) {
       this.merchantsFilter = urlParams.get('merchants')
     }
@@ -1023,23 +1016,12 @@ export default {
       // Toggle between 'list' and 'map' views
       this.currentView = this.currentView === 'map' ? 'list' : 'map';
 
-      // Update visibility of list and map based on currentView
-      const listElement = document.getElementById('list');
-      const mapElement = document.getElementById('map');
-
-      if (this.currentView === 'list') {
-        listElement.style.display = 'block';
-        mapElement.style.display = 'none';
-      } else {
-        listElement.style.display = 'none';
-        mapElement.style.display = 'block';
-      }
-
       if (this.isMobile && this.currentView === 'map') {
         // When switching to map view on mobile, fit the viewport properly
-        this.$refs.mapView.fitViewportWhenVisible();
+        this.$nextTick(() => {
+          this.$refs.mapView.fitViewportWhenVisible();
+        });
       }
-      // Don't update map when switching to list view - let it stay where it is
     },
     checkLastTransaction(transactionDate) {
       if (this.filterByLastTransaction === 'default') {

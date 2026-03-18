@@ -215,16 +215,19 @@ export default {
     
     // Public method to fit viewport when map becomes visible (e.g., on mobile)
     fitViewportWhenVisible() {
-      // Wait a bit for the map to be fully visible and rendered
+      // Wait for the map container to be fully visible in the DOM
       setTimeout(() => {
-        // If there are merchants, fit to them directly
+        // Invalidate size first - this is critical for Leaflet to recalculate
+        // tiles when the container was previously hidden (display: none)
+        this.map.invalidateSize();
+        
+        // Then fit to markers after size is recalculated
         if (this.merchants && this.merchants.length > 0) {
           this.fitMapToMarkers();
         } else {
-          // Only use default center if no merchants are available
           this.map.setView(defaultCenter, 4, { animate: false });
         }
-      }, 200);
+      }, 100);
     },
     fitMapToMarkers() {
       // Get all markers from the cluster group
