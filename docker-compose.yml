@@ -14,6 +14,11 @@ services:
       - "6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
   paytacamap:
     build: .
     command: [ "supervisord", "-c", "/code/supervisord.conf", "--nodaemon" ]
@@ -25,8 +30,10 @@ services:
     volumes:
       - .:/code
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_healthy
 volumes:
   paytacamap_db:
     external: true
