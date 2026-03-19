@@ -109,7 +109,7 @@ class Command(BaseCommand):
         data = []
         for merchant in merchants:
             # Display: 1 if verified and has transactions, 0 otherwise
-            display = 1 if merchant.verified and merchant.last_transaction_date else 1
+            display = 1 if merchant.verified and merchant.last_transaction_date else 0
 
             row = [
                 display,  # Display

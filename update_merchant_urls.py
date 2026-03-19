@@ -1,5 +1,19 @@
 # Django shell script to update merchant website URLs
-# Paste this into: python manage.py shell
+# Can be run standalone with: python update_merchant_urls.py
+# Or pasted into: python manage.py shell
+
+import os
+import sys
+
+# Setup Django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "paytaca_map.settings")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import django
+
+django.setup()
+
+from main.models import Merchant
 
 # Map of merchant IDs to website URLs
 merchant_urls = {
