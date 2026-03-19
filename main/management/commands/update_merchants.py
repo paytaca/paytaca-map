@@ -102,7 +102,9 @@ def _update_merchant(merchant_data):
     merchant.website_url = merchant_data["website_url"]
     merchant.description = merchant_data["description"]
     merchant.gmap_business_link = merchant_data["gmap_business_link"]
-    merchant.verified = merchant_data.get("verified", False)
+    # Only update verified status if explicitly provided by API, otherwise preserve local value
+    if "verified" in merchant_data:
+        merchant.verified = merchant_data["verified"]
     merchant.last_transaction_date = last_transaction_date
     merchant.last_update = timezone.now()
     merchant.save()
