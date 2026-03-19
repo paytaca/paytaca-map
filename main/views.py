@@ -46,7 +46,7 @@ class MerchantListView(APIView):
 
         merchants = (
             Merchant.objects.with_effective_date()
-            .filter(test_shop=False)
+            .filter(active=True, test_shop=False)
             .exclude(name__regex=r"(^|\s)Test(\s|$)")
         )
         merchants = merchants.filter(
@@ -89,7 +89,7 @@ class LocationListAPIView(APIView):
             return Response(cached_data)
 
         merchants = (
-            Merchant.objects.filter(test_shop=False)
+            Merchant.objects.filter(active=True, test_shop=False)
             .filter(
                 models.Q(last_transaction_date__isnull=False)
                 | models.Q(categories__name="Hotels / Resorts by Hiverooms")
@@ -166,7 +166,7 @@ class LogoListAPIView(APIView):
             return Response(cached_data)
 
         merchants = (
-            Merchant.objects.filter(test_shop=False)
+            Merchant.objects.filter(active=True, test_shop=False)
             .filter(
                 models.Q(last_transaction_date__isnull=False)
                 | models.Q(categories__name="Hotels / Resorts by Hiverooms")
