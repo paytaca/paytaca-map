@@ -134,9 +134,12 @@
             </div>
             <div class="w-20 h-20 bg-gray-400 rounded flex-shrink-0"></div>
           </div>
-          <div class="mt-2 flex items-center space-x-3 clear-both">
-            <div class="h-5 w-5 bg-gray-400 rounded-full"></div>
-            <div class="h-5 w-5 bg-gray-400 rounded-full"></div>
+          <div class="mt-2 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="h-5 w-5 bg-gray-400 rounded-full"></div>
+              <div class="h-5 w-5 bg-gray-400 rounded-full"></div>
+            </div>
+            <div class="h-6 w-8 bg-gray-400 rounded"></div>
           </div>
         </div>
       </div>
@@ -162,7 +165,8 @@
               <p class="text-gray-600" v-if="merchant.last_transaction_date">Last transaction: {{ formatDate(merchant.last_transaction_date) }}</p>
             </div>
           </div>
-                      <p class="mt-2 text-white flex items-center space-x-3">
+          <div class="mt-2 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
               <a v-if="getGoogleMapLink(merchant)" :href="getGoogleMapLink(merchant)" target="_blank" class="inline-flex items-center text-green-400 hover:text-green-300 transition-colors duration-200" title="View in Google Maps">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 drop-shadow-lg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
@@ -178,7 +182,9 @@
                     title="Click to view cashback details"
                     :ref="`gift-${merchant.id}`"
                     @click.stop="showCashbackDialog(merchant)">🎁</span>
-            </p>
+            </div>
+            <span class="text-xl">{{ getCountryFlag(merchant.country) }}</span>
+          </div>
         </div>
       </div>
 
@@ -747,6 +753,200 @@ export default {
     },
   },
   methods: {
+    getCountryFlag(country) {
+      const countryFlags = {
+        'Philippines': '🇵🇭', 'PH': '🇵🇭',
+        'United States': '🇺🇸', 'USA': '🇺🇸', 'US': '🇺🇸',
+        'Australia': '🇦🇺', 'AU': '🇦🇺',
+        'Canada': '🇨🇦', 'CA': '🇨🇦',
+        'United Kingdom': '🇬🇧', 'UK': '🇬🇧', 'GB': '🇬🇧',
+        'Singapore': '🇸🇬', 'SG': '🇸🇬',
+        'Japan': '🇯🇵', 'JP': '🇯🇵',
+        'South Korea': '🇰🇷', 'KR': '🇰🇷',
+        'Thailand': '🇹🇭', 'TH': '🇹🇭',
+        'Vietnam': '🇻🇳', 'VN': '🇻🇳',
+        'Malaysia': '🇲🇾', 'MY': '🇲🇾',
+        'Indonesia': '🇮🇩', 'ID': '🇮🇩',
+        'India': '🇮🇳', 'IN': '🇮🇳',
+        'Germany': '🇩🇪', 'DE': '🇩🇪',
+        'France': '🇫🇷', 'FR': '🇫🇷',
+        'Spain': '🇪🇸', 'ES': '🇪🇸',
+        'Italy': '🇮🇹', 'IT': '🇮🇹',
+        'Netherlands': '🇳🇱', 'NL': '🇳🇱',
+        'Switzerland': '🇨🇭', 'CH': '🇨🇭',
+        'Sweden': '🇸🇪', 'SE': '🇸🇪',
+        'Norway': '🇳🇴', 'NO': '🇳🇴',
+        'Denmark': '🇩🇰', 'DK': '🇩🇰',
+        'Finland': '🇫🇮', 'FI': '🇫🇮',
+        'Brazil': '🇧🇷', 'BR': '🇧🇷',
+        'Mexico': '🇲🇽', 'MX': '🇲🇽',
+        'Argentina': '🇦🇷', 'AR': '🇦🇷',
+        'Chile': '🇨🇱', 'CL': '🇨🇱',
+        'Colombia': '🇨🇴', 'CO': '🇨🇴',
+        'South Africa': '🇿🇦', 'ZA': '🇿🇦',
+        'Nigeria': '🇳🇬', 'NG': '🇳🇬',
+        'Kenya': '🇰🇪', 'KE': '🇰🇪',
+        'Ghana': '🇬🇭', 'GH': '🇬🇭',
+        'UAE': '🇦🇪', 'United Arab Emirates': '🇦🇪',
+        'Saudi Arabia': '🇸🇦', 'SA': '🇸🇦',
+        'Turkey': '🇹🇷', 'TR': '🇹🇷',
+        'Israel': '🇮🇱', 'IL': '🇮🇱',
+        'Russia': '🇷🇺', 'RU': '🇷🇺',
+        'China': '🇨🇳', 'CN': '🇨🇳',
+        'Hong Kong': '🇭🇰', 'HK': '🇭🇰',
+        'Taiwan': '🇹🇼', 'TW': '🇹🇼',
+        'New Zealand': '🇳🇿', 'NZ': '🇳🇿',
+        'Portugal': '🇵🇹', 'PT': '🇵🇹',
+        'Belgium': '🇧🇪', 'BE': '🇧🇪',
+        'Austria': '🇦🇹', 'AT': '🇦🇹',
+        'Poland': '🇵🇱', 'PL': '🇵🇱',
+        'Czech Republic': '🇨🇿', 'CZ': '🇨🇿',
+        'Hungary': '🇭🇺', 'HU': '🇭🇺',
+        'Greece': '🇬🇷', 'GR': '🇬🇷',
+        'Ireland': '🇮🇪', 'IE': '🇮🇪',
+        'Ukraine': '🇺🇦', 'UA': '🇺🇦',
+        'Romania': '🇷🇴', 'RO': '🇷🇴',
+        'Bulgaria': '🇧🇬', 'BG': '🇧🇬',
+        'Croatia': '🇭🇷', 'HR': '🇭🇷',
+        'Slovenia': '🇸🇮', 'SI': '🇸🇮',
+        'Slovakia': '🇸🇰', 'SK': '🇸🇰',
+        'Lithuania': '🇱🇹', 'LT': '🇱🇹',
+        'Latvia': '🇱🇻', 'LV': '🇱🇻',
+        'Estonia': '🇪🇪', 'EE': '🇪🇪',
+        'Serbia': '🇷🇸', 'RS': '🇷🇸',
+        'Montenegro': '🇲🇪', 'ME': '🇲🇪',
+        'Bosnia and Herzegovina': '🇧🇦', 'BA': '🇧🇦',
+        'North Macedonia': '🇲🇰', 'MK': '🇲🇰',
+        'Albania': '🇦🇱', 'AL': '🇦🇱',
+        'Kosovo': '🇽🇰', 'XK': '🇽🇰',
+        'Moldova': '🇲🇩', 'MD': '🇲🇩',
+        'Belarus': '🇧🇾', 'BY': '🇧🇾',
+        'Armenia': '🇦🇲', 'AM': '🇦🇲',
+        'Azerbaijan': '🇦🇿', 'AZ': '🇦🇿',
+        'Georgia': '🇬🇪', 'GE': '🇬🇪',
+        'Kazakhstan': '🇰🇿', 'KZ': '🇰🇿',
+        'Uzbekistan': '🇺🇿', 'UZ': '🇺🇿',
+        'Kyrgyzstan': '🇰🇬', 'KG': '🇰🇬',
+        'Tajikistan': '🇹🇯', 'TJ': '🇹🇯',
+        'Turkmenistan': '🇹🇲', 'TM': '🇹🇲',
+        'Mongolia': '🇲🇳', 'MN': '🇲🇳',
+        'Nepal': '🇳🇵', 'NP': '🇳🇵',
+        'Bangladesh': '🇧🇩', 'BD': '🇧🇩',
+        'Sri Lanka': '🇱🇰', 'LK': '🇱🇰',
+        'Pakistan': '🇵🇰', 'PK': '🇵🇰',
+        'Afghanistan': '🇦🇫', 'AF': '🇦🇫',
+        'Iran': '🇮🇷', 'IR': '🇮🇷',
+        'Iraq': '🇮🇶', 'IQ': '🇮🇶',
+        'Syria': '🇸🇾', 'SY': '🇸🇾',
+        'Lebanon': '🇱🇧', 'LB': '🇱🇧',
+        'Jordan': '🇯🇴', 'JO': '🇯🇴',
+        'Kuwait': '🇰🇼', 'KW': '🇰🇼',
+        'Bahrain': '🇧🇭', 'BH': '🇧🇭',
+        'Qatar': '🇶🇦', 'QA': '🇶🇦',
+        'Oman': '🇴🇲', 'OM': '🇴🇲',
+        'Yemen': '🇾🇪', 'YE': '🇾🇪',
+        'Egypt': '🇪🇬', 'EG': '🇪🇬',
+        'Libya': '🇱🇾', 'LY': '🇱🇾',
+        'Tunisia': '🇹🇳', 'TN': '🇹🇳',
+        'Algeria': '🇩🇿', 'DZ': '🇩🇿',
+        'Morocco': '🇲🇦', 'MA': '🇲🇦',
+        'Sudan': '🇸🇩', 'SD': '🇸🇩',
+        'Ethiopia': '🇪🇹', 'ET': '🇪🇹',
+        'Somalia': '🇸🇴', 'SO': '🇸🇴',
+        'Djibouti': '🇩🇯', 'DJ': '🇩🇯',
+        'Eritrea': '🇪🇷', 'ER': '🇪🇷',
+        'Uganda': '🇺🇬', 'UG': '🇺🇬',
+        'Rwanda': '🇷🇼', 'RW': '🇷🇼',
+        'Burundi': '🇧🇮', 'BI': '🇧🇮',
+        'Tanzania': '🇹🇿', 'TZ': '🇹🇿',
+        'Zambia': '🇿🇲', 'ZM': '🇿🇲',
+        'Zimbabwe': '🇿🇼', 'ZW': '🇿🇼',
+        'Malawi': '🇲🇼', 'MW': '🇲🇼',
+        'Mozambique': '🇲🇿', 'MZ': '🇲🇿',
+        'Madagascar': '🇲🇬', 'MG': '🇲🇬',
+        'Mauritius': '🇲🇺', 'MU': '🇲🇺',
+        'Seychelles': '🇸🇨', 'SC': '🇸🇨',
+        'Comoros': '🇰🇲', 'KM': '🇰🇲',
+        'Botswana': '🇧🇼', 'BW': '🇧🇼',
+        'Namibia': '🇳🇦', 'NA': '🇳🇦',
+        'Angola': '🇦🇴', 'AO': '🇦🇴',
+        'Democratic Republic of the Congo': '🇨🇩', 'DR Congo': '🇨🇩', 'DRC': '🇨🇩', 'CD': '🇨🇩',
+        'Republic of the Congo': '🇨🇬', 'Congo': '🇨🇬', 'CG': '🇨🇬',
+        'Gabon': '🇬🇦', 'GA': '🇬🇦',
+        'Equatorial Guinea': '🇬🇶', 'GQ': '🇬🇶',
+        'Cameroon': '🇨🇲', 'CM': '🇨🇲',
+        'Central African Republic': '🇨🇫', 'CF': '🇨🇫',
+        'Chad': '🇹🇩', 'TD': '🇹🇩',
+        'Niger': '🇳🇪', 'NE': '🇳🇪',
+        'Mali': '🇲🇱', 'ML': '🇲🇱',
+        'Burkina Faso': '🇧🇫', 'BF': '🇧🇫',
+        'Senegal': '🇸🇳', 'SN': '🇸🇳',
+        'Gambia': '🇬🇲', 'GM': '🇬🇲',
+        'Guinea-Bissau': '🇬🇼', 'GW': '🇬🇼',
+        'Guinea': '🇬🇳', 'GN': '🇬🇳',
+        'Sierra Leone': '🇸🇱', 'SL': '🇸🇱',
+        'Liberia': '🇱🇷', 'LR': '🇱🇷',
+        'Ivory Coast': '🇨🇮', "Côte d'Ivoire": '🇨🇮', 'CI': '🇨🇮',
+        'Togo': '🇹🇬', 'TG': '🇹🇬',
+        'Benin': '🇧🇯', 'BJ': '🇧🇯',
+        'Mauritania': '🇲🇷', 'MR': '🇲🇷',
+        'Cape Verde': '🇨🇻', 'Cabo Verde': '🇨🇻', 'CV': '🇨🇻',
+        'Sao Tome and Principe': '🇸🇹', 'ST': '🇸🇹',
+        'Lesotho': '🇱🇸', 'LS': '🇱🇸',
+        'Eswatini': '🇸🇿', 'Swaziland': '🇸🇿', 'SZ': '🇸🇿',
+        'Peru': '🇵🇪', 'PE': '🇵🇪',
+        'Bolivia': '🇧🇴', 'BO': '🇧🇴',
+        'Paraguay': '🇵🇾', 'PY': '🇵🇾',
+        'Uruguay': '🇺🇾', 'UY': '🇺🇾',
+        'Ecuador': '🇪🇨', 'EC': '🇪🇨',
+        'Venezuela': '🇻🇪', 'VE': '🇻🇪',
+        'Guyana': '🇬🇾', 'GY': '🇬🇾',
+        'Suriname': '🇸🇷', 'SR': '🇸🇷',
+        'French Guiana': '🇬🇫', 'GF': '🇬🇫',
+        'Belize': '🇧🇿', 'BZ': '🇧🇿',
+        'Guatemala': '🇬🇹', 'GT': '🇬🇹',
+        'Honduras': '🇭🇳', 'HN': '🇭🇳',
+        'El Salvador': '🇸🇻', 'SV': '🇸🇻',
+        'Nicaragua': '🇳🇮', 'NI': '🇳🇮',
+        'Costa Rica': '🇨🇷', 'CR': '🇨🇷',
+        'Panama': '🇵🇦', 'PA': '🇵🇦',
+        'Cuba': '🇨🇺', 'CU': '🇨🇺',
+        'Jamaica': '🇯🇲', 'JM': '🇯🇲',
+        'Haiti': '🇭🇹', 'HT': '🇭🇹',
+        'Dominican Republic': '🇩🇴', 'DO': '🇩🇴',
+        'Puerto Rico': '🇵🇷', 'PR': '🇵🇷',
+        'Trinidad and Tobago': '🇹🇹', 'TT': '🇹🇹',
+        'Barbados': '🇧🇧', 'BB': '🇧🇧',
+        'Saint Lucia': '🇱🇨', 'LC': '🇱🇨',
+        'Grenada': '🇬🇩', 'GD': '🇬🇩',
+        'Saint Vincent and the Grenadines': '🇻🇨', 'VC': '🇻🇨',
+        'Antigua and Barbuda': '🇦🇬', 'AG': '🇦🇬',
+        'Dominica': '🇩🇲', 'DM': '🇩🇲',
+        'Saint Kitts and Nevis': '🇰🇳', 'KN': '🇰🇳',
+        'Bahamas': '🇧🇸', 'BS': '🇧🇸',
+        'Cayman Islands': '🇰🇾', 'KY': '🇰🇾',
+        'Bermuda': '🇧🇲', 'BM': '🇧🇲',
+        'Aruba': '🇦🇼', 'AW': '🇦🇼',
+        'Curacao': '🇨🇼', 'CW': '🇨🇼',
+        'Sint Maarten': '🇸🇽', 'SX': '🇸🇽',
+        'US Virgin Islands': '🇻🇮', 'VI': '🇻🇮',
+        'British Virgin Islands': '🇻🇬', 'VG': '🇻🇬',
+        'Anguilla': '🇦🇮', 'AI': '🇦🇮',
+        'Montserrat': '🇲🇸', 'MS': '🇲🇸',
+        'Guadeloupe': '🇬🇵', 'GP': '🇬🇵',
+        'Martinique': '🇲🇶', 'MQ': '🇲🇶',
+        'Saint Barthelemy': '🇧🇱', 'BL': '🇧🇱',
+        'Saint Martin': '🇲🇫', 'MF': '🇲🇫',
+        'Sint Eustatius': '🇧🇶', 'BQ': '🇧🇶',
+        'Saba': '🇧🇶',
+        'Saint Pierre and Miquelon': '🇵🇲', 'PM': '🇵🇲',
+        'Greenland': '🇬🇱', 'GL': '🇬🇱',
+        'Falkland Islands': '🇫🇰', 'FK': '🇫🇰',
+        'South Georgia and the South Sandwich Islands': '🇬🇸', 'GS': '🇬🇸',
+        'Antarctica': '🇦🇶', 'AQ': '🇦🇶'
+      };
+      return countryFlags[country] || '🏳️';
+    },
     fetchMerchants() {
       // Prevent multiple simultaneous API calls
       if (this.isFetchingMerchants) {
@@ -882,6 +1082,8 @@ export default {
         }
       }
 
+      const countryFlag = this.getCountryFlag(merchant.country);
+
       let popupContent = `<div class="rounded-lg"><div class="flex items-center justify-between"><h3 class='text-lg font-semibold text-gray-900'>${merchant.name}</h3>`;
       
       // Include merchant logo if available
@@ -893,9 +1095,9 @@ export default {
       
       // Include merchant information if available
       if (merchant.city) {
-        popupContent += `<p>${merchant.city}, ${merchant.country}</p>`;
+        popupContent += `<div class="flex items-center justify-between"><p>${merchant.city}, ${merchant.country}</p><span class="text-2xl ml-2">${countryFlag}</span></div>`;
       } else if (merchant.town) {
-        popupContent += `<p>${merchant.town}, ${merchant.province}, ${merchant.country}</p>`;
+        popupContent += `<div class="flex items-center justify-between"><p>${merchant.town}, ${merchant.province}, ${merchant.country}</p><span class="text-2xl ml-2">${countryFlag}</span></div>`;
       }
        
       // Include last transaction time if available
