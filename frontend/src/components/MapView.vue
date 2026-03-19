@@ -55,13 +55,78 @@ export default {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(this.map);
 
-      // Initialize marker cluster group
+      // Initialize marker cluster group with dense clustering effect
       this.markerClusterGroup = L.markerClusterGroup({
-        maxClusterRadius: 20,
+        maxClusterRadius: 15,
         chunkedLoading: true,
-        animate: true
+        animate: true,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        spiderfyDistanceMultiplier: 1.5,  // Spread pins further apart when spiderfying
+        iconCreateFunction: function(cluster) {
+          const childCount = cluster.getChildCount();
+          let size = 40;
+          let fontSize = 14;
+          let backgroundColor = 'rgba(34, 197, 94, 0.7)'; // green-500 with transparency
+          let borderColor = '#16a34a';
+          
+          // Scale cluster size and color based on count
+          if (childCount < 10) {
+            size = 40;
+            fontSize = 14;
+          } else if (childCount < 50) {
+            size = 50;
+            fontSize = 16;
+            backgroundColor = 'rgba(59, 130, 246, 0.75)'; // blue-500 with transparency
+            borderColor = '#2563eb';
+          } else if (childCount < 100) {
+            size = 60;
+            fontSize = 18;
+            backgroundColor = 'rgba(147, 51, 234, 0.75)'; // purple-500 with transparency
+            borderColor = '#7c3aed';
+          } else {
+            size = 70;
+            fontSize = 20;
+            backgroundColor = 'rgba(239, 68, 68, 0.75)'; // red-500 with transparency
+            borderColor = '#dc2626';
+          }
+          
+          return L.divIcon({
+            html: `<div style="
+              width: ${size}px;
+              height: ${size}px;
+              border-radius: 50%;
+              background: ${backgroundColor};
+              border: 3px solid ${borderColor};
+              box-shadow: 0 0 20px ${backgroundColor}, 0 4px 6px rgba(0,0,0,0.3);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              color: white;
+              font-weight: bold;
+              font-size: ${fontSize}px;
+              text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+              animation: cluster-pulse 2s ease-in-out infinite;
+            ">${childCount}</div>`,
+            className: `marker-cluster-custom`,
+            iconSize: L.point(size, size),
+            iconAnchor: L.point(size / 2, size / 2)
+          });
+        }
       });
       this.map.addLayer(this.markerClusterGroup);
+
+      // Reorder z-index after zoom changes since clusters recalculate
+      this.map.on('zoomend', () => {
+        setTimeout(() => {
+          this.reorderClusterZIndex();
+        }, 100);
+      });
+      
+      // Also reorder after marker cluster animation completes
+      this.markerClusterGroup.on('animationend', () => {
+        this.reorderClusterZIndex();
+      });
 
       // Ensure map is properly displayed after initialization
       const vm = this
@@ -131,7 +196,10 @@ export default {
           return;
         }
 
-        const marker = L.marker([latitude, longitude], { icon: customIcon })
+        const marker = L.marker([latitude, longitude], { 
+          icon: customIcon,
+          zIndexOffset: -1000  // Render behind cluster markers
+        })
           .bindPopup(`
           <div class="rounded-lg">
               <div class="flex items-center justify-between">
@@ -165,10 +233,37 @@ export default {
         this.markerClusterGroup.addLayer(marker);
       });
 
+      // Set z-index on cluster markers after they're created
+      this.reorderClusterZIndex();
+
       // Only auto-fit to markers after initial data load is complete
       if (merchants.length > 0 && !this.isInitialDataLoad && this.initialLoadComplete) {
         this.fitMapToMarkers();
       }
+    },
+    reorderClusterZIndex() {
+      // After clusters are rendered, update z-index so larger clusters appear on top
+      const clusterMarkers = document.querySelectorAll('.leaflet-marker-icon');
+      clusterMarkers.forEach(marker => {
+        // Check if this is a cluster marker
+        const clusterDiv = marker.querySelector('.marker-cluster-custom div');
+        if (clusterDiv) {
+          // Extract the count from the div text
+          const count = parseInt(clusterDiv.textContent, 10);
+          if (!isNaN(count)) {
+            // Set z-index based on cluster size (larger = higher z-index)
+            let zIndex = 1000;
+            if (count >= 100) {
+              zIndex = 4000;
+            } else if (count >= 50) {
+              zIndex = 3000;
+            } else if (count >= 10) {
+              zIndex = 2000;
+            }
+            marker.style.zIndex = zIndex;
+          }
+        }
+      });
     },
     getGoogleMapLink(merchant) {
       if (merchant.gmap_business_link) {
@@ -264,4 +359,45 @@ export default {
   height: 100% !important;
   width: 100% !important;
 }
+</style>
+
+<style>
+/* Cluster pulse animation */
+@keyframes cluster-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+/* Custom cluster marker styling */
+.marker-cluster-custom {
+  background: transparent !important;
+}
+
+.marker-cluster-custom div {
+  transition: all 0.3s ease;
+}
+
+.marker-cluster-custom:hover div {
+  transform: scale(1.1) !important;
+  filter: brightness(1.1);
+}
+
+/* Make individual pins more visible when clustered */
+.leaflet-marker-icon {
+  transition: transform 0.3s ease;
+}
+
+/* Spiderfy effect - when clicking on cluster */
+.leaflet-cluster-spider-leg {
+  stroke: #22c55e;
+  stroke-width: 2;
+  stroke-opacity: 0.6;
+}
+
 </style>
