@@ -14,3 +14,6 @@ supervisor==4.2.5
 typing_extensions==4.11.0
 pytz==2024.1
 ipython==8.26.0
+gspread==6.1.2
+google-auth==2.31.0
+google-auth-oauthlib==1.2.0

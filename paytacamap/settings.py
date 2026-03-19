@@ -149,6 +149,15 @@ CACHES = {
 MERCHANTS_CACHE_TIMEOUT = 300  # 5 minutes - merchants change occasionally
 CATEGORIES_CACHE_TIMEOUT = 3600  # 1 hour - categories rarely change
 
+# Google Sheets Configuration
+GOOGLE_SHEETS_SPREADSHEET_ID = config("GOOGLE_SHEETS_SPREADSHEET_ID", default="")
+GOOGLE_PROJECT_ID = config("GOOGLE_PROJECT_ID", default="")
+GOOGLE_PRIVATE_KEY_ID = config("GOOGLE_PRIVATE_KEY_ID", default="")
+GOOGLE_PRIVATE_KEY = config("GOOGLE_PRIVATE_KEY", default="")
+GOOGLE_CLIENT_EMAIL = config("GOOGLE_CLIENT_EMAIL", default="")
+GOOGLE_CLIENT_ID = config("GOOGLE_CLIENT_ID", default="")
+GOOGLE_CLIENT_CERT_URL = config("GOOGLE_CLIENT_CERT_URL", default="")
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
