@@ -124,7 +124,7 @@
 
       <!-- Loading Skeleton -->
       <div v-if="isLoading" class="mt-2 grid grid-cols-1 md:grid-cols-2 w-85 md-270 lg-255 h-auto md-auto">
-        <div v-for="n in 6" :key="n" 
+        <div v-for="n in 8" :key="n"
           class="flex flex-col p-4 m-2 rounded-lg bg-slate-300 animate-pulse border border-gray-200">
           <div class="h-full flex gap-2">
             <div class="text-sm md:text-xs flex-1">
