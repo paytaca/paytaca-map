@@ -218,8 +218,8 @@
     <div id="map" class="h-screen w-full relative" :class="{ 'hidden': isMobile && currentView === 'list' }">
       <MapView ref="mapView" :merchants="filteredMerchants" />
       
-      <!-- Explore Merchants Button (Desktop Only) -->
-      <div v-if="!isMobile && !exploreClicked" class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-[9999]">
+      <!-- Explore Merchants Button -->
+      <div v-if="!exploreClicked" class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-[9999]">
         <button 
           @click="exploreRecentMerchants" 
           class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 whitespace-nowrap"
@@ -228,9 +228,9 @@
         </button>
       </div>
       
-      <!-- Recently Active Merchants Label (Desktop Only) -->
+      <!-- Recently Active Merchants Label and Next Button -->
       <div 
-        v-if="!isMobile && exploreClicked && showRecentLabel" 
+        v-if="exploreClicked && showRecentLabel" 
         class="absolute bottom-8 left-8 z-[9999] transition-opacity duration-500 flex items-center gap-3"
         :class="{ 'opacity-0': !showRecentLabel, 'opacity-100': showRecentLabel }"
       >
@@ -246,13 +246,20 @@
       </div>
     </div>
 
-    <!-- Button to toggle map visibility -->
-    <div v-if="initialRenderComplete" class="fixed bottom-4 left-4 md:left-8 md:bottom-8 md:hidden" style="z-index: 9999;">
-      <button @click="toggleMapView" class="px-6 py-3 ml-2 bg-blue-500 text-white rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-200 shadow-md font-semibold text-lg inline-flex items-center">
-        <svg v-if="currentView === 'map'" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <!-- Button to toggle map visibility - Back to List on top left -->
+    <div v-if="initialRenderComplete && currentView === 'map'" class="fixed top-4 left-4 md:hidden" style="z-index: 9999;">
+      <button @click="toggleMapView" class="px-6 py-3 bg-blue-500 text-white rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-200 shadow-md font-semibold text-lg inline-flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
-        {{ currentView === 'map' ? 'Back to List' : 'Show Map' }}
+        Back to List
+      </button>
+    </div>
+
+    <!-- Button to toggle map visibility - Show Map on bottom left -->
+    <div v-if="initialRenderComplete && currentView === 'list'" class="fixed bottom-4 left-4 md:hidden" style="z-index: 9999;">
+      <button @click="toggleMapView" class="px-6 py-3 bg-blue-500 text-white rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-200 shadow-md font-semibold text-lg inline-flex items-center">
+        Show Map
       </button>
     </div>
 
@@ -1074,11 +1081,11 @@ export default {
         return `https://www.google.com/maps?q=${merchant.latitude},${merchant.longitude}`
       }
     },
-    showPopup(merchant) {
+    showPopup(merchant, skipToggle = false) {
 
       this.zoomLevel = 17.5
       
-      if (this.isMobile) {
+      if (this.isMobile && !skipToggle) {
         // Store merchant data for delayed execution
         this.pendingMapOperations = merchant;
         this.toggleMapView();
@@ -1691,10 +1698,21 @@ export default {
         this.currentRecentMerchantIndex = 0;
         const mostRecentMerchant = this.recentMerchantsList[0];
         
-        // Wait for the button fade animation, then zoom to the merchant
-        setTimeout(() => {
-          this.focusOnMerchant(mostRecentMerchant);
-        }, 600);
+        // On mobile, switch to map view first
+        if (this.isMobile) {
+          this.currentView = 'map';
+          // Wait for map to be ready, then focus
+          this.$nextTick(() => {
+            setTimeout(() => {
+              this.focusOnMerchant(mostRecentMerchant);
+            }, 300);
+          });
+        } else {
+          // On desktop, wait for the button fade animation, then zoom
+          setTimeout(() => {
+            this.focusOnMerchant(mostRecentMerchant);
+          }, 600);
+        }
       }
     },
 
@@ -1730,25 +1748,32 @@ export default {
       
       const nextMerchant = this.recentMerchantsList[this.currentRecentMerchantIndex];
       
+      // On mobile, ensure we're in map view
+      if (this.isMobile) {
+        this.currentView = 'map';
+      }
+      
       // Focus on the merchant (zoom, highlight, scroll)
       this.focusOnMerchant(nextMerchant);
     },
 
-    // Focus on a merchant: zoom to it, highlight it, show popup, and scroll to it in the list
+    // Focus on a merchant: zoom to it, highlight it, show popup, and scroll to it in the list (desktop only)
     focusOnMerchant(merchant) {
       if (!merchant) return;
 
-      // Set the highlighted merchant ID
-      this.highlightedMerchantId = merchant.id;
-      
-      // Scroll to the merchant card in the list immediately
-      this.scrollToMerchantCard(merchant.id);
+      // On desktop, set the highlighted merchant ID and scroll to card
+      // On mobile, skip highlighting since we're in map view
+      if (!this.isMobile) {
+        this.highlightedMerchantId = merchant.id;
+        this.scrollToMerchantCard(merchant.id);
+      }
       
       // Zoom to the merchant on the map and show popup after zoom completes
       this.zoomToMerchant(merchant, () => {
         // Wait 500ms after zoom completes, then show the popup
         setTimeout(() => {
-          this.showPopup(merchant);
+          // On mobile, skip the view toggle since we're already in map view
+          this.showPopup(merchant, this.isMobile);
         }, 500);
       });
     },
