@@ -50,7 +50,16 @@ export default {
   methods: {
     loadMap() {
       // Initialize map without setting a specific view initially
-      this.map = L.map(this.$refs.map);
+      // Disable default zoom control to add custom one on the right
+      this.map = L.map(this.$refs.map, {
+        zoomControl: false
+      });
+      
+      // Add zoom control on the right side
+      L.control.zoom({
+        position: 'topright'
+      }).addTo(this.map);
+      
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(this.map);
@@ -667,14 +676,23 @@ export default {
         return `https://www.google.com/maps?q=${merchant.latitude},${merchant.longitude}`
       }
     },
-    centerOnTarget(coordinates, zoomLevel) {
+    centerOnTarget(coordinates, zoomLevel, onComplete) {
       if (coordinates.length == 0) {
         coordinates = defaultCenter;
       }
       // Invalidate size first to ensure proper rendering after container becomes visible
       this.map.invalidateSize();
       // Use flyTo for smoother transition
-      this.map.flyTo(coordinates, zoomLevel, { animate: true, duration: 1.2 }); 
+      this.map.flyTo(coordinates, zoomLevel, { animate: true, duration: 1.2 });
+      
+      // If a callback is provided, listen for the moveend event (fires when animation completes)
+      if (onComplete && typeof onComplete === 'function') {
+        const handleMoveEnd = () => {
+          onComplete();
+          this.map.off('moveend', handleMoveEnd);
+        };
+        this.map.once('moveend', handleMoveEnd);
+      }
     },
     openPopup(latitude, longitude, content) {
       const popup = L.popup()
@@ -793,6 +811,37 @@ export default {
   stroke: #22c55e;
   stroke-width: 2;
   stroke-opacity: 0.6;
+}
+
+/* Popup ease-in animation from below */
+.leaflet-popup {
+  animation: popup-ease-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: bottom center;
+}
+
+@keyframes popup-ease-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Popup content wrapper animation */
+.leaflet-popup-content-wrapper {
+  animation: popup-content-fade 0.3s ease-out 0.1s both;
+}
+
+@keyframes popup-content-fade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 </style>

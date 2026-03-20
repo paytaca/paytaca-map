@@ -148,9 +148,18 @@
       <div v-if="!isLoading" class="mt-2 grid grid-cols-1 md:grid-cols-2 w-85 md-270 lg-255 h-auto md-auto">
         <!-- Logos with descriptions -->
         <div v-for="merchant in paginatedMerchants" :key="merchant.id" 
-          class="flex flex-col p-4 m-2 rounded-lg bg-slate-300 hover:bg-gray-100 transition-all duration-300 transform hover:scale-[1.02] shadow-sm border border-gray-200"
+          :data-merchant-id="merchant.id"
+          class="flex flex-col p-4 m-2 rounded-lg bg-slate-300 hover:bg-gray-100 transition-all duration-300 transform hover:scale-[1.02] shadow-sm border-2 cursor-pointer relative"
+          :class="{
+            'border-blue-600 ring-4 ring-blue-400 bg-blue-100 shadow-lg shadow-blue-200 scale-[1.02] z-10': highlightedMerchantId === merchant.id,
+            'border-gray-200': highlightedMerchantId !== merchant.id
+          }"
           :style="showUnverified ? (merchant.verified ? 'border-top: 4px solid #10B981' : 'border-top: 4px solid #EF4444') : ''"
           @click="showPopup(merchant)">
+          <!-- Highlight indicator badge -->
+          <div v-if="highlightedMerchantId === merchant.id" class="absolute -top-2 -right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md z-20">
+            Current
+          </div>
           <!-- Check if merchant.logo is defined before accessing its url property -->
           <div class="h-full">
             <img v-if="merchant.logo" :src="merchant.logo" :alt="merchant.name + ' Logo'" class="m-auto sm:h-auto md:h-20 w-20 md-50 lg-75 object-fill cursor-pointer float-right" style="padding-left: 12px;">
@@ -206,17 +215,60 @@
     </div>
 
     <!-- Right Section: Map  -->
-    <div id="map" class="h-screen w-full" :class="{ 'hidden': isMobile && currentView === 'list' }">
+    <div id="map" class="h-screen w-full relative" :class="{ 'hidden': isMobile && currentView === 'list' }">
       <MapView ref="mapView" :merchants="filteredMerchants" />
+      
+      <!-- Explore Merchants Button -->
+      <div v-if="!exploreClicked" class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-[9999]">
+        <button 
+          @click="exploreRecentMerchants" 
+          class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 whitespace-nowrap"
+        >
+          Explore Merchants
+        </button>
+      </div>
+      
+      <!-- Recently Active Merchants Label and Next Button -->
+      <div 
+        v-if="exploreClicked && showRecentLabel" 
+        class="absolute bottom-8 left-8 z-[9999] transition-opacity duration-500 flex items-center gap-3"
+        :class="{ 'opacity-0': !showRecentLabel, 'opacity-100': showRecentLabel }"
+      >
+        <button 
+          @click="resetExploreMode"
+          class="p-2 bg-gray-500 text-white rounded-lg shadow-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-all duration-200"
+          title="Close"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <span class="px-4 py-2 bg-white/90 backdrop-blur-sm text-gray-800 font-medium rounded-lg shadow-lg text-sm">
+          Recently Active Merchants
+        </span>
+        <button 
+          @click="goToNextRecentMerchant"
+          class="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 text-sm whitespace-nowrap"
+        >
+          Next →
+        </button>
+      </div>
     </div>
 
-    <!-- Button to toggle map visibility -->
-    <div v-if="initialRenderComplete" class="fixed bottom-4 left-4 md:left-8 md:bottom-8 md:hidden" style="z-index: 9999;">
-      <button @click="toggleMapView" class="px-6 py-3 ml-2 bg-blue-500 text-white rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-200 shadow-md font-semibold text-lg inline-flex items-center">
-        <svg v-if="currentView === 'map'" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <!-- Button to toggle map visibility - Back to List on top left -->
+    <div v-if="initialRenderComplete && currentView === 'map'" class="fixed top-4 left-4 md:hidden" style="z-index: 9999;">
+      <button @click="toggleMapView" class="px-6 py-3 bg-blue-500 text-white rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-200 shadow-md font-semibold text-lg inline-flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
-        {{ currentView === 'map' ? 'Back to List' : 'Show Map' }}
+        Back to List
+      </button>
+    </div>
+
+    <!-- Button to toggle map visibility - Show Map on bottom left -->
+    <div v-if="initialRenderComplete && currentView === 'list'" class="fixed bottom-4 left-4 md:hidden" style="z-index: 9999;">
+      <button @click="toggleMapView" class="px-6 py-3 bg-blue-500 text-white rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-200 shadow-md font-semibold text-lg inline-flex items-center">
+        Show Map
       </button>
     </div>
 
@@ -606,7 +658,12 @@ export default {
       pendingMapOperations: null, // Store pending map operations for mobile
       reloadTimeout: null, // Store timeout for reloading merchants when all filters are default
       showFilters: false, // Control visibility of select filter dropdowns
-      showIframeDialog: false // Control iframe browser dialog visibility
+      showIframeDialog: false, // Control iframe browser dialog visibility
+      exploreClicked: false, // Track if Explore Merchants button was clicked
+      showRecentLabel: false, // Control visibility of "Recently Active Merchants" label
+      recentMerchantsList: [], // Sorted list of merchants by most recent transaction
+      currentRecentMerchantIndex: 0, // Current index in the recent merchants list
+      highlightedMerchantId: null, // Currently highlighted merchant ID
     };
   },
   async mounted() {
@@ -1033,11 +1090,11 @@ export default {
         return `https://www.google.com/maps?q=${merchant.latitude},${merchant.longitude}`
       }
     },
-    showPopup(merchant) {
+    showPopup(merchant, skipToggle = false) {
 
       this.zoomLevel = 17.5
       
-      if (this.isMobile) {
+      if (this.isMobile && !skipToggle) {
         // Store merchant data for delayed execution
         this.pendingMapOperations = merchant;
         this.toggleMapView();
@@ -1621,7 +1678,145 @@ export default {
           this.fetchMerchants();
         }
       }, 100);
-    }
+    },
+
+    // Reset explore mode to initial state
+    resetExploreMode() {
+      this.exploreClicked = false;
+      this.showRecentLabel = false;
+      this.recentMerchantsList = [];
+      this.currentRecentMerchantIndex = 0;
+      this.highlightedMerchantId = null;
+    },
+
+    // Handle Explore Merchants button click
+    exploreRecentMerchants() {
+      // Fade out button by setting exploreClicked to true
+      this.exploreClicked = true;
+      
+      // Build and sort the list of recent merchants
+      this.buildRecentMerchantsList();
+      
+      // Show the label after a short delay
+      setTimeout(() => {
+        this.showRecentLabel = true;
+      }, 300);
+      
+      // Get the first merchant (most recent)
+      if (this.recentMerchantsList.length > 0) {
+        this.currentRecentMerchantIndex = 0;
+        const mostRecentMerchant = this.recentMerchantsList[0];
+        
+        // On mobile, switch to map view first
+        if (this.isMobile) {
+          this.currentView = 'map';
+          // Wait for map to be ready, then focus
+          this.$nextTick(() => {
+            setTimeout(() => {
+              this.focusOnMerchant(mostRecentMerchant);
+            }, 300);
+          });
+        } else {
+          // On desktop, wait for the button fade animation, then zoom
+          setTimeout(() => {
+            this.focusOnMerchant(mostRecentMerchant);
+          }, 600);
+        }
+      }
+    },
+
+    // Build the sorted list of merchants with recent transactions
+    buildRecentMerchantsList() {
+      if (!this.filteredMerchants || this.filteredMerchants.length === 0) {
+        this.recentMerchantsList = [];
+        return;
+      }
+
+      // Filter merchants that have a last_transaction_date and sort them
+      this.recentMerchantsList = this.filteredMerchants
+        .filter(merchant => merchant.last_transaction_date)
+        .sort((a, b) => {
+          const dateA = new Date(a.last_transaction_date);
+          const dateB = new Date(b.last_transaction_date);
+          return dateB - dateA; // Descending order (most recent first)
+        });
+    },
+
+    // Go to the next recent merchant in the list
+    goToNextRecentMerchant() {
+      if (this.recentMerchantsList.length === 0) {
+        this.buildRecentMerchantsList();
+      }
+
+      if (this.recentMerchantsList.length === 0) {
+        return; // No merchants with transactions
+      }
+
+      // Move to the next index, wrap around if at the end
+      this.currentRecentMerchantIndex = (this.currentRecentMerchantIndex + 1) % this.recentMerchantsList.length;
+      
+      const nextMerchant = this.recentMerchantsList[this.currentRecentMerchantIndex];
+      
+      // On mobile, ensure we're in map view
+      if (this.isMobile) {
+        this.currentView = 'map';
+      }
+      
+      // Focus on the merchant (zoom, highlight, scroll)
+      this.focusOnMerchant(nextMerchant);
+    },
+
+    // Focus on a merchant: zoom to it, highlight it, show popup, and scroll to it in the list (desktop only)
+    focusOnMerchant(merchant) {
+      if (!merchant) return;
+
+      // On desktop, set the highlighted merchant ID and scroll to card
+      // On mobile, skip highlighting since we're in map view
+      if (!this.isMobile) {
+        this.highlightedMerchantId = merchant.id;
+        this.scrollToMerchantCard(merchant.id);
+      }
+      
+      // Zoom to the merchant on the map and show popup after zoom completes
+      this.zoomToMerchant(merchant, () => {
+        // Wait 500ms after zoom completes, then show the popup
+        setTimeout(() => {
+          // On mobile, skip the view toggle since we're already in map view
+          this.showPopup(merchant, this.isMobile);
+        }, 500);
+      });
+    },
+
+    // Scroll to the merchant card in the list and center it vertically
+    scrollToMerchantCard(merchantId) {
+      this.$nextTick(() => {
+        const merchantCard = document.querySelector(`[data-merchant-id="${merchantId}"]`);
+        if (merchantCard && this.$refs.logosContainer) {
+          // Calculate the position to scroll to
+          const container = this.$refs.logosContainer;
+          const cardTop = merchantCard.offsetTop;
+          const cardHeight = merchantCard.offsetHeight;
+          const containerHeight = container.clientHeight;
+          
+          // Calculate the scroll position to center the card vertically
+          const scrollPosition = cardTop - (containerHeight / 2) + (cardHeight / 2);
+          
+          // Scroll the container to center the card
+          container.scrollTo({
+            top: Math.max(0, scrollPosition),
+            behavior: 'smooth'
+          });
+        }
+      });
+    },
+
+    // Zoom to a specific merchant on the map
+    zoomToMerchant(merchant, onComplete) {
+      if (this.$refs.mapView && merchant && merchant.latitude && merchant.longitude) {
+        const zoomLevel = 16; // Close zoom level to see the merchant clearly
+        this.$refs.mapView.centerOnTarget([merchant.latitude, merchant.longitude], zoomLevel, onComplete);
+      }
+    },
   },
   watch: {
     searchQuery(newValue, oldValue) {
@@ -1638,6 +1833,9 @@ export default {
         // Also reset nearby filter when search query changes
         this.showNearbyOnly = false;
         this.userLocation = null;
+        
+        // Reset explore mode when search changes
+        this.resetExploreMode();
       }
     },
     filterByCountry(newValue) {
@@ -1717,6 +1915,11 @@ export default {
         this.$nextTick(() => {
           this.observeGiftIcons();
         });
+        
+        // If we're in explore mode, rebuild the recent merchants list
+        if (this.exploreClicked) {
+          this.buildRecentMerchantsList();
+        }
       },
       deep: true
     },
@@ -1876,6 +2079,39 @@ button:disabled {
   50% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1.5);
+  }
+}
+
+/* Highlighted merchant card styles */
+[data-merchant-id].ring-4 {
+  animation: highlight-pulse 2s ease-in-out infinite;
+}
+
+@keyframes highlight-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.5), 0 10px 25px -5px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(96, 165, 250, 0.3), 0 10px 25px -5px rgba(59, 130, 246, 0.5);
+  }
+}
+
+/* Current badge animation */
+.absolute.bg-blue-600 {
+  animation: badge-bounce 0.5s ease-out;
+}
+
+@keyframes badge-bounce {
+  0% {
+    transform: scale(0) translateY(10px);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) translateY(-2px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
   }
 }
 
