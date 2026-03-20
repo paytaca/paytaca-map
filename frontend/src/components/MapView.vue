@@ -50,7 +50,16 @@ export default {
   methods: {
     loadMap() {
       // Initialize map without setting a specific view initially
-      this.map = L.map(this.$refs.map);
+      // Disable default zoom control to add custom one on the right
+      this.map = L.map(this.$refs.map, {
+        zoomControl: false
+      });
+      
+      // Add zoom control on the right side
+      L.control.zoom({
+        position: 'topright'
+      }).addTo(this.map);
+      
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(this.map);
