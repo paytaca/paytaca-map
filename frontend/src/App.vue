@@ -234,6 +234,15 @@
         class="absolute bottom-8 left-8 z-[9999] transition-opacity duration-500 flex items-center gap-3"
         :class="{ 'opacity-0': !showRecentLabel, 'opacity-100': showRecentLabel }"
       >
+        <button 
+          @click="resetExploreMode"
+          class="p-2 bg-gray-500 text-white rounded-lg shadow-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-all duration-200"
+          title="Close"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
         <span class="px-4 py-2 bg-white/90 backdrop-blur-sm text-gray-800 font-medium rounded-lg shadow-lg text-sm">
           Recently Active Merchants
         </span>
