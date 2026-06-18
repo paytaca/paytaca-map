@@ -155,6 +155,9 @@ def _fetch_merchants(check_last_update=True):
                     ):
                         proceed_update = True
 
+                if "verified" in merchant_data and merchant_data["verified"] != merchant.verified:
+                    proceed_update = True
+
                 if proceed_update:
                     _update_merchant(merchant_data)
                     any_updates = True
