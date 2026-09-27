@@ -31,7 +31,7 @@ export default {
       popup: null,
       featureHtmlById: {},
       clusterMinPointsZoomedOut: 1,
-      clusterMinPointsCloseup: 50,
+      clusterMinPointsCloseup: 20,
       clusterCloseupZoomThreshold: 10,
       appliedClusterMinPoints: null,
       currentFeatureCollection: { type: 'FeatureCollection', features: [] },
@@ -300,7 +300,7 @@ export default {
         if (this.popup) {
           this.popup.remove();
         }
-        this.popup = new maplibregl.Popup({ offset: [0, -48], maxWidth: '340px' })
+        this.popup = new maplibregl.Popup({ offset: [0, -48], maxWidth: '360px' })
           .setLngLat(feature.geometry.coordinates)
           .setHTML(html)
           .addTo(this.map);
@@ -429,34 +429,32 @@ export default {
       const countryFlag = this.getCountryFlag(merchant.country);
 
       return `
-          <div class="rounded-lg">
-              <div class="flex items-center justify-between">
-                  <h3 class="text-lg font-semibold text-gray-900">${merchant.name}</h3>
-                  ${merchant.logo ? `<img src="${merchant.logo}" alt="${merchant.name} Logo" class="h-16 w-16 rounded-full">` : ''}
-              </div>
-              <div class="text-sm md:text-xs">
-                  <div class="flex items-center justify-between">
-                      <p class="text-gray-600">${merchantLocation}</p>
-                      <span class="text-2xl" style="float: right; margin-left: 8px;">${countryFlag}</span>
+          <div class="min-w-[260px] max-w-[320px]">
+              <div class="flex items-start gap-3">
+                  <div class="min-w-0 flex-1">
+                      <h3 class="truncate text-base font-semibold text-gray-900">${merchant.name}</h3>
+                      <p class="mt-1 flex items-center gap-1.5 text-sm text-gray-600">
+                          <span class="shrink-0">${countryFlag}</span>
+                          <span class="truncate">${merchantLocation}</span>
+                      </p>
+                      ${merchant.last_transaction_date ? `<p class="mt-0.5 text-sm text-gray-500">Last transaction: ${timeText}</p>` : ''}
                   </div>
-                  ${merchant.last_transaction_date ? `<p class="text-gray-600">Last transaction: ${timeText}</p>` : ''}
-                  <div class="mt-3">
-                    <a href="${this.getGoogleMapLink(merchant)}" target="_blank" class="inline-flex items-center px-3 py-2 text-xs font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200" style="color: white;">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  ${merchant.logo ? `<img src="${merchant.logo}" alt="${merchant.name} Logo" class="h-14 w-14 shrink-0 rounded-full object-cover ring-1 ring-gray-200">` : ''}
+              </div>
+              <div class="mt-4 flex flex-wrap gap-2">
+                  <a href="${this.getGoogleMapLink(merchant)}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg bg-green-500 px-3 py-1.5 text-xs font-medium text-white transition-colors duration-200 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                       </svg>
                       View in Google Map
-                    </a>
-                  </div>
+                  </a>
                   ${merchant.website_url ? `
-                    <div class="mt-3">
-                      <a href="${merchant.website_url}" target="_blank" class="inline-flex items-center px-3 py-2 text-xs font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200" style="color: white;">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <a href="${merchant.website_url}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg bg-blue-500 px-3 py-1.5 text-xs font-medium text-white transition-colors duration-200 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                         </svg>
                         ${merchant.categories?.some(cat => cat.short_name === 'hiverooms') ? 'Book Now' : 'Visit Website'}
                       </a>
-                    </div>
                   ` : ''}
               </div>
           </div>
@@ -957,16 +955,38 @@ export default {
 </style>
 
 <style>
-/* Popup ease-in animation from below */
-.maplibregl-popup {
-  animation: popup-ease-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+/* Merchant popup card */
+.maplibregl-popup-content {
+  padding: 18px 20px;
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18), 0 2px 8px rgba(15, 23, 42, 0.08);
+  font-family: inherit;
+  animation: popup-ease-up 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   transform-origin: bottom center;
 }
 
+.maplibregl-popup-close-button {
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  font-size: 18px;
+  line-height: 1;
+  color: #64748b;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.maplibregl-popup-close-button:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+/* Popup ease-in animation from below */
 @keyframes popup-ease-up {
   0% {
     opacity: 0;
-    transform: translateY(20px) scale(0.95);
+    transform: translateY(20px) scale(0.9);
   }
   100% {
     opacity: 1;
