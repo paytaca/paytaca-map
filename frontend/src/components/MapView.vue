@@ -27,6 +27,7 @@
 <script>
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { Supercluster } from '@maplibre/geojson-vt';
 import image from "../assets/marker_pin.png";
 
 // Default map center - Philippines ([lng, lat] for MapLibre)
@@ -57,6 +58,8 @@ export default {
       appliedClusterMinPoints: null,
       currentFeatureCollection: { type: 'FeatureCollection', features: [] },
       clusterPulseFrame: null,
+      merchantInteractionsBound: false,
+      clusterIndex: null,
       globeResizeObserver: null,
       initResizeObserver: null,
       globeFitZoom: null,
@@ -205,6 +208,15 @@ export default {
         attributionControl: { compact: true },
       });
 
+      // Collapse the compact attribution by default on small screens
+      this.map.on('resize', this.collapseCompactAttribution);
+      this.map.on('sourcedata', (event) => {
+        if (event.sourceDataType === 'metadata') {
+          this.collapseCompactAttribution();
+        }
+      });
+      this.collapseCompactAttribution();
+
       // Globe opens fully visible and cannot be zoomed out past that fit level
       if (fitZoom !== null) {
         this.map.setMinZoom(fitZoom);
@@ -346,6 +358,25 @@ export default {
       });
       this.globeResizeObserver.observe(this.$refs.map);
     },
+    // MapLibre's compact attribution opens itself by default; keep it collapsed
+    // on small screens while still letting the user expand it by tapping.
+    collapseCompactAttribution() {
+      if (!this.map) {
+        return;
+      }
+      const container = this.map.getCanvasContainer();
+      if (!container || container.offsetWidth > 640) {
+        return;
+      }
+      const attribution = this.map
+        .getContainer()
+        .querySelector('.maplibregl-ctrl-attrib.maplibregl-compact');
+      if (!attribution) {
+        return;
+      }
+      attribution.classList.remove('maplibregl-compact-show');
+      attribution.removeAttribute('open');
+    },
     isAtGlobeFitZoom() {
       if (!this.map || this.globeFitZoom === null) {
         return false;
@@ -437,6 +468,7 @@ export default {
         this.map.removeSource('merchants');
       }
       this.setupMerchantLayers(desired);
+      this.buildClusterIndex();
     },
     setupMerchantLayers(minPoints = this.getClusterMinPointsForZoom(this.map.getZoom())) {
       this.appliedClusterMinPoints = minPoints;
@@ -562,16 +594,37 @@ export default {
 
       this.startClusterPulse();
 
-      // Clicking a cluster zooms in to expand it
-      this.map.on('click', 'clusters', (e) => {
-        const features = this.map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
-        if (!features.length) {
+      // Interaction handlers are bound once; rebuilding the source/layers on zoom must not
+      // register duplicate listeners.
+      if (this.merchantInteractionsBound) {
+        return;
+      }
+      this.merchantInteractionsBound = true;
+
+      // MapLibre's feature picking (queryRenderedFeatures/querySourceFeatures) can return
+      // nothing on the globe projection and for clustered GeoJSON sources, which leaves the
+      // cluster circles unclickable when zoomed out. Maintain a matching cluster index on the
+      // client and hit-test it manually so clicking works under any projection.
+      this.map.on('click', (e) => {
+        // Never let a cluster that happens to sit near a pin steal the pin's click.
+        const pinAtPoint = this.isPinAtPoint(e.point);
+        const feature = this.findFeatureAtPoint(e.point);
+        if (pinAtPoint || !feature) {
           return;
         }
-        const clusterId = features[0].properties.cluster_id;
-        this.map.getSource('merchants').getClusterExpansionZoom(clusterId).then((zoom) => {
-          this.map.easeTo({ center: features[0].geometry.coordinates, zoom });
-        }).catch(() => {});
+        const coordinates = feature.geometry.type === 'MultiPoint'
+          ? feature.geometry.coordinates[0]
+          : feature.geometry.coordinates;
+        if (this.clusterIndex && feature.properties && feature.properties.cluster_id != null) {
+          const zoom = this.clusterIndex.getClusterExpansionZoom(feature.properties.cluster_id);
+          if (zoom != null) {
+            this.map.easeTo({ center: coordinates, zoom });
+          }
+        } else {
+          // A lone merchant (shown as a "cluster of 1") zooms in like a cluster, where it
+          // will then appear as a normal pin.
+          this.map.easeTo({ center: coordinates, zoom: this.clusterCloseupZoomThreshold });
+        }
       });
 
       // Clicking a pin opens its popup
@@ -591,23 +644,87 @@ export default {
       };
       this.map.on('click', 'unclustered', openMerchantPopup);
 
-      // Clicking a lone merchant (shown as a "cluster of 1") zooms in like a cluster,
-      // where it will then appear as a normal pin.
-      this.map.on('click', 'unclustered-circle', (e) => {
-        this.map.easeTo({
-          center: e.features[0].geometry.coordinates,
-          zoom: this.clusterCloseupZoomThreshold,
-        });
+      // Cursor feedback. Pin layers are picked normally (mercator only); clusters use the
+      // projection-independent manual hit-test used for clicks.
+      this.map.on('mousemove', (e) => {
+        const overPin = this.isPinAtPoint(e.point);
+        const overFeature = Boolean(this.findFeatureAtPoint(e.point));
+        this.map.getCanvas().style.cursor = overPin || overFeature ? 'pointer' : '';
       });
-
-      ['clusters', 'unclustered', 'unclustered-circle'].forEach((layer) => {
-        this.map.on('mouseenter', layer, () => {
-          this.map.getCanvas().style.cursor = 'pointer';
-        });
-        this.map.on('mouseleave', layer, () => {
-          this.map.getCanvas().style.cursor = '';
-        });
+      this.map.on('mouseout', () => {
+        this.map.getCanvas().style.cursor = '';
       });
+    },
+    isPinAtPoint(point) {
+      if (!this.map) {
+        return false;
+      }
+      try {
+        return this.map.queryRenderedFeatures(point, {
+          layers: ['unclustered', 'unclustered-circle'],
+        }).length > 0;
+      } catch (e) {
+        return false;
+      }
+    },
+    // Build a client-side cluster index that mirrors the MapLibre source clustering options.
+    // It is used only for hit-testing clicks/hover, so it stays correct regardless of how
+    // (or whether) MapLibre can pick features under the current projection.
+    buildClusterIndex() {
+      const points = this.currentFeatureCollection.features.filter(
+        (feature) => feature.geometry && feature.geometry.type === 'Point',
+      );
+      const zoom = this.map ? this.map.getZoom() : this.clusterMinPointsZoomedOut;
+      const minPoints = Math.max(2, this.getClusterMinPointsForZoom(zoom));
+      const index = new Supercluster({
+        maxZoom: 14,
+        radius: 50,
+        extent: 512,
+        minPoints,
+      });
+      index.load(points);
+      this.clusterIndex = index;
+    },
+    findFeatureAtPoint(point, radius = 24) {
+      if (!this.map || !this.clusterIndex) {
+        return null;
+      }
+      let features;
+      try {
+        const bounds = this.map.getBounds();
+        const bbox = [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()];
+        features = this.clusterIndex.getClusters(bbox, this.map.getZoom());
+      } catch (e) {
+        return null;
+      }
+      let nearest = null;
+      let nearestDist = radius;
+      const center = this.map.getCenter();
+      const centerLat = center.lat * (Math.PI / 180);
+      features.forEach((feature) => {
+        if (!feature.geometry || feature.geometry.type !== 'Point') {
+          return;
+        }
+        const coords = feature.geometry.coordinates;
+        // On the globe, far-side features project into the same screen space as the near
+        // side. The visible hemisphere is everything within 90 degrees of the center.
+        const lat = coords[1] * (Math.PI / 180);
+        const dLng = (coords[0] - center.lng) * (Math.PI / 180);
+        const dLat = lat - centerLat;
+        const haversine = Math.sin(dLat / 2) ** 2
+          + Math.cos(centerLat) * Math.cos(lat) * Math.sin(dLng / 2) ** 2;
+        const angular = 2 * Math.asin(Math.min(1, Math.sqrt(haversine)));
+        if (angular > Math.PI / 2) {
+          return;
+        }
+        const projected = this.map.project(coords);
+        const dist = Math.hypot(projected.x - point.x, projected.y - point.y);
+        if (dist <= nearestDist) {
+          nearestDist = dist;
+          nearest = feature;
+        }
+      });
+      return nearest;
     },
     startClusterPulse() {
       if (this.clusterPulseFrame) {
@@ -667,6 +784,7 @@ export default {
 
       const source = this.map && this.map.getSource('merchants');
       this.currentFeatureCollection = { type: 'FeatureCollection', features };
+      this.buildClusterIndex();
       if (source) {
         source.setData(this.currentFeatureCollection);
       }
