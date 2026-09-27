@@ -4,6 +4,7 @@
 
 // Export the configuration object
 export default {
+  darkMode: 'class',
   // Specify the files Tailwind should analyze for generating utility classes
   content: [
     "./index.html", // HTML file(s) to analyze
@@ -21,9 +22,9 @@ export default {
     extend: {
       colors: {
         brand: {
-          50: '#E7FBF1',
-          100: '#C6F5DE',
-          200: '#A2EDC8',
+          50: 'rgb(var(--brand-50) / <alpha-value>)',
+          100: 'rgb(var(--brand-100) / <alpha-value>)',
+          200: 'rgb(var(--brand-200) / <alpha-value>)',
           300: '#5FE3A3',
           400: '#2ED592',
           500: '#10C57E',
@@ -33,22 +34,22 @@ export default {
           900: '#0B5639',
         },
         mango: {
-          100: '#FFF3D6',
+          100: 'rgb(var(--mango-100) / <alpha-value>)',
           300: '#FFD074',
           500: '#FFB020',
           600: '#F09300',
           700: '#C97700',
         },
         coral: {
-          100: '#FFE6E1',
+          100: 'rgb(var(--coral-100) / <alpha-value>)',
           300: '#FFA79B',
           500: '#FF6B5A',
           600: '#EE4936',
           700: '#C43526',
         },
         sky: {
-          100: '#E4F6FB',
-          200: '#BEEAF5',
+          100: 'rgb(var(--sky-100) / <alpha-value>)',
+          200: 'rgb(var(--sky-200) / <alpha-value>)',
           300: '#7FD6E9',
           500: '#2BB8D8',
           600: '#1A9CBB',
@@ -62,15 +63,16 @@ export default {
           700: '#C33C67',
         },
         cloud: {
-          DEFAULT: '#EFF6FF',
-          deep: '#DCE9FB',
+          DEFAULT: 'rgb(var(--cloud) / <alpha-value>)',
+          deep: 'rgb(var(--cloud-deep) / <alpha-value>)',
         },
+        card: 'rgb(var(--card) / <alpha-value>)',
         ink: {
-          DEFAULT: '#12241E',
-          muted: '#4B635B',
-          faint: '#8AA096',
+          DEFAULT: 'rgb(var(--ink) / <alpha-value>)',
+          muted: 'rgb(var(--ink-muted) / <alpha-value>)',
+          faint: 'rgb(var(--ink-faint) / <alpha-value>)',
         },
-        soft: '#D9E4F2',
+        soft: 'rgb(var(--soft) / <alpha-value>)',
       },
       fontFamily: {
         display: ['"Baloo 2"', 'ui-rounded', 'system-ui', 'sans-serif'],

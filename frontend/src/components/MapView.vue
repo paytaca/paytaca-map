@@ -1,6 +1,21 @@
 <template>
   <div class="map-container w-full h-full relative">
     <div ref="map" class="w-full h-full"></div>
+
+    <button
+      v-if="showGlobeButton"
+      type="button"
+      class="globe-home-btn"
+      title="Back to globe view"
+      aria-label="Back to globe view"
+      @click="returnToGlobeFit"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M3 12h18" />
+        <path d="M12 3c2.6 2.4 4 5.6 4 9s-1.4 6.6-4 9c-2.6-2.4-4-5.6-4-9s1.4-6.6 4-9Z" />
+      </svg>
+    </button>
   </div>
 </template>
 
@@ -48,16 +63,19 @@ export default {
       travelPauseMs: 700,
       travelPauseTimeout: null,
       travelMoveHandler: null,
+      mapZoom: null,
     };
   },
   mounted() {
     this.loadMap();
+    window.addEventListener('themechange', this.onThemeChange);
     // After 3 seconds, consider initial data load complete
     setTimeout(() => {
       this.isInitialDataLoad = false;
     }, 3000);
   },
   beforeUnmount() {
+    window.removeEventListener('themechange', this.onThemeChange);
     this.stopClusterPulse();
     this.stopGlobeSpin();
     if (this.spinResumeTimeout) {
@@ -91,6 +109,16 @@ export default {
         this.updateMarkers(newMerchants);
       },
       deep: true,
+    },
+  },
+  computed: {
+    // Show the globe shortcut whenever the map is zoomed past the globe fit level
+    showGlobeButton() {
+      return (
+        this.globeFitZoom !== null &&
+        this.mapZoom !== null &&
+        this.mapZoom > this.globeFitZoom + 0.15
+      );
     },
   },
   methods: {
@@ -140,9 +168,11 @@ export default {
         this.map.setMinZoom(fitZoom);
       }
       this.globeFitZoom = fitZoom;
+      this.mapZoom = this.map.getZoom();
 
       // Re-cluster with a different minimum size depending on zoom level
       this.map.on('zoomend', () => {
+        this.mapZoom = this.map.getZoom();
         this.syncClusterMinPoints();
         this.scheduleGlobeSpinResume();
       });
@@ -189,9 +219,38 @@ export default {
         this.updateGlobeMinZoom();
         this.setupGlobeResizeObserver();
 
+        // Match the basemap to the active color scheme
+        this.applyMapTheme(this.isDarkTheme());
+
         // Start the slow Earth-like rotation at the fit zoom level
         this.evaluateGlobeSpin();
       });
+    },
+    isDarkTheme() {
+      return document.documentElement.classList.contains('dark');
+    },
+    applyMapTheme(dark) {
+      if (!this.map) {
+        return;
+      }
+      if (this.map.getLayer('water')) {
+        this.map.setPaintProperty('water', 'background-color', dark ? '#12233d' : '#a5c8e4');
+      }
+      if (this.map.getLayer('osm')) {
+        if (dark) {
+          this.map.setPaintProperty('osm', 'raster-brightness-max', 0.62);
+          this.map.setPaintProperty('osm', 'raster-saturation', -0.28);
+          this.map.setPaintProperty('osm', 'raster-contrast', 0.12);
+        } else {
+          this.map.setPaintProperty('osm', 'raster-brightness-max', 1);
+          this.map.setPaintProperty('osm', 'raster-saturation', 0);
+          this.map.setPaintProperty('osm', 'raster-contrast', 0);
+        }
+      }
+    },
+    onThemeChange(event) {
+      const dark = event && event.detail ? event.detail.dark : this.isDarkTheme();
+      this.applyMapTheme(dark);
     },
     computeGlobeFitZoom(width, height, lat) {
       if (!width || !height) {
@@ -602,24 +661,24 @@ export default {
           <div class="min-w-[260px] max-w-[320px]">
               <div class="flex items-start gap-3">
                   <div class="min-w-0 flex-1">
-                      <h3 class="truncate text-base font-semibold text-gray-900">${merchant.name}</h3>
-                      ${locationText ? `<p class="mt-1 flex items-start gap-1.5 text-sm text-gray-600">
+                      <h3 class="truncate text-base font-semibold text-ink">${merchant.name}</h3>
+                      ${locationText ? `<p class="mt-1 flex items-start gap-1.5 text-sm text-ink-muted">
                           <span class="w-5 shrink-0 text-center leading-5">${countryFlag}</span>
                           <span class="truncate">${locationText}</span>
                       </p>` : ''}
-                      ${merchant.last_transaction_date ? `<p class="mt-0.5 text-sm text-gray-500">Last transaction: ${timeText}</p>` : ''}
+                      ${merchant.last_transaction_date ? `<p class="mt-0.5 text-sm text-ink-faint">Last transaction: ${timeText}</p>` : ''}
                   </div>
-                  ${merchant.logo ? `<img src="${merchant.logo}" alt="${merchant.name} Logo" class="h-14 w-14 shrink-0 rounded-full object-cover ring-1 ring-gray-200">` : ''}
+                  ${merchant.logo ? `<img src="${merchant.logo}" alt="${merchant.name} Logo" class="h-14 w-14 shrink-0 rounded-full object-cover ring-1 ring-brand-100">` : ''}
               </div>
-              <div class="mt-4 flex flex-wrap gap-2 border-t border-gray-100 pt-3">
-                  <a href="${this.getGoogleMapLink(merchant)}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg bg-green-500 px-3 py-1.5 text-xs font-medium text-white transition-colors duration-200 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+              <div class="mt-4 flex flex-wrap gap-2 border-t border-soft pt-3">
+                  <a href="${this.getGoogleMapLink(merchant)}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-medium text-white transition-colors duration-200 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                       </svg>
                       View in Google Map
                   </a>
                   ${merchant.website_url ? `
-                      <a href="${merchant.website_url}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg bg-blue-500 px-3 py-1.5 text-xs font-medium text-white transition-colors duration-200 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                      <a href="${merchant.website_url}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-medium text-white transition-colors duration-200 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                         </svg>
@@ -1189,6 +1248,28 @@ export default {
         duration: 1500,
       });
     },
+    // Close any open merchant popup card
+    closePopup() {
+      if (this.popup) {
+        this.popup.remove();
+        this.popup = null;
+      }
+    },
+    // Fly the globe back to its optimal (fit) zoom level
+    returnToGlobeFit() {
+      if (!this.map) {
+        return;
+      }
+
+      const targetZoom = this.globeFitZoom ?? this.map.getZoom();
+      this.mapZoom = targetZoom;
+
+      this.map.flyTo({
+        center: defaultCenter,
+        zoom: targetZoom,
+        duration: 1800,
+      });
+    },
   },
 };
 </script>
@@ -1200,15 +1281,44 @@ export default {
   min-height: 0;
   background: radial-gradient(
     circle at 50% 50%,
-    #dbe7f8 0%,
-    #e6effb 45%,
-    #eff6ff 78%
+    rgb(var(--map-glow-1)) 0%,
+    rgb(var(--map-glow-2)) 45%,
+    rgb(var(--map-glow-3)) 78%
   );
 }
 
 .map-container :deep(.maplibregl-map) {
   height: 100% !important;
   width: 100% !important;
+}
+
+.globe-home-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  border: 1px solid rgb(var(--soft));
+  background-color: rgb(var(--card));
+  color: rgb(var(--ink));
+  box-shadow: 0 10px 24px -10px rgba(15, 23, 42, 0.35);
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.globe-home-btn:hover {
+  background-color: rgb(var(--brand-600));
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.globe-home-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(var(--cloud)), 0 0 0 5px rgb(var(--brand-500));
 }
 </style>
 
@@ -1217,9 +1327,9 @@ export default {
 .maplibregl-popup-content {
   padding: 18px 20px;
   border-radius: 16px;
-  border: 1px solid var(--soft-border, #F0E7D6);
-  background-color: var(--card, #FFFFFF);
-  box-shadow: 0 12px 32px rgba(18, 36, 30, 0.16), 0 2px 8px rgba(18, 36, 30, 0.07);
+  border: 1px solid rgb(var(--soft));
+  background-color: rgb(var(--card));
+  box-shadow: var(--popup-shadow);
   font-family: inherit;
   animation: popup-ease-up 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   transform-origin: bottom center;
@@ -1233,13 +1343,13 @@ export default {
   border-radius: 9999px;
   font-size: 18px;
   line-height: 1;
-  color: var(--ink-faint, #8AA096);
+  color: rgb(var(--ink-faint));
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .maplibregl-popup-close-button:hover {
-  background-color: var(--brand-50, #E7FBF1);
-  color: var(--ink, #12241E);
+  background-color: rgb(var(--brand-50));
+  color: rgb(var(--ink));
 }
 
 /* Popup ease-in animation from below */

@@ -7,12 +7,21 @@
 a,
 .green {
   text-decoration: none;
-  color: var(--brand-600);
+  color: rgb(var(--brand-600));
   transition: color 0.25s ease;
+}
+
+html.dark a,
+html.dark .green {
+  color: #5FE3A3;
 }
 
 @media (hover: hover) {
   a:hover {
-    color: var(--brand-500);
+    color: rgb(var(--brand-500));
+  }
+
+  html.dark a:hover {
+    color: #8FF0C0;
   }
 }

@@ -1,24 +1,68 @@
 /* Paytaca Map design tokens */
 :root {
-  --brand-50: #e7fbf1;
-  --brand-100: #c6f5de;
-  --brand-300: #5fe3a3;
-  --brand-500: #10c57e;
-  --brand-600: #0aa76c;
-  --brand-700: #088455;
+  color-scheme: light;
 
-  --mango-500: #ffb020;
-  --coral-500: #ff6b5a;
-  --sky-500: #2bb8d8;
-  --pink-500: #ff7aa2;
+  --brand-50: 231 251 241;
+  --brand-100: 198 245 222;
+  --brand-200: 162 237 200;
+  --brand-500: 16 197 126;
+  --brand-600: 10 167 108;
 
-  --ink: #12241e;
-  --ink-muted: #4b635b;
-  --ink-faint: #8aa096;
+  --sky-100: 228 246 251;
+  --sky-200: 190 234 245;
 
-  --cloud: #eff6ff;
-  --card: #ffffff;
-  --soft-border: #d9e4f2;
+  --mango-100: 255 243 214;
+  --coral-100: 255 230 225;
+
+  --mango-500: 255 176 32;
+  --coral-500: 255 107 90;
+  --sky-500: 43 184 216;
+  --pink-500: 255 122 162;
+
+  --ink: 18 36 30;
+  --ink-muted: 75 99 91;
+  --ink-faint: 138 160 150;
+
+  --cloud: 239 246 255;
+  --cloud-deep: 220 233 251;
+  --card: 255 255 255;
+  --soft: 217 228 242;
+
+  /* Map/globe backdrop gradient */
+  --map-glow-1: 219 231 248;
+  --map-glow-2: 230 239 251;
+  --map-glow-3: 239 246 255;
+
+  --popup-shadow: 0 12px 32px rgba(15, 23, 42, 0.18), 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+html.dark {
+  color-scheme: dark;
+
+  --brand-50: 16 36 28;
+  --brand-100: 22 53 42;
+  --brand-200: 30 74 57;
+
+  --sky-100: 16 42 54;
+  --sky-200: 22 64 79;
+
+  --mango-100: 51 38 15;
+  --coral-100: 51 26 23;
+
+  --ink: 234 241 248;
+  --ink-muted: 159 176 195;
+  --ink-faint: 107 124 145;
+
+  --cloud: 11 18 32;
+  --cloud-deep: 24 35 52;
+  --card: 30 42 60;
+  --soft: 58 75 102;
+
+  --map-glow-1: 18 30 48;
+  --map-glow-2: 14 24 40;
+  --map-glow-3: 11 18 32;
+
+  --popup-shadow: 0 14px 34px rgba(0, 0, 0, 0.55), 0 2px 10px rgba(0, 0, 0, 0.4);
 }
 
 *,
@@ -29,12 +73,18 @@
   font-weight: normal;
 }
 
+html.dark * {
+  --tw-ring-offset-color: rgb(var(--cloud));
+}
+
 html,
-body {
+body,
+#app {
   min-height: 100vh;
   min-height: -webkit-fill-available;
-  color: var(--ink);
-  background: var(--cloud);
+  color: rgb(var(--ink));
+  background: rgb(var(--cloud));
+  overflow-x: hidden;
   line-height: 1.6;
   font-family:
     'Plus Jakarta Sans',

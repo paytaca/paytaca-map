@@ -7,7 +7,7 @@
         v-model="searchQuery"
         type="text"
         placeholder="Search merchants..."
-        class="w-full px-5 py-3.5 mb-5 rounded-2xl bg-white text-ink placeholder-ink-faint focus:outline-none focus:ring-2 focus:ring-brand-500 border border-soft shadow-card transition-shadow"
+        class="w-full px-5 py-3.5 mb-5 rounded-2xl bg-card text-ink placeholder-ink-faint focus:outline-none focus:ring-2 focus:ring-brand-500 border border-soft shadow-card transition-shadow"
       />
 
       <!-- Filter buttons -->
@@ -42,7 +42,7 @@
         <button 
           @click="toggleVerifiedFilter" 
           class="px-4 py-2 text-xs md:text-sm font-semibold rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 whitespace-nowrap flex-shrink-0"
-          :class="verifiedOnly ? 'text-white bg-sky-600 hover:bg-sky-700 focus:ring-sky-500 shadow-card' : 'text-sky-700 bg-sky-100 hover:bg-sky-200 focus:ring-sky-500'"
+          :class="verifiedOnly ? 'text-white bg-sky-600 border border-sky-600 hover:bg-sky-700 focus:ring-sky-500 shadow-card' : 'text-sky-700 dark:text-sky-300 bg-sky-100 border border-sky-300 dark:border-sky-700 hover:bg-sky-200 focus:ring-sky-500'"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -54,7 +54,7 @@
         <button 
           @click="showFilters = !showFilters" 
           class="px-4 py-2 text-xs md:text-sm font-semibold rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 whitespace-nowrap flex-shrink-0"
-          :class="showFilters ? 'text-white bg-mango-600 hover:bg-mango-700 focus:ring-mango-500 shadow-card' : 'text-mango-700 bg-mango-100 hover:bg-mango-300 focus:ring-mango-500'"
+          :class="showFilters ? 'text-white bg-mango-600 border border-mango-600 hover:bg-mango-700 focus:ring-mango-500 shadow-card' : 'text-mango-700 dark:text-mango-300 bg-mango-100 border border-mango-300 hover:bg-mango-300 focus:ring-mango-500'"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -70,7 +70,7 @@
           v-model="filterByCountry" 
           :disabled="showNearbyOnly"
           class="w-full px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 border transition-all duration-200"
-          :class="showNearbyOnly ? 'bg-cloud-deep text-ink-faint border-soft cursor-not-allowed' : 'bg-white text-ink border-soft hover:border-soft'"
+          :class="showNearbyOnly ? 'bg-cloud-deep text-ink-faint border-soft cursor-not-allowed' : 'bg-card text-ink border-soft hover:border-soft'"
         >
           <option value="default">Country: All</option>
           <option v-for="country in uniqueCountries" :key="country" :value="country">{{ country }}</option>
@@ -81,20 +81,20 @@
           v-model="filterByCity" 
           :disabled="showNearbyOnly"
           class="w-full px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 border transition-all duration-200"
-          :class="showNearbyOnly ? 'bg-cloud-deep text-ink-faint border-soft cursor-not-allowed' : 'bg-white text-ink border-soft hover:border-soft'"
+          :class="showNearbyOnly ? 'bg-cloud-deep text-ink-faint border-soft cursor-not-allowed' : 'bg-card text-ink border-soft hover:border-soft'"
         >
           <option value="default">City: All</option>
           <option v-for="city in uniqueCities" :key="city" :value="city">{{ city }}</option>
         </select>
 
         <!-- Dropdown for sorting by category -->
-        <select v-model="filterByCategory" class="w-full px-4 py-2 rounded-xl bg-white text-ink focus:outline-none focus:ring-2 focus:ring-brand-500 border border-soft">
+        <select v-model="filterByCategory" class="w-full px-4 py-2 rounded-xl bg-card text-ink focus:outline-none focus:ring-2 focus:ring-brand-500 border border-soft">
           <option value="default">Category: All</option>
           <option v-for="category in categoriesList" :key="category" :value="category.id">{{ category.name }}</option>
         </select>
 
         <!-- Dropdown for sorting by last transaction date -->
-        <select v-model="filterByLastTransaction" class="w-full px-4 py-2 rounded-xl bg-white text-ink focus:outline-none focus:ring-2 focus:ring-brand-500 border border-soft">
+        <select v-model="filterByLastTransaction" class="w-full px-4 py-2 rounded-xl bg-card text-ink focus:outline-none focus:ring-2 focus:ring-brand-500 border border-soft">
           <option value="default">Last Transaction: All</option>
           <option value="24hours">Within last 24 hours</option>
           <option value="1week">Within last 1 week</option>
@@ -125,7 +125,7 @@
       <!-- Loading Skeleton -->
       <div v-if="isLoading" class="mt-2 grid grid-cols-1 md:grid-cols-2 w-85 md-270 lg-255 h-auto md-auto">
         <div v-for="n in 8" :key="n"
-          class="flex flex-col p-4 m-2 rounded-2xl bg-white animate-pulse border border-soft">
+          class="flex flex-col p-4 m-2 rounded-2xl bg-card animate-pulse border border-soft">
           <div class="h-full flex gap-2">
             <div class="text-sm md:text-xs flex-1">
               <div class="h-5 bg-brand-100 rounded w-3/4 mb-2"></div>
@@ -149,7 +149,7 @@
         <!-- Logos with descriptions -->
         <div v-for="merchant in paginatedMerchants" :key="merchant.id" 
           :data-merchant-id="merchant.id"
-          class="flex flex-col p-4 m-2 rounded-2xl bg-white hover:bg-brand-50 transition-all duration-300 transform hover:scale-[1.02] shadow-card hover:shadow-card-hover border-2 cursor-pointer relative"
+          class="flex flex-col p-4 m-2 rounded-2xl bg-card hover:bg-brand-50 transition-all duration-300 transform hover:scale-[1.02] shadow-card hover:shadow-card-hover border-2 cursor-pointer relative"
           :class="{
             'border-brand-500 ring-4 ring-brand-200 bg-brand-50 shadow-card-hover scale-[1.02] z-10': highlightedMerchantId === merchant.id,
             'border-soft': highlightedMerchantId !== merchant.id
@@ -166,7 +166,7 @@
               <h3 class="font-display text-lg font-semibold text-ink">{{ merchant.name }}</h3>
               <span
                 class="mt-1 mb-1 inline-flex items-center gap-1 text-[11px] font-medium leading-none"
-                :class="merchant.verified ? 'text-brand-700' : 'text-ink-faint'"
+                :class="merchant.verified ? 'text-brand-700 dark:text-brand-300' : 'text-ink-faint'"
                 :title="merchant.verified ? 'Verified merchant' : 'Not yet verified'"
               >
                 <svg v-if="merchant.verified" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-80" viewBox="0 0 20 20" fill="currentColor">
@@ -213,7 +213,7 @@
       <div v-if="!reachedEnd && filteredMerchants.length > pageSize && initialRenderComplete && !isLoading && !isFetchingMerchants" class="flex justify-center mt-6 mb-4">
         <button 
           @click="loadMoreMerchants" 
-          class="px-6 py-2.5 text-sm font-semibold text-brand-700 bg-brand-50 border border-brand-100 rounded-full hover:bg-brand-100 focus:outline-none focus:ring-2 focus:ring-brand-300 transition-all duration-200"
+          class="px-6 py-2.5 text-sm font-semibold text-brand-700 dark:text-brand-300 bg-brand-50 border border-brand-100 rounded-full hover:bg-brand-100 focus:outline-none focus:ring-2 focus:ring-brand-300 transition-all duration-200"
         >
           Load More Merchants
         </button>
@@ -247,7 +247,7 @@
         :class="{ 'opacity-0': !showRecentLabel, 'opacity-100': showRecentLabel }"
       >
         <button 
-          @click="resetExploreMode"
+          @click="closeExploreMode"
           class="p-2.5 bg-ink-muted text-white rounded-full shadow-card hover:bg-ink focus:outline-none focus:ring-2 focus:ring-brand-300 focus:ring-offset-2 transition-all duration-200"
           title="Close"
         >
@@ -255,7 +255,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <span class="px-4 py-2 bg-white/90 backdrop-blur-sm text-ink font-semibold rounded-full shadow-card text-sm">
+        <span class="px-4 py-2 bg-card/90 backdrop-blur-sm text-ink font-semibold rounded-full shadow-card text-sm">
           Recently Active Merchants
         </span>
         <button 
@@ -286,7 +286,7 @@
 
     <!-- Iframe Browser Dialog -->
     <div v-if="showIframeDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
-      <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+      <div class="bg-card rounded-lg shadow-xl max-w-md w-full p-6">
         <!-- Dialog Header -->
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center space-x-3">
@@ -335,7 +335,7 @@
 
     <!-- Cashback Campaign Dialog -->
     <div v-if="showCashbackModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
-      <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div class="bg-card rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         <!-- Dialog Header -->
         <div class="flex items-center justify-between p-6 border-b border-soft">
           <div class="flex items-center space-x-3">
@@ -372,17 +372,17 @@
               <!-- Cashback Percentages -->
               <div class="bg-brand-50 border border-brand-200 rounded-lg p-4">
                 <div class="text-center">
-                  <p class="text-lg font-semibold text-brand-800 mb-2">
+                  <p class="text-lg font-semibold text-brand-800 dark:text-brand-300 mb-2">
                     Get up to {{ Math.round(selectedCashbackCampaign.campaign.first_cashback_percentage * 100) }}% cashback! 😍
                   </p>
-                  <p class="text-sm text-brand-700">
+                  <p class="text-sm text-brand-700 dark:text-brand-300">
                     Maximum cashback: <span class="font-semibold">{{ convertSatsToBCH(selectedCashbackCampaign.campaign.per_transaction_cashback_limit) }} BCH</span>
                     <span v-if="convertSatsToLocalCurrency(selectedCashbackCampaign.campaign.per_transaction_cashback_limit)" class="text-xs text-ink-muted ml-1">
                       (≈ PHP {{ convertSatsToLocalCurrency(selectedCashbackCampaign.campaign.per_transaction_cashback_limit) }})
                     </span>
                   </p>
                   <div v-if="!selectedCashbackCampaign.campaign.is_one_time_claim" class="mt-3 pt-3 border-t border-brand-200">
-                    <p class="text-sm text-brand-700">
+                    <p class="text-sm text-brand-700 dark:text-brand-300">
                       Succeeding transactions: {{ Math.round(selectedCashbackCampaign.campaign.succeeding_cashback_percentage * 100) }}% cashback
                     </p>
                   </div>
@@ -428,9 +428,9 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-coral-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                     </svg>
-                    <h6 class="font-medium text-coral-700">Campaign Reserved</h6>
+                    <h6 class="font-medium text-coral-700 dark:text-coral-300">Campaign Reserved</h6>
                   </div>
-                  <div class="text-sm text-coral-700 space-y-2">
+                  <div class="text-sm text-coral-700 dark:text-coral-300 space-y-2">
                     <p>
                       This one-time cashback promo has been reserved<span v-if="selectedCashbackCampaign.campaign.reserved_customer?.address"> for 
                       <span class="font-mono text-xs bg-coral-100 px-2 py-1 rounded">{{ truncateAddress(selectedCashbackCampaign.campaign.reserved_customer.address) }}</span></span>.
@@ -443,11 +443,11 @@
 
                 <!-- Available Campaign Instructions -->
                 <div v-else>
-                  <h6 class="font-medium text-sky-700 mb-3">How to Claim Your Cashback</h6>
-                  <div class="space-y-3 text-sm text-sky-700">
+                  <h6 class="font-medium text-sky-700 dark:text-sky-300 mb-3">How to Claim Your Cashback</h6>
+                  <div class="space-y-3 text-sm text-sky-700 dark:text-sky-300">
                     <div class="flex items-start">
                       <div class="flex-shrink-0 w-6 h-6 bg-sky-200 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                        <span class="text-xs font-bold text-sky-700">1</span>
+                        <span class="text-xs font-bold text-sky-700 dark:text-sky-300">1</span>
                       </div>
                       <p>
                         If the campaign is still active, cashback applies automatically after paying with BCH through Paytaca. The cashback is sent immediately after payment.
@@ -458,9 +458,9 @@
                     <div v-if="selectedCashbackCampaign.campaign.is_one_time_claim" class="mt-4 pt-3 border-t border-sky-200">
                       <div class="flex items-start mb-3">
                         <div class="flex-shrink-0 w-6 h-6 bg-coral-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                          <span class="text-xs font-bold text-coral-700">2</span>
+                          <span class="text-xs font-bold text-coral-700 dark:text-coral-300">2</span>
                         </div>
-                        <p class="text-sm text-sky-700">
+                        <p class="text-sm text-sky-700 dark:text-sky-300">
                           Since this is a one-time claim campaign, there is a reservation option, which will reserve the promo for you for 6 hours. You must transact within this period to claim the cashback.
                         </p>
                       </div>
@@ -481,7 +481,7 @@
                         <!-- Reservation Form -->
                         <div v-if="showReservationForm" class="space-y-3">
                           <div>
-                            <label class="block text-xs font-medium text-sky-700 mb-1">BCH Receiving Address in Paytaca</label>
+                            <label class="block text-xs font-medium text-sky-700 dark:text-sky-300 mb-1">BCH Receiving Address in Paytaca</label>
                             <input 
                               v-model="bchAddress"
                               type="text" 
@@ -516,7 +516,7 @@
               <!-- Limits -->
               <div v-if="showLimits" class="grid grid-cols-1 gap-3">
                 <!-- Campaign Type with Explanatory Notes -->
-                <div class="bg-white border border-soft rounded-lg p-3">
+                <div class="bg-card border border-soft rounded-lg p-3">
                   <div class="flex items-start justify-between mb-2">
                     <div class="flex-1">
                       <div class="text-sm font-medium text-ink-muted">Campaign Type</div>
@@ -548,7 +548,7 @@
                 <div class="bg-sky-100 border border-sky-200 rounded-lg p-3">
                   <div class="flex items-start justify-between">
                     <div class="flex-1">
-                      <div class="text-sm font-medium text-sky-700">Per Transaction Limit</div>
+                      <div class="text-sm font-medium text-sky-700 dark:text-sky-300">Per Transaction Limit</div>
                       <div class="text-xs text-ink-muted mt-1">Maximum cashback you can get in a single transaction</div>
                     </div>
                     <div class="text-right ml-3">
@@ -562,7 +562,7 @@
                 <div class="bg-sky-100 border border-sky-200 rounded-lg p-3">
                   <div class="flex items-start justify-between">
                     <div class="flex-1">
-                      <div class="text-sm font-medium text-sky-700">Per Customer Limit</div>
+                      <div class="text-sm font-medium text-sky-700 dark:text-sky-300">Per Customer Limit</div>
                       <div class="text-xs text-ink-muted mt-1">Maximum cashback you can claim in this entire campaign</div>
                     </div>
                     <div class="text-right ml-3">
@@ -576,7 +576,7 @@
                 <div class="bg-sky-100 border border-sky-200 rounded-lg p-3">
                   <div class="flex items-start justify-between">
                     <div class="flex-1">
-                      <div class="text-sm font-medium text-sky-700">Per Merchant Limit</div>
+                      <div class="text-sm font-medium text-sky-700 dark:text-sky-300">Per Merchant Limit</div>
                       <div class="text-xs text-ink-muted mt-1">Total cashback pool for all customers in this campaign</div>
                     </div>
                     <div class="text-right ml-3">
@@ -1700,6 +1700,19 @@ export default {
       this.lastFocusedCountry = null;
     },
 
+    // Exit explore mode and return the globe to its optimal zoom level
+    closeExploreMode() {
+      this.resetExploreMode();
+
+      if (this.$refs.mapView && typeof this.$refs.mapView.closePopup === 'function') {
+        this.$refs.mapView.closePopup();
+      }
+
+      if (this.$refs.mapView && typeof this.$refs.mapView.returnToGlobeFit === 'function') {
+        this.$refs.mapView.returnToGlobeFit();
+      }
+    },
+
     // Handle Explore Merchants button click
     exploreRecentMerchants() {
       // Fade out button by setting exploreClicked to true
@@ -1999,11 +2012,11 @@ export default {
 }
 
 .bg-soft {
-  background-color: var(--soft-border);
+  background-color: rgb(var(--soft));
 }
 
 .text-ink-muted {
-  color: var(--ink-muted);
+  color: rgb(var(--ink-muted));
 }
 
 .rounded-md {
@@ -2028,7 +2041,7 @@ button:hover {
 }
 
 #vute{
-  color: var(--ink);
+  color: rgb(var(--ink));
 }
 
 /* Active button styles */
