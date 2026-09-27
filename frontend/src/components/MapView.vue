@@ -36,6 +36,15 @@ export default {
       appliedClusterMinPoints: null,
       currentFeatureCollection: { type: 'FeatureCollection', features: [] },
       clusterPulseFrame: null,
+      globeResizeObserver: null,
+      globeFitZoom: null,
+      spinFrame: null,
+      spinLastTime: 0,
+      spinDegreesPerSecond: 2.5,
+      spinUserPaused: false,
+      spinResumeTimeout: null,
+      spinInternalMove: false,
+      isSpinning: false,
     };
   },
   mounted() {
@@ -47,6 +56,15 @@ export default {
   },
   beforeUnmount() {
     this.stopClusterPulse();
+    this.stopGlobeSpin();
+    if (this.spinResumeTimeout) {
+      clearTimeout(this.spinResumeTimeout);
+      this.spinResumeTimeout = null;
+    }
+    if (this.globeResizeObserver) {
+      this.globeResizeObserver.disconnect();
+      this.globeResizeObserver = null;
+    }
     if (this.popup) {
       this.popup.remove();
       this.popup = null;
@@ -66,6 +84,8 @@ export default {
   },
   methods: {
     loadMap() {
+      const container = this.$refs.map;
+      const fitZoom = this.computeGlobeFitZoom(container.clientWidth, container.clientHeight, defaultCenter[1]);
       this.map = new maplibregl.Map({
         container: this.$refs.map,
         style: {
@@ -99,7 +119,7 @@ export default {
           ],
         },
         center: defaultCenter,
-        zoom: 4,
+        zoom: fitZoom ?? 4,
         maxZoom: 19,
         attributionControl: { compact: true },
       });
@@ -107,8 +127,36 @@ export default {
       // Zoom control on the right (matches previous Leaflet placement)
       this.map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
 
+      // Globe opens fully visible and cannot be zoomed out past that fit level
+      if (fitZoom !== null) {
+        this.map.setMinZoom(fitZoom);
+      }
+      this.globeFitZoom = fitZoom;
+
       // Re-cluster with a different minimum size depending on zoom level
-      this.map.on('zoomend', () => this.syncClusterMinPoints());
+      this.map.on('zoomend', () => {
+        this.syncClusterMinPoints();
+        this.scheduleGlobeSpinResume();
+      });
+
+      // Keep the zoom-out limit in sync with the globe's rendered size, and
+      // resume auto-rotation once the viewer settles back at the fit level
+      this.map.on('moveend', () => {
+        if (this.spinInternalMove) {
+          return;
+        }
+        this.updateGlobeMinZoom();
+        this.scheduleGlobeSpinResume();
+      });
+
+      // Pause auto-rotation as soon as the user interacts with the globe
+      ['movestart', 'zoomstart', 'rotatestart', 'pitchstart'].forEach((event) => {
+        this.map.on(event, () => {
+          if (!this.spinInternalMove) {
+            this.pauseGlobeSpin();
+          }
+        });
+      });
 
       this.map.on('load', () => {
         this.map
@@ -128,7 +176,120 @@ export default {
         setTimeout(() => {
           this.initialLoadComplete = true;
         }, 100);
+
+        // Limit zoom-out so the globe always fits the container
+        this.updateGlobeMinZoom();
+        this.setupGlobeResizeObserver();
+
+        // Start the slow Earth-like rotation at the fit zoom level
+        this.evaluateGlobeSpin();
       });
+    },
+    computeGlobeFitZoom(width, height, lat) {
+      if (!width || !height) {
+        return null;
+      }
+      // MapLibre renders the globe as a sphere of radius (px):
+      //   worldSize / (2 * PI) / cos(centerLat),  where worldSize = 512 * 2^zoom
+      // Solve for the zoom where the diameter matches the shorter container edge.
+      const latFactor = Math.cos((lat * Math.PI) / 180);
+      const targetRadius = Math.min(width, height) / 2;
+      const zoom = Math.log2((targetRadius * 2 * Math.PI * latFactor) / 512);
+      return isFinite(zoom) ? Math.max(zoom, 0) : null;
+    },
+    updateGlobeMinZoom() {
+      if (!this.map || this.isSpinning) {
+        return;
+      }
+      const container = this.map.getContainer();
+      const clamped = this.computeGlobeFitZoom(
+        container.clientWidth,
+        container.clientHeight,
+        this.map.getCenter().lat,
+      );
+      if (clamped === null) {
+        return;
+      }
+      this.globeFitZoom = clamped;
+      this.map.setMinZoom(clamped);
+      if (this.map.getZoom() < clamped - 0.01) {
+        this.map.setZoom(clamped);
+      }
+    },
+    setupGlobeResizeObserver() {
+      if (this.globeResizeObserver || typeof ResizeObserver === 'undefined') {
+        return;
+      }
+      this.globeResizeObserver = new ResizeObserver(() => this.updateGlobeMinZoom());
+      this.globeResizeObserver.observe(this.$refs.map);
+    },
+    isAtGlobeFitZoom() {
+      if (!this.map || this.globeFitZoom === null) {
+        return false;
+      }
+      return this.map.getZoom() <= this.globeFitZoom + 0.05;
+    },
+    startGlobeSpin() {
+      if (!this.map || this.isSpinning || this.spinUserPaused) {
+        return;
+      }
+      this.isSpinning = true;
+      this.spinLastTime = 0;
+      this.spinFrame = requestAnimationFrame(this.spinStep);
+    },
+    stopGlobeSpin() {
+      this.isSpinning = false;
+      if (this.spinFrame !== null) {
+        cancelAnimationFrame(this.spinFrame);
+        this.spinFrame = null;
+      }
+      this.spinLastTime = 0;
+    },
+    spinStep(now) {
+      if (!this.map || !this.isSpinning) {
+        return;
+      }
+      if (!this.spinLastTime) {
+        this.spinLastTime = now;
+      }
+      const deltaSeconds = (now - this.spinLastTime) / 1000;
+      this.spinLastTime = now;
+
+      const center = this.map.getCenter();
+      // Earth rotates west -> east, so surface features drift east (right) while
+      // the point under the camera keeps moving west: decrease the center longitude.
+      let longitude = center.lng - this.spinDegreesPerSecond * deltaSeconds;
+      if (longitude < -180) {
+        longitude += 360;
+      }
+
+      this.spinInternalMove = true;
+      this.map.setCenter([longitude, center.lat]);
+      this.spinInternalMove = false;
+
+      this.spinFrame = requestAnimationFrame(this.spinStep);
+    },
+    pauseGlobeSpin() {
+      this.spinUserPaused = true;
+      this.stopGlobeSpin();
+      this.scheduleGlobeSpinResume();
+    },
+    scheduleGlobeSpinResume() {
+      if (this.spinResumeTimeout) {
+        clearTimeout(this.spinResumeTimeout);
+      }
+      this.spinResumeTimeout = setTimeout(() => {
+        this.spinResumeTimeout = null;
+        this.spinUserPaused = false;
+        this.evaluateGlobeSpin();
+      }, 3000);
+    },
+    evaluateGlobeSpin() {
+      if (this.isAtGlobeFitZoom()) {
+        this.startGlobeSpin();
+      } else {
+        this.stopGlobeSpin();
+      }
     },
     getClusterMinPointsForZoom(zoom) {
       return zoom >= this.clusterCloseupZoomThreshold
@@ -946,6 +1107,7 @@ export default {
   width: 100%;
   height: 100vh;
   min-height: 100vh;
+  background-color: #475569;
 }
 
 .map-container :deep(.maplibregl-map) {
