@@ -2,6 +2,11 @@
   <div class="map-container w-full h-full relative">
     <div ref="map" class="w-full h-full"></div>
 
+    <div v-if="mapError" class="map-error" role="alert">
+      <p class="map-error__title">Map unavailable</p>
+      <p class="map-error__text">{{ mapError }}</p>
+    </div>
+
     <button
       v-if="showGlobeButton"
       type="button"
@@ -43,6 +48,7 @@ export default {
     return {
       initialLoadComplete: false,
       isInitialDataLoad: true,
+      mapError: null,
       popup: null,
       featureHtmlById: {},
       clusterMinPointsZoomedOut: 1,
@@ -52,6 +58,7 @@ export default {
       currentFeatureCollection: { type: 'FeatureCollection', features: [] },
       clusterPulseFrame: null,
       globeResizeObserver: null,
+      initResizeObserver: null,
       globeFitZoom: null,
       spinFrame: null,
       spinLastTime: 0,
@@ -94,6 +101,10 @@ export default {
       this.globeResizeObserver.disconnect();
       this.globeResizeObserver = null;
     }
+    if (this.initResizeObserver) {
+      this.initResizeObserver.disconnect();
+      this.initResizeObserver = null;
+    }
     if (this.popup) {
       this.popup.remove();
       this.popup = null;
@@ -124,7 +135,38 @@ export default {
   methods: {
     loadMap() {
       const container = this.$refs.map;
+      if (!container || this.map) {
+        return;
+      }
+
+      // On mobile the map panel starts hidden (display: none), so the container
+      // has no size yet. Initializing MapLibre into a 0x0 box produces a broken
+      // canvas, so wait until the container is actually laid out.
+      if ((!container.clientWidth || !container.clientHeight) && typeof ResizeObserver !== 'undefined') {
+        if (!this.initResizeObserver) {
+          this.initResizeObserver = new ResizeObserver(() => {
+            const el = this.$refs.map;
+            if (el && el.clientWidth && el.clientHeight) {
+              this.initResizeObserver.disconnect();
+              this.initResizeObserver = null;
+              this.loadMap();
+            }
+          });
+          this.initResizeObserver.observe(container);
+        }
+        return;
+      }
+
       const fitZoom = this.computeGlobeFitZoom(container.clientWidth, container.clientHeight, defaultCenter[1]);
+
+      // MapLibre GL v5 (globe projection) requires WebGL2. Older iOS/Safari builds
+      // only expose WebGL1, which fails silently into a blank canvas.
+      if (!this.supportsWebGL2()) {
+        this.mapError =
+          'This device or browser cannot render the interactive 3D map. Please update to the latest version of iOS or Safari.';
+        return;
+      }
+
       this.map = new maplibregl.Map({
         container: this.$refs.map,
         style: {
@@ -229,6 +271,15 @@ export default {
     isDarkTheme() {
       return document.documentElement.classList.contains('dark');
     },
+    supportsWebGL2() {
+      try {
+        const canvas = document.createElement('canvas');
+        return !!canvas.getContext('webgl2');
+      } catch (e) {
+        void e;
+        return false;
+      }
+    },
     applyMapTheme(dark) {
       if (!this.map) {
         return;
@@ -287,7 +338,12 @@ export default {
       if (this.globeResizeObserver || typeof ResizeObserver === 'undefined') {
         return;
       }
-      this.globeResizeObserver = new ResizeObserver(() => this.updateGlobeMinZoom());
+      this.globeResizeObserver = new ResizeObserver(() => {
+        if (this.map) {
+          this.map.resize();
+        }
+        this.updateGlobeMinZoom();
+      });
       this.globeResizeObserver.observe(this.$refs.map);
     },
     isAtGlobeFitZoom() {
@@ -1209,20 +1265,32 @@ export default {
     },
     // Public method to fit viewport when map becomes visible (e.g., on mobile)
     fitViewportWhenVisible() {
+      // Ensure the map is initialised now that the panel is actually visible.
+      // On some mobile browsers the deferred ResizeObserver init never fires, so
+      // trigger it explicitly here (loadMap is idempotent).
+      this.loadMap();
+
       if (!this.map) {
         return;
       }
       // Wait for the map container to be fully visible in the DOM
-      setTimeout(() => {
+      const reveal = (attempt = 0) => {
+        if (!this.map) {
+          // Map may still be initialising after the panel became visible
+          if (attempt < 20) {
+            setTimeout(() => reveal(attempt + 1), 50);
+          }
+          return;
+        }
         // Resize first - critical when the container was previously hidden (display: none)
         this.map.resize();
 
-        if (this.merchants && this.merchants.length > 0) {
-          this.fitMapToMarkers();
-        } else {
-          this.map.jumpTo({ center: defaultCenter, zoom: 4 });
-        }
-      }, 100);
+        // Match a fresh desktop load: globe fitted to the container, centred on the Philippines
+        const targetZoom = this.globeFitZoom ?? this.map.getZoom();
+        this.mapZoom = targetZoom;
+        this.map.jumpTo({ center: defaultCenter, zoom: targetZoom });
+      };
+      setTimeout(() => reveal(), 100);
     },
     fitMapToMarkers() {
       if (!this.map) {
@@ -1290,6 +1358,32 @@ export default {
 .map-container :deep(.maplibregl-map) {
   height: 100% !important;
   width: 100% !important;
+}
+
+.map-error {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.map-error__title {
+  font-family: 'Baloo 2', ui-rounded, system-ui, sans-serif;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: rgb(var(--ink));
+}
+
+.map-error__text {
+  max-width: 24rem;
+  font-size: 0.875rem;
+  color: rgb(var(--ink-muted));
 }
 
 .globe-home-btn {

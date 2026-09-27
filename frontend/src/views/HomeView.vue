@@ -1,7 +1,7 @@
 <template>
   <div class="h-full md:grid md:grid-cols-2 bg-cloud overflow-hidden">
     <!-- Left Section: Logos with Descriptions -->
-    <div id="list" class="p-6 md:p-8 overflow-y-auto md:h-full bg-cloud" ref="logosContainer" :class="{ 'hidden': isMobile && currentView === 'map' }">
+    <div id="list" class="p-6 md:p-8 h-full overflow-y-auto bg-cloud" ref="logosContainer" :class="{ 'hidden': isMobile && currentView === 'map' }">
       <!-- Search Bar -->
       <input
         v-model="searchQuery"
@@ -268,7 +268,7 @@
     </div>
 
     <!-- Button to toggle map visibility - Back to List on top left -->
-    <div v-if="initialRenderComplete && currentView === 'map'" class="fixed top-4 left-4 md:hidden" style="z-index: 9999;">
+    <div v-if="initialRenderComplete && currentView === 'map'" class="fixed top-20 left-4 md:hidden" style="z-index: 9999;">
       <button @click="toggleMapView" class="px-6 py-3 bg-brand-600 text-white rounded-full focus:outline-none focus:ring-4 focus:ring-brand-300 transition-all duration-200 shadow-pop font-semibold text-lg inline-flex items-center">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
