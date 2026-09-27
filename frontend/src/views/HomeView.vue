@@ -11,7 +11,7 @@
       />
 
       <!-- Filter buttons -->
-      <div class="flex items-center justify-start md:justify-center gap-2 mb-4 overflow-x-auto md:overflow-x-visible overflow-y-hidden flex-nowrap md:flex-wrap">
+      <div class="filter-scroll flex items-center justify-start md:justify-center gap-2 mb-4 overflow-x-auto md:overflow-x-visible overflow-y-hidden flex-nowrap md:flex-wrap">
         <!-- Show Merchants Near Me Button -->
         <button 
           v-if="!showNearbyOnly"
@@ -2149,6 +2149,18 @@ button:disabled {
     transform: scale(1) translateY(0);
     opacity: 1;
   }
+}
+
+/* Keep the filter row horizontally scrollable without showing a scrollbar */
+.filter-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.filter-scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 </style>
