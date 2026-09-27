@@ -1120,82 +1120,13 @@ export default {
 
     // Helper method to perform map operations
     performMapOperations(merchant) {
-      console.log('X', merchant.last_transaction_date)
-      const transactionDate = new Date(merchant.last_transaction_date);
-      console.log('Y', transactionDate)
-      const currentDate = new Date();
-      const timeDifference = currentDate - transactionDate;
-      let timeText = '';
+      const popupContent = this.$refs.mapView?.buildMerchantPopupHtml
+        ? this.$refs.mapView.buildMerchantPopupHtml(merchant)
+        : '';
 
-      // Convert milliseconds to years, months, weeks, days, hours, and minutes
-      const years = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 365));
-      const months = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 30));
-      const weeks = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 7));
-      const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
-      const hours = Math.floor(timeDifference / (1000 * 60 * 60));
-      const minutes = Math.floor(timeDifference / (1000 * 60));
-
-      // Choose the appropriate time unit based on the duration
-      if (merchant.last_transaction_date) {
-        if (years > 0) {
-          timeText = years === 1 ? '1 year ago' : `${years} years ago`;
-        } else if (months > 0) {
-          timeText = months === 1 ? '1 month ago' : `${months} months ago`;
-        } else if (weeks > 0) {
-          timeText = weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
-        } else if (days > 0) {
-          timeText = days === 1 ? '1 day ago' : `${days} days ago`;
-        } else if (hours > 0) {
-          timeText = hours === 1 ? '1 hour ago' : `${hours} hours ago`;
-        } else {
-          timeText = minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`;
-        }
-      }
-
-      const countryFlag = this.getCountryFlag(merchant.country);
-
-      let merchantLocation = '';
-      if (merchant.city) {
-        merchantLocation = `${merchant.city}, ${merchant.country}`;
-      } else if (merchant.town) {
-        merchantLocation = `${merchant.town}, ${merchant.province}, ${merchant.country}`;
-      }
-      const locationText = merchantLocation || merchant.country || '';
-
-      let popupContent = `
-        <div class="min-w-[260px] max-w-[320px]">
-          <div class="flex items-start gap-3">
-            <div class="min-w-0 flex-1">
-              <h3 class="truncate text-base font-semibold text-ink">${merchant.name}</h3>
-              ${locationText ? `<p class="mt-1 flex items-start gap-1.5 text-sm text-ink-muted">
-                <span class="w-5 shrink-0 text-center leading-5">${countryFlag}</span>
-                <span class="truncate">${locationText}</span>
-              </p>` : ''}
-              ${timeText ? `<p class="mt-0.5 text-sm text-ink-faint">Last transaction: ${timeText}</p>` : ''}
-            </div>
-            ${merchant.logo ? `<img src="${merchant.logo}" alt="${merchant.name} Logo" class="h-14 w-14 shrink-0 rounded-full object-cover ring-1 ring-brand-100">` : ''}
-          </div>
-          <div class="mt-4 flex flex-wrap gap-2 border-t border-soft pt-3">
-            <a href="${this.getGoogleMapLink(merchant)}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-medium text-white transition-colors duration-200 hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2" style="color: white;">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-              </svg>
-              View in Google Map
-            </a>
-            ${merchant.website_url ? `
-              <a href="${merchant.website_url}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-medium text-white transition-colors duration-200 hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2" style="color: white;">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                </svg>
-                ${merchant.categories?.some(cat => cat.short_name === 'hiverooms') ? 'Book Now' : 'Visit Website'}
-              </a>
-            ` : ''}
-          </div>
-        </div>`;
-      
       // Open popup at merchant coordinates with the popup content
       this.$refs.mapView.openPopup(merchant.latitude, merchant.longitude, popupContent);
-      
+
       // Center the map on the merchant coordinates
       this.$refs.mapView.centerOnTarget([merchant.latitude, merchant.longitude], this.zoomLevel);
     },
