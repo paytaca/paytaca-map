@@ -831,11 +831,22 @@ export default {
       const countryFlag = this.getCountryFlag(merchant.country);
       const locationText = merchantLocation || merchant.country || '';
 
+      const verifiedBadge = merchant.verified
+        ? `<span class="inline-flex items-center gap-1 text-[11px] font-medium leading-none text-brand-700" title="Verified merchant">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-80" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+              Verified
+            </span>`
+        : `<span class="inline-flex items-center gap-1 text-[11px] font-medium leading-none text-ink-faint" title="Not yet verified">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-70" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a1 1 0 00-1 1v4a1 1 0 002 0V6a1 1 0 00-1-1zm0 8a1.25 1.25 0 100 2.5 1.25 1.25 0 000-2.5z" clip-rule="evenodd" /></svg>
+              Unverified
+            </span>`;
+
       return `
           <div class="min-w-[260px] max-w-[320px]">
               <div class="flex items-start gap-3">
                   <div class="min-w-0 flex-1">
                       <h3 class="truncate text-base font-semibold text-ink">${merchant.name}</h3>
+                      <div class="mt-1">${verifiedBadge}</div>
                       ${locationText ? `<p class="mt-1 flex items-start gap-1.5 text-sm text-ink-muted">
                           <span class="w-5 shrink-0 text-center leading-5">${countryFlag}</span>
                           <span class="truncate">${locationText}</span>
