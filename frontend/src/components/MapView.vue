@@ -1,5 +1,5 @@
 <template>
-  <div class="map-container w-full h-screen relative">
+  <div class="map-container w-full h-full relative">
     <div ref="map" class="w-full h-full"></div>
   </div>
 </template>
@@ -134,9 +134,6 @@ export default {
         maxZoom: 19,
         attributionControl: { compact: true },
       });
-
-      // Zoom control on the right (matches previous Leaflet placement)
-      this.map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
 
       // Globe opens fully visible and cannot be zoomed out past that fit level
       if (fitZoom !== null) {
@@ -1199,9 +1196,14 @@ export default {
 <style scoped>
 .map-container {
   width: 100%;
-  height: 100vh;
-  min-height: 100vh;
-  background-color: #475569;
+  height: 100%;
+  min-height: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    #dbe7f8 0%,
+    #e6effb 45%,
+    #eff6ff 78%
+  );
 }
 
 .map-container :deep(.maplibregl-map) {
@@ -1215,7 +1217,9 @@ export default {
 .maplibregl-popup-content {
   padding: 18px 20px;
   border-radius: 16px;
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18), 0 2px 8px rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--soft-border, #F0E7D6);
+  background-color: var(--card, #FFFFFF);
+  box-shadow: 0 12px 32px rgba(18, 36, 30, 0.16), 0 2px 8px rgba(18, 36, 30, 0.07);
   font-family: inherit;
   animation: popup-ease-up 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   transform-origin: bottom center;
@@ -1229,13 +1233,13 @@ export default {
   border-radius: 9999px;
   font-size: 18px;
   line-height: 1;
-  color: #64748b;
+  color: var(--ink-faint, #8AA096);
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .maplibregl-popup-close-button:hover {
-  background-color: #f1f5f9;
-  color: #0f172a;
+  background-color: var(--brand-50, #E7FBF1);
+  color: var(--ink, #12241E);
 }
 
 /* Popup ease-in animation from below */

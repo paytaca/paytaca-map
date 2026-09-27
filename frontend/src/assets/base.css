@@ -1,53 +1,24 @@
-/* color palette from <https://github.com/vuejs/theme> */
+/* Paytaca Map design tokens */
 :root {
-  --vt-c-white: #ffffff;
-  --vt-c-white-soft: #f8f8f8;
-  --vt-c-white-mute: #f2f2f2;
+  --brand-50: #e7fbf1;
+  --brand-100: #c6f5de;
+  --brand-300: #5fe3a3;
+  --brand-500: #10c57e;
+  --brand-600: #0aa76c;
+  --brand-700: #088455;
 
-  --vt-c-black: #181818;
-  --vt-c-black-soft: #222222;
-  --vt-c-black-mute: #282828;
+  --mango-500: #ffb020;
+  --coral-500: #ff6b5a;
+  --sky-500: #2bb8d8;
+  --pink-500: #ff7aa2;
 
-  --vt-c-indigo: #2c3e50;
+  --ink: #12241e;
+  --ink-muted: #4b635b;
+  --ink-faint: #8aa096;
 
-  --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
-  --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
-  --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
-  --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
-
-  --vt-c-text-light-1: var(--vt-c-indigo);
-  --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
-  --vt-c-text-dark-1: var(--vt-c-white);
-  --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
-}
-
-/* semantic color variables for this project */
-:root {
-  --color-background: var(--vt-c-white);
-  --color-background-soft: var(--vt-c-white-soft);
-  --color-background-mute: var(--vt-c-white-mute);
-
-  --color-border: var(--vt-c-divider-light-2);
-  --color-border-hover: var(--vt-c-divider-light-1);
-
-  --color-heading: var(--vt-c-text-light-1);
-  --color-text: var(--vt-c-text-light-1);
-
-  --section-gap: 160px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: var(--vt-c-black);
-    --color-background-soft: var(--vt-c-black-soft);
-    --color-background-mute: var(--vt-c-black-mute);
-
-    --color-border: var(--vt-c-divider-dark-2);
-    --color-border-hover: var(--vt-c-divider-dark-1);
-
-    --color-heading: var(--vt-c-text-dark-1);
-    --color-text: var(--vt-c-text-dark-2);
-  }
+  --cloud: #eff6ff;
+  --card: #ffffff;
+  --soft-border: #d9e4f2;
 }
 
 *,
@@ -58,30 +29,33 @@
   font-weight: normal;
 }
 
-html, body {
+html,
+body {
   min-height: 100vh;
   min-height: -webkit-fill-available;
-  color: var(--color-text);
-  background: #334155;
-  transition:
-    color 0.5s,
-    background-color 0.5s;
+  color: var(--ink);
+  background: var(--cloud);
   line-height: 1.6;
   font-family:
-    Inter,
+    'Plus Jakarta Sans',
+    ui-sans-serif,
+    system-ui,
     -apple-system,
     BlinkMacSystemFont,
     'Segoe UI',
     Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    'Fira Sans',
-    'Droid Sans',
-    'Helvetica Neue',
     sans-serif;
   font-size: 15px;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+.font-display {
+  font-family: 'Baloo 2', ui-rounded, system-ui, sans-serif;
+  letter-spacing: -0.01em;
 }
