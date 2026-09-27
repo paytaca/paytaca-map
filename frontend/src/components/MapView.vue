@@ -599,21 +599,22 @@ export default {
       }
 
       const countryFlag = this.getCountryFlag(merchant.country);
+      const locationText = merchantLocation || merchant.country || '';
 
       return `
           <div class="min-w-[260px] max-w-[320px]">
               <div class="flex items-start gap-3">
                   <div class="min-w-0 flex-1">
                       <h3 class="truncate text-base font-semibold text-gray-900">${merchant.name}</h3>
-                      <p class="mt-1 flex items-center gap-1.5 text-sm text-gray-600">
-                          <span class="shrink-0">${countryFlag}</span>
-                          <span class="truncate">${merchantLocation}</span>
-                      </p>
+                      ${locationText ? `<p class="mt-1 flex items-start gap-1.5 text-sm text-gray-600">
+                          <span class="w-5 shrink-0 text-center leading-5">${countryFlag}</span>
+                          <span class="truncate">${locationText}</span>
+                      </p>` : ''}
                       ${merchant.last_transaction_date ? `<p class="mt-0.5 text-sm text-gray-500">Last transaction: ${timeText}</p>` : ''}
                   </div>
                   ${merchant.logo ? `<img src="${merchant.logo}" alt="${merchant.name} Logo" class="h-14 w-14 shrink-0 rounded-full object-cover ring-1 ring-gray-200">` : ''}
               </div>
-              <div class="mt-4 flex flex-wrap gap-2">
+              <div class="mt-4 flex flex-wrap gap-2 border-t border-gray-100 pt-3">
                   <a href="${this.getGoogleMapLink(merchant)}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg bg-green-500 px-3 py-1.5 text-xs font-medium text-white transition-colors duration-200 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
@@ -1145,7 +1146,7 @@ export default {
       if (this.popup) {
         this.popup.remove();
       }
-      this.popup = new maplibregl.Popup({ offset: [0, -48], maxWidth: '340px' })
+      this.popup = new maplibregl.Popup({ offset: [0, -48], maxWidth: '360px' })
         .setLngLat([lng, lat])
         .setHTML(content)
         .addTo(this.map);

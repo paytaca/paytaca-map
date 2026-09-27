@@ -1154,47 +1154,44 @@ export default {
 
       const countryFlag = this.getCountryFlag(merchant.country);
 
-      let popupContent = `<div class="rounded-lg"><div class="flex items-center justify-between"><h3 class='text-lg font-semibold text-gray-900'>${merchant.name}</h3>`;
-      
-      // Include merchant logo if available
-      if (merchant.logo) {
-        popupContent += `<img src="${merchant.logo}" alt="${merchant.name} Logo" class="h-16 w-16 rounded-full">`;
-      }
-      
-      popupContent += `</div><div>`;
-      
-      // Include merchant information if available
+      let merchantLocation = '';
       if (merchant.city) {
-        popupContent += `<div class="flex items-center justify-between"><p>${merchant.city}, ${merchant.country}</p><span class="text-2xl ml-2">${countryFlag}</span></div>`;
+        merchantLocation = `${merchant.city}, ${merchant.country}`;
       } else if (merchant.town) {
-        popupContent += `<div class="flex items-center justify-between"><p>${merchant.town}, ${merchant.province}, ${merchant.country}</p><span class="text-2xl ml-2">${countryFlag}</span></div>`;
+        merchantLocation = `${merchant.town}, ${merchant.province}, ${merchant.country}`;
       }
-       
-      // Include last transaction time if available
-      if (timeText) {
-        popupContent += `<p>Last transaction: ${timeText}</p>`;
-      }
-      
-      // Include link to Google Map
-      popupContent += `<div class="flex items-center"><a href="${this.getGoogleMapLink(merchant)}" target="_blank" class="inline-flex items-center px-3 py-2 text-xs font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200" style="color: white;">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-        </svg>
-        View in Google Map
-      </a></div>`;
+      const locationText = merchantLocation || merchant.country || '';
 
-      // Include website link if available
-      if (merchant.website_url) {
-        const buttonText = merchant.categories?.some(cat => cat.short_name === 'hiverooms') ? 'Book Now' : 'Visit Website';
-        popupContent += `<div class="mt-3"><a href="${merchant.website_url}" target="_blank" class="inline-flex items-center px-3 py-2 text-xs font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200" style="color: white;">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-          </svg>
-          ${buttonText}
-        </a></div>`;
-      }
-
-      popupContent += `</div></div></div>`;
+      let popupContent = `
+        <div class="min-w-[260px] max-w-[320px]">
+          <div class="flex items-start gap-3">
+            <div class="min-w-0 flex-1">
+              <h3 class="truncate text-base font-semibold text-gray-900">${merchant.name}</h3>
+              ${locationText ? `<p class="mt-1 flex items-start gap-1.5 text-sm text-gray-600">
+                <span class="w-5 shrink-0 text-center leading-5">${countryFlag}</span>
+                <span class="truncate">${locationText}</span>
+              </p>` : ''}
+              ${timeText ? `<p class="mt-0.5 text-sm text-gray-500">Last transaction: ${timeText}</p>` : ''}
+            </div>
+            ${merchant.logo ? `<img src="${merchant.logo}" alt="${merchant.name} Logo" class="h-14 w-14 shrink-0 rounded-full object-cover ring-1 ring-gray-200">` : ''}
+          </div>
+          <div class="mt-4 flex flex-wrap gap-2 border-t border-gray-100 pt-3">
+            <a href="${this.getGoogleMapLink(merchant)}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg bg-green-500 px-3 py-1.5 text-xs font-medium text-white transition-colors duration-200 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2" style="color: white;">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+              View in Google Map
+            </a>
+            ${merchant.website_url ? `
+              <a href="${merchant.website_url}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg bg-blue-500 px-3 py-1.5 text-xs font-medium text-white transition-colors duration-200 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" style="color: white;">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                </svg>
+                ${merchant.categories?.some(cat => cat.short_name === 'hiverooms') ? 'Book Now' : 'Visit Website'}
+              </a>
+            ` : ''}
+          </div>
+        </div>`;
       
       // Open popup at merchant coordinates with the popup content
       this.$refs.mapView.openPopup(merchant.latitude, merchant.longitude, popupContent);
