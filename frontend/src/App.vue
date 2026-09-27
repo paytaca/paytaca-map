@@ -40,14 +40,14 @@
         </button>
         
         <button 
-          @click="toggleUnverifiedFilter" 
+          @click="toggleVerifiedFilter" 
           class="px-3 md:px-4 py-2 text-xs md:text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 whitespace-nowrap flex-shrink-0"
-          :class="showUnverified ? 'text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-500' : 'text-blue-600 bg-blue-100 hover:bg-blue-200 focus:ring-blue-500'"
+          :class="verifiedOnly ? 'text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-500' : 'text-blue-600 bg-blue-100 hover:bg-blue-200 focus:ring-blue-500'"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          {{ showUnverified ? 'Hide Non-Verified' : 'With Non-Verified' }}
+          {{ verifiedOnly ? 'Show All' : 'Verified Only' }}
         </button>
 
         <!-- More Filters Button -->
@@ -154,7 +154,6 @@
             'border-blue-600 ring-4 ring-blue-400 bg-blue-100 shadow-lg shadow-blue-200 scale-[1.02] z-10': highlightedMerchantId === merchant.id,
             'border-gray-200': highlightedMerchantId !== merchant.id
           }"
-          :style="showUnverified ? (merchant.verified ? 'border-top: 4px solid #10B981' : 'border-top: 4px solid #EF4444') : ''"
           @click="showPopup(merchant)">
           <!-- Highlight indicator badge -->
           <div v-if="highlightedMerchantId === merchant.id" class="absolute -top-2 -right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md z-20">
@@ -165,6 +164,19 @@
             <img v-if="merchant.logo" :src="merchant.logo" :alt="merchant.name + ' Logo'" class="m-auto sm:h-auto md:h-20 w-20 md-50 lg-75 object-fill cursor-pointer float-right" style="padding-left: 12px;">
             <div class="text-sm md:text-xs">
               <h3 class="text-lg font-semibold text-gray-900">{{ merchant.name }}</h3>
+              <span
+                class="mt-1 mb-1 inline-flex items-center gap-1 text-[11px] font-medium leading-none"
+                :class="merchant.verified ? 'text-emerald-700' : 'text-gray-500'"
+                :title="merchant.verified ? 'Verified merchant' : 'Not yet verified'"
+              >
+                <svg v-if="merchant.verified" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-80" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-70" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a1 1 0 00-1 1v4a1 1 0 002 0V6a1 1 0 00-1-1zm0 8a1.25 1.25 0 100 2.5 1.25 1.25 0 000-2.5z" clip-rule="evenodd" />
+                </svg>
+                {{ merchant.verified ? 'Verified' : 'Unverified' }}
+              </span>
               <template v-if="merchant.town">
                 <p class="text-gray-600">{{ merchant.town }}, {{ merchant.province }}, {{ merchant.country }}</p>
               </template>
@@ -636,7 +648,7 @@ export default {
       reachedEnd: false, // Flag to indicate whether the end of scroll is reached
       currentView: 'list',
       merchantsFilter: null,
-      showUnverified: false,
+      verifiedOnly: false,
       isLoading: true,
       isFetchingMerchants: false, // Flag to prevent multiple simultaneous merchant fetches
       initialRenderComplete: false, // Add new state variable
@@ -746,7 +758,7 @@ export default {
         const matchesLastTransaction = this.checkLastTransaction(merchant.last_transaction_date);
 
         // Check verification status
-        const matchesVerification = this.showUnverified || merchant.verified;
+        const matchesVerification = !this.verifiedOnly || merchant.verified;
 
         // Check if merchant is within 10km radius when showing nearby merchants
         let matchesNearby = true;
@@ -1417,9 +1429,9 @@ export default {
       this.filterByLastTransaction = 'default';
     },
     
-    // Toggle the unverified merchants filter
-    toggleUnverifiedFilter() {
-      this.showUnverified = !this.showUnverified;
+    // Toggle the verified-only merchants filter
+    toggleVerifiedFilter() {
+      this.verifiedOnly = !this.verifiedOnly;
     },
 
     // Check if a merchant has a cashback campaign
@@ -1670,7 +1682,7 @@ export default {
           this.filterByCity === 'default' &&
           this.filterByCategory === 'default' &&
           this.filterByLastTransaction === 'default' &&
-          !this.showUnverified &&
+          !this.verifiedOnly &&
           !this.showNearbyOnly &&
           !this.searchQuery;
         
@@ -1902,7 +1914,7 @@ export default {
         this.checkAndReloadIfAllFiltersDefault();
       }
     },
-    showUnverified() {
+    verifiedOnly() {
       this.checkAndReloadIfAllFiltersDefault();
     },
     showNearbyOnly() {
