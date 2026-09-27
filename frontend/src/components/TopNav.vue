@@ -2,7 +2,11 @@
   <header class="shrink-0 border-b border-soft bg-card/85 backdrop-blur">
     <div class="mx-auto flex h-14 max-w-[1500px] items-center gap-2 px-3 md:h-16 md:gap-4 md:px-8">
       <router-link to="/" class="flex shrink-0 items-center gap-2 md:gap-3">
-        <span class="grid h-9 w-9 place-items-center rounded-2xl bg-brand-600 text-lg text-white shadow-pop md:h-10 md:w-10 md:text-xl">🧭</span>
+        <span class="grid h-9 w-9 place-items-center rounded-2xl bg-brand-600 text-white shadow-pop md:h-10 md:w-10">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+          </svg>
+        </span>
         <span class="font-display text-lg font-bold text-ink leading-none md:text-xl">Paytaca Map</span>
       </router-link>
 
