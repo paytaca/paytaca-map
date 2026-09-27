@@ -676,6 +676,7 @@ export default {
       recentMerchantsList: [], // Sorted list of merchants by most recent transaction
       currentRecentMerchantIndex: 0, // Current index in the recent merchants list
       highlightedMerchantId: null, // Currently highlighted merchant ID
+      lastFocusedCountry: null, // Country of the last focused merchant (for cross-country travel pause)
     };
   },
   async mounted() {
@@ -1699,12 +1700,14 @@ export default {
       this.recentMerchantsList = [];
       this.currentRecentMerchantIndex = 0;
       this.highlightedMerchantId = null;
+      this.lastFocusedCountry = null;
     },
 
     // Handle Explore Merchants button click
     exploreRecentMerchants() {
       // Fade out button by setting exploreClicked to true
       this.exploreClicked = true;
+      this.lastFocusedCountry = null;
       
       // Build and sort the list of recent merchants
       this.buildRecentMerchantsList();
@@ -1782,6 +1785,13 @@ export default {
     focusOnMerchant(merchant) {
       if (!merchant) return;
 
+      // Detect a cross-country transition so we can pause mid-flight
+      const isCountryChange =
+        !!this.lastFocusedCountry &&
+        !!merchant.country &&
+        merchant.country !== this.lastFocusedCountry;
+      this.lastFocusedCountry = merchant.country || this.lastFocusedCountry;
+
       // On desktop, set the highlighted merchant ID and scroll to card
       // On mobile, skip highlighting since we're in map view
       if (!this.isMobile) {
@@ -1789,14 +1799,14 @@ export default {
         this.scrollToMerchantCard(merchant.id);
       }
       
-      // Zoom to the merchant on the map and show popup after zoom completes
+      // Zoom to the merchant on the map and show popup as the zoom settles
       this.zoomToMerchant(merchant, () => {
-        // Wait 500ms after zoom completes, then show the popup
+        // Brief beat so the popup appears just as the flight completes
         setTimeout(() => {
           // On mobile, skip the view toggle since we're already in map view
           this.showPopup(merchant, this.isMobile);
-        }, 500);
-      });
+        }, 150);
+      }, isCountryChange);
     },
 
     // Scroll to the merchant card in the list and center it vertically
@@ -1823,10 +1833,18 @@ export default {
     },
 
     // Zoom to a specific merchant on the map
-    zoomToMerchant(merchant, onComplete) {
+    zoomToMerchant(merchant, onComplete, withTravelPause) {
       if (this.$refs.mapView && merchant && merchant.latitude && merchant.longitude) {
         const zoomLevel = 16; // Close zoom level to see the merchant clearly
-        this.$refs.mapView.centerOnTarget([merchant.latitude, merchant.longitude], zoomLevel, onComplete);
+        if (withTravelPause) {
+          this.$refs.mapView.flyToWithTravelPause(
+            [merchant.latitude, merchant.longitude],
+            zoomLevel,
+            onComplete
+          );
+        } else {
+          this.$refs.mapView.centerOnTarget([merchant.latitude, merchant.longitude], zoomLevel, onComplete);
+        }
       }
     },
   },

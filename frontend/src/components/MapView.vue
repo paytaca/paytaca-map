@@ -45,6 +45,9 @@ export default {
       spinResumeTimeout: null,
       spinInternalMove: false,
       isSpinning: false,
+      travelPauseMs: 700,
+      travelPauseTimeout: null,
+      travelMoveHandler: null,
     };
   },
   mounted() {
@@ -60,6 +63,14 @@ export default {
     if (this.spinResumeTimeout) {
       clearTimeout(this.spinResumeTimeout);
       this.spinResumeTimeout = null;
+    }
+    if (this.travelPauseTimeout) {
+      clearTimeout(this.travelPauseTimeout);
+      this.travelPauseTimeout = null;
+    }
+    if (this.travelMoveHandler && this.map) {
+      this.map.off('moveend', this.travelMoveHandler);
+      this.travelMoveHandler = null;
     }
     if (this.globeResizeObserver) {
       this.globeResizeObserver.disconnect();
@@ -1033,12 +1044,94 @@ export default {
 
       // Ensure proper rendering after container becomes visible
       this.map.resize();
-      this.map.flyTo({ center: [lng, lat], zoom: zoomLevel || 4, duration: 1200 });
+      const targetZoom = zoomLevel || 4;
+      this.map.flyTo({
+        center: [lng, lat],
+        zoom: targetZoom,
+        duration: this.computeFlightDuration(lat, lng, targetZoom),
+      });
 
       // If a callback is provided, fire it once the movement finishes
       if (onComplete && typeof onComplete === 'function') {
         this.map.once('moveend', onComplete);
       }
+    },
+    // Scale flight time with distance and zoom change so long ocean-crossing
+    // flights show the globe rotation and the zoom-out/zoom-in arc clearly.
+    computeFlightDuration(lat, lng, targetZoom) {
+      if (!this.map) {
+        return 1500;
+      }
+      const center = this.map.getCenter();
+      const toRad = degrees => (degrees * Math.PI) / 180;
+      const dLat = toRad(lat - center.lat);
+      const dLng = toRad(lng - center.lng);
+      const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(center.lat)) * Math.cos(toRad(lat)) * Math.sin(dLng / 2) ** 2;
+      const distanceKm = 2 * 6371 * Math.asin(Math.min(1, Math.sqrt(a)));
+      const distanceFactor = Math.min(distanceKm / 20015, 1);
+      const zoomDelta = Math.abs(targetZoom - this.map.getZoom());
+      const duration = 1500 + distanceFactor * 4000 + zoomDelta * 80;
+      return Math.max(1500, Math.min(duration, 6500));
+    },
+    // Two-stage flight for cross-country transitions: zoom out to the globe,
+    // hold there so the journey is noticeable, then travel into the target.
+    flyToWithTravelPause(coordinates, zoomLevel, onComplete) {
+      if (!this.map) {
+        return;
+      }
+
+      let lat = coordinates && coordinates.length ? parseFloat(coordinates[0]) : NaN;
+      let lng = coordinates && coordinates.length ? parseFloat(coordinates[1]) : NaN;
+      if (isNaN(lat) || isNaN(lng)) {
+        lng = defaultCenter[0];
+        lat = defaultCenter[1];
+      }
+      const targetZoom = zoomLevel || 4;
+      const origin = this.map.getCenter();
+      const pauseZoom = this.globeFitZoom != null ? this.globeFitZoom : 2;
+
+      // Cancel any in-progress travel pause
+      if (this.travelPauseTimeout) {
+        clearTimeout(this.travelPauseTimeout);
+        this.travelPauseTimeout = null;
+      }
+      if (this.travelMoveHandler) {
+        this.map.off('moveend', this.travelMoveHandler);
+        this.travelMoveHandler = null;
+      }
+
+      this.map.resize();
+
+      // Stage 1: zoom out over the origin to reveal the globe
+      this.map.flyTo({ center: [origin.lng, origin.lat], zoom: pauseZoom, duration: 1600 });
+
+      this.travelMoveHandler = () => {
+        if (!this.map) {
+          return;
+        }
+        this.map.off('moveend', this.travelMoveHandler);
+        this.travelMoveHandler = null;
+
+        // Hold at the zoomed-out view so the travel is perceptible
+        this.travelPauseTimeout = setTimeout(() => {
+          this.travelPauseTimeout = null;
+          if (!this.map) {
+            return;
+          }
+          // Stage 2: travel across the globe into the target
+          this.map.flyTo({
+            center: [lng, lat],
+            zoom: targetZoom,
+            duration: this.computeFlightDuration(lat, lng, targetZoom),
+          });
+          if (onComplete && typeof onComplete === 'function') {
+            this.map.once('moveend', onComplete);
+          }
+        }, this.travelPauseMs);
+      };
+      this.map.once('moveend', this.travelMoveHandler);
     },
     openPopup(latitude, longitude, content) {
       if (!this.map) {
