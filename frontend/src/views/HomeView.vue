@@ -1392,11 +1392,13 @@ export default {
     
     // Toggle the verified-only merchants filter
     toggleVerifiedFilter() {
+      this.$refs.mapView?.suppressNextAutoFit();
       this.verifiedOnly = !this.verifiedOnly;
     },
 
     // Toggle the NFC card support filter
     toggleNfcFilter() {
+      this.$refs.mapView?.suppressNextAutoFit();
       this.nfcOnly = !this.nfcOnly;
     },
 

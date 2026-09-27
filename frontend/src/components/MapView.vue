@@ -74,6 +74,7 @@ export default {
       travelPauseTimeout: null,
       travelMoveHandler: null,
       mapZoom: null,
+      autoFitSuppressed: false,
     };
   },
   mounted() {
@@ -789,10 +790,17 @@ export default {
         source.setData(this.currentFeatureCollection);
       }
 
-      // Only auto-fit to markers after initial data load is complete
-      if (features.length > 0 && !this.isInitialDataLoad && this.initialLoadComplete) {
+      // Only auto-fit to markers after initial data load is complete, and only
+      // when the caller hasn't asked to keep the current camera position.
+      if (features.length > 0 && !this.isInitialDataLoad && this.initialLoadComplete && !this.autoFitSuppressed) {
         this.fitMapToMarkers();
       }
+      this.autoFitSuppressed = false;
+    },
+    // Let the parent opt out of the next auto-fit (e.g. toggling the verified
+    // or NFC filters should update markers without moving the globe).
+    suppressNextAutoFit() {
+      this.autoFitSuppressed = true;
     },
     buildMerchantPopupHtml(merchant) {
       const transactionDate = new Date(merchant.last_transaction_date);
