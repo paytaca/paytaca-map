@@ -841,12 +841,19 @@ export default {
               Unverified
             </span>`;
 
+      const nfcBadge = merchant.nfc_enabled
+        ? `<span class="inline-flex items-center gap-1 text-[11px] font-medium leading-none text-pink-700" title="Accepts NFC card payments">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 9a6 6 0 010 6" /><path d="M11 7a9 9 0 010 10" /><path d="M14 5a12 12 0 010 14" /></svg>
+              NFC
+            </span>`
+        : '';
+
       return `
           <div class="min-w-[260px] max-w-[320px]">
               <div class="flex items-start gap-3">
                   <div class="min-w-0 flex-1">
                       <h3 class="truncate text-base font-semibold text-ink">${merchant.name}</h3>
-                      <div class="mt-1">${verifiedBadge}</div>
+                      <div class="mt-1 flex flex-wrap items-center gap-3">${verifiedBadge}${nfcBadge}</div>
                       ${locationText ? `<p class="mt-1 flex items-start gap-1.5 text-sm text-ink-muted">
                           <span class="w-5 shrink-0 text-center leading-5">${countryFlag}</span>
                           <span class="truncate">${locationText}</span>

@@ -47,6 +47,7 @@ class Merchant(models.Model):
     last_update = models.DateTimeField(null=True, blank=True)
     test_shop = models.BooleanField(default=False)
     verified = models.BooleanField(default=False)
+    nfc_enabled = models.BooleanField(default=False)
     active = models.BooleanField(default=True)
 
     # Location fields

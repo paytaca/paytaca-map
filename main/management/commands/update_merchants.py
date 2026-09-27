@@ -39,6 +39,7 @@ def _save_merchant(merchant_data):
         last_transaction_date=last_transaction_date,
         last_update=timezone.now(),
         verified=merchant_data.get("verified", False),
+        nfc_enabled=merchant_data.get("nfc_enabled", False),
         # Location fields
         landmark=location_data["landmark"],
         street=location_data["street"],
@@ -105,6 +106,9 @@ def _update_merchant(merchant_data):
     # Only update verified status if explicitly provided by API, otherwise preserve local value
     if "verified" in merchant_data:
         merchant.verified = merchant_data["verified"]
+    # Only update NFC support if explicitly provided by API
+    if "nfc_enabled" in merchant_data:
+        merchant.nfc_enabled = merchant_data["nfc_enabled"]
     merchant.last_transaction_date = last_transaction_date
     merchant.last_update = timezone.now()
     merchant.save()
@@ -156,6 +160,12 @@ def _fetch_merchants(check_last_update=True):
                         proceed_update = True
 
                 if "verified" in merchant_data and merchant_data["verified"] != merchant.verified:
+                    proceed_update = True
+
+                if (
+                    "nfc_enabled" in merchant_data
+                    and merchant_data["nfc_enabled"] != merchant.nfc_enabled
+                ):
                     proceed_update = True
 
                 if proceed_update:

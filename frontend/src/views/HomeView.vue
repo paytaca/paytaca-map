@@ -16,14 +16,14 @@
         <button 
           v-if="!showNearbyOnly"
           @click="showMerchantsNearMe" 
-          class="px-4 py-2 text-xs md:text-sm font-semibold text-white bg-brand-600 rounded-full shadow-pop hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-all duration-200 whitespace-nowrap flex-shrink-0"
+          class="px-4 py-2 text-xs md:text-sm font-semibold text-brand-700 dark:text-brand-300 bg-brand-100 border border-brand-300 dark:border-brand-700 rounded-full hover:bg-brand-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-all duration-200 whitespace-nowrap flex-shrink-0"
           :disabled="isGettingLocation"
         >
           <svg v-if="!isGettingLocation" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
-          <div v-if="isGettingLocation" class="animate-spin rounded-full h-4 w-4 inline mr-2 border-t-2 border-b-2 border-white"></div>
+          <div v-if="isGettingLocation" class="animate-spin rounded-full h-4 w-4 inline mr-2 border-t-2 border-b-2 border-brand-600"></div>
           {{ isGettingLocation ? 'Getting Location...' : 'Merchants Near Me' }}
         </button>
         
@@ -48,6 +48,20 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           {{ verifiedOnly ? 'Show All' : 'Verified Only' }}
+        </button>
+
+        <button 
+          @click="toggleNfcFilter" 
+          class="px-4 py-2 text-xs md:text-sm font-semibold rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 whitespace-nowrap flex-shrink-0"
+          :class="nfcOnly ? 'text-white bg-pink-600 border border-pink-600 hover:bg-pink-700 focus:ring-pink-500 shadow-card' : 'text-pink-700 dark:text-pink-300 bg-pink-100 border border-pink-300 hover:bg-pink-300 focus:ring-pink-500'"
+          title="Show merchants that accept NFC card payments"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M8 9a6 6 0 010 6" />
+            <path d="M11 7a9 9 0 010 10" />
+            <path d="M14 5a12 12 0 010 14" />
+          </svg>
+          NFC Card
         </button>
 
         <!-- More Filters Button -->
@@ -164,19 +178,33 @@
             <img v-if="merchant.logo" :src="merchant.logo" :alt="merchant.name + ' Logo'" class="m-auto sm:h-auto md:h-20 w-20 md-50 lg-75 object-fill cursor-pointer float-right" style="padding-left: 12px;">
             <div class="text-sm md:text-xs">
               <h3 class="font-display text-lg font-semibold text-ink">{{ merchant.name }}</h3>
-              <span
-                class="mt-1 mb-1 inline-flex items-center gap-1 text-[11px] font-medium leading-none"
-                :class="merchant.verified ? 'text-brand-700 dark:text-brand-300' : 'text-ink-faint'"
-                :title="merchant.verified ? 'Verified merchant' : 'Not yet verified'"
-              >
-                <svg v-if="merchant.verified" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-80" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                </svg>
-                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-70" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a1 1 0 00-1 1v4a1 1 0 002 0V6a1 1 0 00-1-1zm0 8a1.25 1.25 0 100 2.5 1.25 1.25 0 000-2.5z" clip-rule="evenodd" />
-                </svg>
-                {{ merchant.verified ? 'Verified' : 'Unverified' }}
-              </span>
+              <div class="mt-1 mb-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span
+                  class="inline-flex items-center gap-1 text-[11px] font-medium leading-none"
+                  :class="merchant.verified ? 'text-brand-700 dark:text-brand-300' : 'text-ink-faint'"
+                  :title="merchant.verified ? 'Verified merchant' : 'Not yet verified'"
+                >
+                  <svg v-if="merchant.verified" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-80" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  </svg>
+                  <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-70" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a1 1 0 00-1 1v4a1 1 0 002 0V6a1 1 0 00-1-1zm0 8a1.25 1.25 0 100 2.5 1.25 1.25 0 000-2.5z" clip-rule="evenodd" />
+                  </svg>
+                  {{ merchant.verified ? 'Verified' : 'Unverified' }}
+                </span>
+                <span
+                  v-if="merchant.nfc_enabled"
+                  class="inline-flex items-center gap-1 text-[11px] font-medium leading-none text-pink-700 dark:text-pink-300"
+                  title="Accepts NFC card payments"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                    <path d="M8 9a6 6 0 010 6" />
+                    <path d="M11 7a9 9 0 010 10" />
+                    <path d="M14 5a12 12 0 010 14" />
+                  </svg>
+                  NFC
+                </span>
+              </div>
               <template v-if="merchant.town">
                 <p class="text-ink-muted">{{ merchant.town }}, {{ merchant.province }}, {{ merchant.country }}</p>
               </template>
@@ -649,6 +677,7 @@ export default {
       currentView: 'list',
       merchantsFilter: null,
       verifiedOnly: false,
+      nfcOnly: false,
       isLoading: true,
       isFetchingMerchants: false, // Flag to prevent multiple simultaneous merchant fetches
       initialRenderComplete: false, // Add new state variable
@@ -761,6 +790,9 @@ export default {
         // Check verification status
         const matchesVerification = !this.verifiedOnly || merchant.verified;
 
+        // Check NFC card support
+        const matchesNfc = !this.nfcOnly || merchant.nfc_enabled;
+
         // Check if merchant is within 10km radius when showing nearby merchants
         let matchesNearby = true;
         if (this.showNearbyOnly && this.userLocation && merchant.latitude && merchant.longitude) {
@@ -774,7 +806,7 @@ export default {
         }
 
         // Return true only if all filters match
-        return matchesSearchQuery && matchesCountry && matchesCity && matchesLastTransaction && matchesVerification && matchesNearby;
+        return matchesSearchQuery && matchesCountry && matchesCity && matchesLastTransaction && matchesVerification && matchesNfc && matchesNearby;
       });
       
       
@@ -1363,6 +1395,11 @@ export default {
       this.verifiedOnly = !this.verifiedOnly;
     },
 
+    // Toggle the NFC card support filter
+    toggleNfcFilter() {
+      this.nfcOnly = !this.nfcOnly;
+    },
+
     // Check if a merchant has a cashback campaign
     hasCashbackCampaign(merchant) {
       if (!merchant.watchtower_merchant_id) return false;
@@ -1612,6 +1649,7 @@ export default {
           this.filterByCategory === 'default' &&
           this.filterByLastTransaction === 'default' &&
           !this.verifiedOnly &&
+          !this.nfcOnly &&
           !this.showNearbyOnly &&
           !this.searchQuery;
         
@@ -1874,6 +1912,9 @@ export default {
       }
     },
     verifiedOnly() {
+      this.checkAndReloadIfAllFiltersDefault();
+    },
+    nfcOnly() {
       this.checkAndReloadIfAllFiltersDefault();
     },
     showNearbyOnly() {

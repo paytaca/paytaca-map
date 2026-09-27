@@ -18,9 +18,10 @@ class MerchantAdmin(admin.ModelAdmin):
         "active",
         "test_shop",
         "verified",
+        "nfc_enabled",
         "last_transaction_date",
     ]
-    list_filter = ["active", "test_shop", "verified", "country", "city", "categories"]
+    list_filter = ["active", "test_shop", "verified", "nfc_enabled", "country", "city", "categories"]
     search_fields = ["name", "city", "country", "description"]
     fieldsets = (
         (
@@ -35,6 +36,7 @@ class MerchantAdmin(admin.ModelAdmin):
                     "active",
                     "test_shop",
                     "verified",
+                    "nfc_enabled",
                 )
             },
         ),
