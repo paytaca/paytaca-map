@@ -1,22 +1,20 @@
 <template>
-  <div class="map-container w-full h-screen">
+  <div class="map-container w-full h-screen relative">
     <div ref="map" class="w-full h-full"></div>
   </div>
 </template>
 
 <script>
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import 'leaflet.markercluster/dist/MarkerCluster.css';
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
-import 'leaflet.markercluster/dist/leaflet.markercluster';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import image from "../assets/marker_pin.png";
 
+// Default map center - Philippines ([lng, lat] for MapLibre)
+const defaultCenter = [121.7740, 12.8797];
+// const defaultCenter = [124.9987370, 11.2441900]; // Tacloban City
+// const defaultCenter = [129.97266776311113, -2.745453205711577]; // Custom
 
-// Default map center - Philippines
-const defaultCenter = [12.8797, 121.7740]; // Center of Philippines
-// const defaultCenter = [11.2441900, 124.9987370]; // Tacloban City
-// const defaultCenter = [-2.745453205711577, 129.97266776311113]; // Custom
+const GLYPHS_URL = 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf';
 
 export default {
   name: 'MapView',
@@ -30,14 +28,33 @@ export default {
     return {
       initialLoadComplete: false,
       isInitialDataLoad: true,
+      popup: null,
+      featureHtmlById: {},
+      clusterMinPointsZoomedOut: 1,
+      clusterMinPointsCloseup: 50,
+      clusterCloseupZoomThreshold: 10,
+      appliedClusterMinPoints: null,
+      currentFeatureCollection: { type: 'FeatureCollection', features: [] },
+      clusterPulseFrame: null,
     };
   },
-  mounted () {
+  mounted() {
     this.loadMap();
     // After 3 seconds, consider initial data load complete
     setTimeout(() => {
       this.isInitialDataLoad = false;
     }, 3000);
+  },
+  beforeUnmount() {
+    this.stopClusterPulse();
+    if (this.popup) {
+      this.popup.remove();
+      this.popup = null;
+    }
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
+    }
   },
   watch: {
     merchants: {
@@ -49,154 +66,302 @@ export default {
   },
   methods: {
     loadMap() {
-      // Initialize map without setting a specific view initially
-      // Disable default zoom control to add custom one on the right
-      this.map = L.map(this.$refs.map, {
-        zoomControl: false
+      this.map = new maplibregl.Map({
+        container: this.$refs.map,
+        style: {
+          version: 8,
+          projection: { type: 'globe' },
+          glyphs: GLYPHS_URL,
+          sources: {
+            osm: {
+              type: 'raster',
+              tiles: [
+                'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              ],
+              tileSize: 256,
+              maxzoom: 19,
+              attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            },
+          },
+          layers: [
+            {
+              id: 'water',
+              type: 'background',
+              paint: { 'background-color': '#a5c8e4' },
+            },
+            {
+              id: 'osm',
+              type: 'raster',
+              source: 'osm',
+            },
+          ],
+        },
+        center: defaultCenter,
+        zoom: 4,
+        maxZoom: 19,
+        attributionControl: { compact: true },
       });
-      
-      // Add zoom control on the right side
-      L.control.zoom({
-        position: 'topright'
-      }).addTo(this.map);
-      
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      }).addTo(this.map);
 
-      // Initialize marker cluster group with dense clustering effect
-      this.markerClusterGroup = L.markerClusterGroup({
-        maxClusterRadius: 15,
-        chunkedLoading: true,
-        animate: true,
-        spiderfyOnMaxZoom: true,
-        showCoverageOnHover: false,
-        spiderfyDistanceMultiplier: 1.5,  // Spread pins further apart when spiderfying
-        iconCreateFunction: function(cluster) {
-          const childCount = cluster.getChildCount();
-          let size = 40;
-          let fontSize = 14;
-          let backgroundColor = 'rgba(34, 197, 94, 0.7)'; // green-500 with transparency
-          let borderColor = '#16a34a';
-          
-          // Scale cluster size and color based on count
-          if (childCount < 10) {
-            size = 40;
-            fontSize = 14;
-          } else if (childCount < 50) {
-            size = 50;
-            fontSize = 16;
-            backgroundColor = 'rgba(59, 130, 246, 0.75)'; // blue-500 with transparency
-            borderColor = '#2563eb';
-          } else if (childCount < 100) {
-            size = 60;
-            fontSize = 18;
-            backgroundColor = 'rgba(147, 51, 234, 0.75)'; // purple-500 with transparency
-            borderColor = '#7c3aed';
-          } else {
-            size = 70;
-            fontSize = 20;
-            backgroundColor = 'rgba(239, 68, 68, 0.75)'; // red-500 with transparency
-            borderColor = '#dc2626';
-          }
-          
-          return L.divIcon({
-            html: `<div style="
-              width: ${size}px;
-              height: ${size}px;
-              border-radius: 50%;
-              background: ${backgroundColor};
-              border: 3px solid ${borderColor};
-              box-shadow: 0 0 20px ${backgroundColor}, 0 4px 6px rgba(0,0,0,0.3);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              color: white;
-              font-weight: bold;
-              font-size: ${fontSize}px;
-              text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-              animation: cluster-pulse 2s ease-in-out infinite;
-            ">${childCount}</div>`,
-            className: `marker-cluster-custom`,
-            iconSize: L.point(size, size),
-            iconAnchor: L.point(size / 2, size / 2)
+      // Zoom control on the right (matches previous Leaflet placement)
+      this.map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+
+      // Re-cluster with a different minimum size depending on zoom level
+      this.map.on('zoomend', () => this.syncClusterMinPoints());
+
+      this.map.on('load', () => {
+        this.map
+          .loadImage(image)
+          .then((response) => {
+            if (!this.map.hasImage('merchant-pin')) {
+              this.map.addImage('merchant-pin', response.data);
+            }
+          })
+          .catch(() => {})
+          .finally(() => {
+            this.setupMerchantLayers();
+            this.updateMarkers(this.merchants);
           });
-        }
-      });
-      this.map.addLayer(this.markerClusterGroup);
 
-      // Reorder z-index after zoom changes since clusters recalculate
-      this.map.on('zoomend', () => {
+        // Mark initial load as complete
         setTimeout(() => {
-          this.reorderClusterZIndex();
+          this.initialLoadComplete = true;
         }, 100);
       });
-      
-      // Also reorder after marker cluster animation completes
-      this.markerClusterGroup.on('animationend', () => {
-        this.reorderClusterZIndex();
+    },
+    getClusterMinPointsForZoom(zoom) {
+      return zoom >= this.clusterCloseupZoomThreshold
+        ? this.clusterMinPointsCloseup
+        : this.clusterMinPointsZoomedOut;
+    },
+    syncClusterMinPoints() {
+      if (!this.map || !this.map.getSource('merchants')) {
+        return;
+      }
+      const desired = this.getClusterMinPointsForZoom(this.map.getZoom());
+      if (desired === this.appliedClusterMinPoints) {
+        return;
+      }
+      // Cluster options are fixed at source-creation time in MapLibre, so rebuild the source
+      ['unclustered-count', 'unclustered-circle', 'unclustered-halo', 'cluster-count', 'unclustered', 'clusters', 'cluster-halo'].forEach((id) => {
+        if (this.map.getLayer(id)) {
+          this.map.removeLayer(id);
+        }
+      });
+      if (this.map.getSource('merchants')) {
+        this.map.removeSource('merchants');
+      }
+      this.setupMerchantLayers(desired);
+    },
+    setupMerchantLayers(minPoints = this.getClusterMinPointsForZoom(this.map.getZoom())) {
+      this.appliedClusterMinPoints = minPoints;
+      this.map.addSource('merchants', {
+        type: 'geojson',
+        data: this.currentFeatureCollection,
+        cluster: true,
+        clusterMaxZoom: 14,
+        clusterRadius: 50,
+        clusterMinPoints: minPoints,
       });
 
-      // Ensure map is properly displayed after initialization
-      const vm = this
-      setTimeout(() => {
-        vm.map.invalidateSize();
-        
-        // Always start with Philippines view on initial load
-        vm.map.setView(defaultCenter, 4, { animate: false });
-        
-        // Mark initial load as complete
-        vm.initialLoadComplete = true;
-      }, 100);
+      this.map.addLayer({
+        id: 'clusters',
+        type: 'circle',
+        source: 'merchants',
+        filter: ['has', 'point_count'],
+        paint: {
+          'circle-color': 'rgba(34, 197, 94, 0.7)',
+          'circle-radius': ['step', ['get', 'point_count'], 18, 10, 23, 50, 28, 100, 33],
+          'circle-stroke-width': 3,
+          'circle-stroke-color': '#16a34a',
+        },
+      });
+
+      this.map.addLayer({
+        id: 'cluster-count',
+        type: 'symbol',
+        source: 'merchants',
+        filter: ['has', 'point_count'],
+        layout: {
+          'text-field': '{point_count_abbreviated}',
+          'text-font': ['Open Sans Bold'],
+          'text-size': 14,
+          'text-allow-overlap': true,
+        },
+        paint: { 'text-color': '#ffffff' },
+      });
+
+      this.map.addLayer({
+        id: 'unclustered',
+        type: 'symbol',
+        source: 'merchants',
+        minzoom: this.clusterCloseupZoomThreshold,
+        filter: ['!', ['has', 'point_count']],
+        layout: {
+          'icon-image': 'merchant-pin',
+          'icon-size': [
+            'interpolate', ['linear'], ['zoom'],
+            3, 0.2,
+            6, 0.35,
+            10, 0.6,
+            14, 0.9,
+            18, 1,
+          ],
+          'icon-anchor': 'bottom',
+          'icon-allow-overlap': true,
+          'icon-ignore-placement': true,
+        },
+      });
+
+      // Lone merchants are not clustered by supercluster, so at zoomed-out levels we
+      // render them as a cluster-style circle labeled "1" for a uniform expectation.
+      this.map.addLayer({
+        id: 'unclustered-circle',
+        type: 'circle',
+        source: 'merchants',
+        maxzoom: this.clusterCloseupZoomThreshold,
+        filter: ['!', ['has', 'point_count']],
+        paint: {
+          'circle-color': 'rgba(34, 197, 94, 0.7)',
+          'circle-radius': 18,
+          'circle-stroke-width': 3,
+          'circle-stroke-color': '#16a34a',
+        },
+      });
+
+      this.map.addLayer({
+        id: 'unclustered-count',
+        type: 'symbol',
+        source: 'merchants',
+        maxzoom: this.clusterCloseupZoomThreshold,
+        filter: ['!', ['has', 'point_count']],
+        layout: {
+          'text-field': '1',
+          'text-font': ['Open Sans Bold'],
+          'text-size': 14,
+          'text-allow-overlap': true,
+        },
+        paint: { 'text-color': '#ffffff' },
+      });
+
+      // Pulsing halos behind clusters (and lone-merchant circles) for a throbbing/shining effect.
+      // Their radius/opacity are animated by startClusterPulse().
+      this.map.addLayer({
+        id: 'cluster-halo',
+        type: 'circle',
+        source: 'merchants',
+        filter: ['has', 'point_count'],
+        paint: {
+          'circle-color': '#22c55e',
+          'circle-radius': ['step', ['get', 'point_count'], 18, 10, 23, 50, 28, 100, 33],
+          'circle-opacity': 0.4,
+          'circle-radius-transition': { duration: 0, delay: 0 },
+          'circle-opacity-transition': { duration: 0, delay: 0 },
+        },
+      }, 'clusters');
+
+      this.map.addLayer({
+        id: 'unclustered-halo',
+        type: 'circle',
+        source: 'merchants',
+        maxzoom: this.clusterCloseupZoomThreshold,
+        filter: ['!', ['has', 'point_count']],
+        paint: {
+          'circle-color': '#22c55e',
+          'circle-radius': 18,
+          'circle-opacity': 0.4,
+          'circle-radius-transition': { duration: 0, delay: 0 },
+          'circle-opacity-transition': { duration: 0, delay: 0 },
+        },
+      }, 'unclustered-circle');
+
+      this.startClusterPulse();
+
+      // Clicking a cluster zooms in to expand it
+      this.map.on('click', 'clusters', (e) => {
+        const features = this.map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
+        if (!features.length) {
+          return;
+        }
+        const clusterId = features[0].properties.cluster_id;
+        this.map.getSource('merchants').getClusterExpansionZoom(clusterId).then((zoom) => {
+          this.map.easeTo({ center: features[0].geometry.coordinates, zoom });
+        }).catch(() => {});
+      });
+
+      // Clicking a pin opens its popup
+      const openMerchantPopup = (e) => {
+        const feature = e.features[0];
+        const html = this.featureHtmlById[feature.properties.id];
+        if (!html) {
+          return;
+        }
+        if (this.popup) {
+          this.popup.remove();
+        }
+        this.popup = new maplibregl.Popup({ offset: [0, -48], maxWidth: '340px' })
+          .setLngLat(feature.geometry.coordinates)
+          .setHTML(html)
+          .addTo(this.map);
+      };
+      this.map.on('click', 'unclustered', openMerchantPopup);
+
+      // Clicking a lone merchant (shown as a "cluster of 1") zooms in like a cluster,
+      // where it will then appear as a normal pin.
+      this.map.on('click', 'unclustered-circle', (e) => {
+        this.map.easeTo({
+          center: e.features[0].geometry.coordinates,
+          zoom: this.clusterCloseupZoomThreshold,
+        });
+      });
+
+      ['clusters', 'unclustered', 'unclustered-circle'].forEach((layer) => {
+        this.map.on('mouseenter', layer, () => {
+          this.map.getCanvas().style.cursor = 'pointer';
+        });
+        this.map.on('mouseleave', layer, () => {
+          this.map.getCanvas().style.cursor = '';
+        });
+      });
+    },
+    startClusterPulse() {
+      if (this.clusterPulseFrame) {
+        return;
+      }
+      const baseRadius = ['step', ['get', 'point_count'], 18, 10, 23, 50, 28, 100, 33];
+      const period = 1600;
+      const tick = (time) => {
+        if (!this.map) {
+          return;
+        }
+        const phase = 0.5 - 0.5 * Math.cos((time / period) * Math.PI * 2); // 0 -> 1 -> 0
+        const extra = 2 + 12 * phase;
+        const opacity = 0.05 + 0.4 * (1 - phase);
+
+        if (this.map.getLayer('cluster-halo')) {
+          this.map.setPaintProperty('cluster-halo', 'circle-radius', ['+', baseRadius, extra]);
+          this.map.setPaintProperty('cluster-halo', 'circle-opacity', opacity);
+        }
+        if (this.map.getLayer('unclustered-halo')) {
+          this.map.setPaintProperty('unclustered-halo', 'circle-radius', 18 + extra);
+          this.map.setPaintProperty('unclustered-halo', 'circle-opacity', opacity);
+        }
+        this.clusterPulseFrame = requestAnimationFrame(tick);
+      };
+      this.clusterPulseFrame = requestAnimationFrame(tick);
+    },
+    stopClusterPulse() {
+      if (this.clusterPulseFrame) {
+        cancelAnimationFrame(this.clusterPulseFrame);
+        this.clusterPulseFrame = null;
+      }
     },
     updateMarkers(merchants) {
-      // Clear existing markers
-      this.markerClusterGroup.clearLayers();
+      const features = [];
+      this.featureHtmlById = {};
 
-      // Add new markers for merchants
-      merchants.forEach(merchant => {
-        const transactionDate = new Date(merchant.last_transaction_date);
-        const currentDate = new Date();
-        const timeDifference = currentDate - transactionDate;
-        let timeText = '';
-
-        // Convert milliseconds to years, months, weeks, days, hours, and minutes
-        const years = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 365));
-        const months = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 30));
-        const weeks = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 7));
-        const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
-        const hours = Math.floor(timeDifference / (1000 * 60 * 60));
-        const minutes = Math.floor(timeDifference / (1000 * 60));
-
-        // Choose the appropriate time unit based on the duration
-        if (years > 0) {
-          timeText = years === 1 ? '1 year ago' : `${years} years ago`;
-        } else if (months > 0) {
-          timeText = months === 1 ? '1 month ago' : `${months} months ago`;
-        } else if (weeks > 0) {
-          timeText = weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
-        } else if (days > 0) {
-          timeText = days === 1 ? '1 day ago' : `${days} days ago`;
-        } else if (hours > 0) {
-          timeText = hours === 1 ? '1 hour ago' : `${hours} hours ago`;
-        } else {
-          timeText = minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`;
-        }
-
-        let merchantLocation = '';
-        if (merchant.city) {
-          merchantLocation = `${merchant.city}, ${merchant.country}`;
-        } else if (merchant.town) {
-          merchantLocation = `${merchant.town}, ${merchant.province}, ${merchant.country}`;
-        }
-
-        const customIcon = L.icon({
-          iconUrl: image,
-          iconSize: [35, 48],
-          iconAnchor: [17, 48], // Adjusted iconAnchor for proper positioning
-        });
-
-        // Fetch latitude and longitude from the related Location object
+      (merchants || []).forEach((merchant) => {
         const latitude = parseFloat(merchant.latitude);
         const longitude = parseFloat(merchant.longitude);
 
@@ -205,13 +370,65 @@ export default {
           return;
         }
 
-        const countryFlag = this.getCountryFlag(merchant.country);
+        this.featureHtmlById[merchant.id] = this.buildMerchantPopupHtml(merchant);
+        features.push({
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [longitude, latitude] },
+          properties: {
+            id: merchant.id,
+            verified: !!merchant.verified,
+          },
+        });
+      });
 
-        const marker = L.marker([latitude, longitude], { 
-          icon: customIcon,
-          zIndexOffset: -1000  // Render behind cluster markers
-        })
-          .bindPopup(`
+      const source = this.map && this.map.getSource('merchants');
+      this.currentFeatureCollection = { type: 'FeatureCollection', features };
+      if (source) {
+        source.setData(this.currentFeatureCollection);
+      }
+
+      // Only auto-fit to markers after initial data load is complete
+      if (features.length > 0 && !this.isInitialDataLoad && this.initialLoadComplete) {
+        this.fitMapToMarkers();
+      }
+    },
+    buildMerchantPopupHtml(merchant) {
+      const transactionDate = new Date(merchant.last_transaction_date);
+      const currentDate = new Date();
+      const timeDifference = currentDate - transactionDate;
+      let timeText = '';
+
+      const years = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 365));
+      const months = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 30));
+      const weeks = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 7));
+      const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor(timeDifference / (1000 * 60 * 60));
+      const minutes = Math.floor(timeDifference / (1000 * 60));
+
+      if (years > 0) {
+        timeText = years === 1 ? '1 year ago' : `${years} years ago`;
+      } else if (months > 0) {
+        timeText = months === 1 ? '1 month ago' : `${months} months ago`;
+      } else if (weeks > 0) {
+        timeText = weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
+      } else if (days > 0) {
+        timeText = days === 1 ? '1 day ago' : `${days} days ago`;
+      } else if (hours > 0) {
+        timeText = hours === 1 ? '1 hour ago' : `${hours} hours ago`;
+      } else {
+        timeText = minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`;
+      }
+
+      let merchantLocation = '';
+      if (merchant.city) {
+        merchantLocation = `${merchant.city}, ${merchant.country}`;
+      } else if (merchant.town) {
+        merchantLocation = `${merchant.town}, ${merchant.province}, ${merchant.country}`;
+      }
+
+      const countryFlag = this.getCountryFlag(merchant.country);
+
+      return `
           <div class="rounded-lg">
               <div class="flex items-center justify-between">
                   <h3 class="text-lg font-semibold text-gray-900">${merchant.name}</h3>
@@ -224,7 +441,7 @@ export default {
                   </div>
                   ${merchant.last_transaction_date ? `<p class="text-gray-600">Last transaction: ${timeText}</p>` : ''}
                   <div class="mt-3">
-                    <a href="${ this.getGoogleMapLink(merchant) }" target="_blank" class="inline-flex items-center px-3 py-2 text-xs font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200" style="color: white;">
+                    <a href="${this.getGoogleMapLink(merchant)}" target="_blank" class="inline-flex items-center px-3 py-2 text-xs font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200" style="color: white;">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                       </svg>
@@ -243,41 +460,7 @@ export default {
                   ` : ''}
               </div>
           </div>
-          `);
-        this.markerClusterGroup.addLayer(marker);
-      });
-
-      // Set z-index on cluster markers after they're created
-      this.reorderClusterZIndex();
-
-      // Only auto-fit to markers after initial data load is complete
-      if (merchants.length > 0 && !this.isInitialDataLoad && this.initialLoadComplete) {
-        this.fitMapToMarkers();
-      }
-    },
-    reorderClusterZIndex() {
-      // After clusters are rendered, update z-index so larger clusters appear on top
-      const clusterMarkers = document.querySelectorAll('.leaflet-marker-icon');
-      clusterMarkers.forEach(marker => {
-        // Check if this is a cluster marker
-        const clusterDiv = marker.querySelector('.marker-cluster-custom div');
-        if (clusterDiv) {
-          // Extract the count from the div text
-          const count = parseInt(clusterDiv.textContent, 10);
-          if (!isNaN(count)) {
-            // Set z-index based on cluster size (larger = higher z-index)
-            let zIndex = 1000;
-            if (count >= 100) {
-              zIndex = 4000;
-            } else if (count >= 50) {
-              zIndex = 3000;
-            } else if (count >= 10) {
-              zIndex = 2000;
-            }
-            marker.style.zIndex = zIndex;
-          }
-        }
-      });
+          `;
     },
     getCountryFlag(country) {
       const countryFlags = {
@@ -677,85 +860,84 @@ export default {
       }
     },
     centerOnTarget(coordinates, zoomLevel, onComplete) {
-      if (coordinates.length == 0) {
-        coordinates = defaultCenter;
+      if (!this.map) {
+        return;
       }
-      // Invalidate size first to ensure proper rendering after container becomes visible
-      this.map.invalidateSize();
-      // Use flyTo for smoother transition
-      this.map.flyTo(coordinates, zoomLevel, { animate: true, duration: 1.2 });
-      
-      // If a callback is provided, listen for the moveend event (fires when animation completes)
+
+      // Coordinates arrive as [lat, lng]; MapLibre expects [lng, lat]
+      let lat = coordinates && coordinates.length ? parseFloat(coordinates[0]) : NaN;
+      let lng = coordinates && coordinates.length ? parseFloat(coordinates[1]) : NaN;
+      if (isNaN(lat) || isNaN(lng)) {
+        lng = defaultCenter[0];
+        lat = defaultCenter[1];
+      }
+
+      // Ensure proper rendering after container becomes visible
+      this.map.resize();
+      this.map.flyTo({ center: [lng, lat], zoom: zoomLevel || 4, duration: 1200 });
+
+      // If a callback is provided, fire it once the movement finishes
       if (onComplete && typeof onComplete === 'function') {
-        const handleMoveEnd = () => {
-          onComplete();
-          this.map.off('moveend', handleMoveEnd);
-        };
-        this.map.once('moveend', handleMoveEnd);
+        this.map.once('moveend', onComplete);
       }
     },
     openPopup(latitude, longitude, content) {
-      const popup = L.popup()
-        .setLatLng([latitude, longitude])
-        .setContent(content);
-      popup.openOn(this.map);
+      if (!this.map) {
+        return;
+      }
+      const lat = parseFloat(latitude);
+      const lng = parseFloat(longitude);
+      if (isNaN(lat) || isNaN(lng)) {
+        return;
+      }
+      if (this.popup) {
+        this.popup.remove();
+      }
+      this.popup = new maplibregl.Popup({ offset: [0, -48], maxWidth: '340px' })
+        .setLngLat([lng, lat])
+        .setHTML(content)
+        .addTo(this.map);
     },
-    fitMapToViewport() {
-      // Get the map container dimensions
-      const container = this.$refs.map;
-      const containerHeight = container.clientHeight;
-      
-      // Use a more direct approach to fill the viewport
-      // Start with a reasonable zoom level and adjust based on container size
-      let zoomLevel = 4; // Start with zoom level 4
-      
-      // If container is tall, increase zoom to fill vertical space
-      if (containerHeight > 600) {
-        zoomLevel = 5;
-      }
-      if (containerHeight > 800) {
-        zoomLevel = 6;
-      }
-      if (containerHeight > 1000) {
-        zoomLevel = 7;
-      }
-      
-      // Center the map and set the calculated zoom
-      this.map.setView(defaultCenter, zoomLevel, { animate: false });
-    },
-    
     // Public method to fit viewport when map becomes visible (e.g., on mobile)
     fitViewportWhenVisible() {
+      if (!this.map) {
+        return;
+      }
       // Wait for the map container to be fully visible in the DOM
       setTimeout(() => {
-        // Invalidate size first - this is critical for Leaflet to recalculate
-        // tiles when the container was previously hidden (display: none)
-        this.map.invalidateSize();
-        
-        // Then fit to markers after size is recalculated
+        // Resize first - critical when the container was previously hidden (display: none)
+        this.map.resize();
+
         if (this.merchants && this.merchants.length > 0) {
           this.fitMapToMarkers();
         } else {
-          this.map.setView(defaultCenter, 4, { animate: false });
+          this.map.jumpTo({ center: defaultCenter, zoom: 4 });
         }
       }, 100);
     },
     fitMapToMarkers() {
-      // Get all markers from the cluster group
-      const markers = this.markerClusterGroup.getLayers();
-      
-      if (markers.length > 0) {
-        // Create a group of all markers to calculate bounds
-        const group = L.featureGroup(markers);
-        
-        // Fit the map to show all markers with some padding
-        this.map.fitBounds(group.getBounds(), {
-          padding: [20, 20], // Add 20px padding around the bounds
-          maxZoom: 12, // Limit maximum zoom to prevent over-zooming
-          animate: true,
-          duration: 1.5
-        });
+      if (!this.map) {
+        return;
       }
+
+      const points = (this.merchants || [])
+        .map(merchant => [parseFloat(merchant.longitude), parseFloat(merchant.latitude)])
+        .filter(coord => !isNaN(coord[0]) && !isNaN(coord[1]));
+
+      if (points.length === 0) {
+        return;
+      }
+
+      const bounds = points.reduce(
+        (acc, coord) => acc.extend(coord),
+        new maplibregl.LngLatBounds(points[0], points[0])
+      );
+
+      this.map.fitBounds(bounds, {
+        padding: 20,
+        maxZoom: 12,
+        duration: 1500,
+      });
     },
   },
 };
@@ -768,53 +950,15 @@ export default {
   min-height: 100vh;
 }
 
-.map-container .leaflet-container {
+.map-container :deep(.maplibregl-map) {
   height: 100% !important;
   width: 100% !important;
 }
 </style>
 
 <style>
-/* Cluster pulse animation */
-@keyframes cluster-pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.9;
-  }
-}
-
-/* Custom cluster marker styling */
-.marker-cluster-custom {
-  background: transparent !important;
-}
-
-.marker-cluster-custom div {
-  transition: all 0.3s ease;
-}
-
-.marker-cluster-custom:hover div {
-  transform: scale(1.1) !important;
-  filter: brightness(1.1);
-}
-
-/* Make individual pins more visible when clustered */
-.leaflet-marker-icon {
-  transition: transform 0.3s ease;
-}
-
-/* Spiderfy effect - when clicking on cluster */
-.leaflet-cluster-spider-leg {
-  stroke: #22c55e;
-  stroke-width: 2;
-  stroke-opacity: 0.6;
-}
-
 /* Popup ease-in animation from below */
-.leaflet-popup {
+.maplibregl-popup {
   animation: popup-ease-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   transform-origin: bottom center;
 }
@@ -829,19 +973,4 @@ export default {
     transform: translateY(0) scale(1);
   }
 }
-
-/* Popup content wrapper animation */
-.leaflet-popup-content-wrapper {
-  animation: popup-content-fade 0.3s ease-out 0.1s both;
-}
-
-@keyframes popup-content-fade {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
 </style>
