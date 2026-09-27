@@ -44,6 +44,12 @@ export default {
       type: Array,
       default: () => [],
     },
+    // When false, marker data updates never move the camera. The parent flips
+    // this off around client-side filters (Verified/NFC) and their reloads.
+    autoFit: {
+      type: Boolean,
+      default: true,
+    },
   },
   data() {
     return {
@@ -74,7 +80,6 @@ export default {
       travelPauseTimeout: null,
       travelMoveHandler: null,
       mapZoom: null,
-      autoFitSuppressed: false,
     };
   },
   mounted() {
@@ -791,16 +796,10 @@ export default {
       }
 
       // Only auto-fit to markers after initial data load is complete, and only
-      // when the caller hasn't asked to keep the current camera position.
-      if (features.length > 0 && !this.isInitialDataLoad && this.initialLoadComplete && !this.autoFitSuppressed) {
+      // when the parent allows camera movement for data updates.
+      if (features.length > 0 && !this.isInitialDataLoad && this.initialLoadComplete && this.autoFit) {
         this.fitMapToMarkers();
       }
-      this.autoFitSuppressed = false;
-    },
-    // Let the parent opt out of the next auto-fit (e.g. toggling the verified
-    // or NFC filters should update markers without moving the globe).
-    suppressNextAutoFit() {
-      this.autoFitSuppressed = true;
     },
     buildMerchantPopupHtml(merchant) {
       const transactionDate = new Date(merchant.last_transaction_date);

@@ -256,7 +256,7 @@
 
     <!-- Right Section: Map  -->
     <div id="map" class="h-full w-full relative" :class="{ 'hidden': isMobile && currentView === 'list' }">
-      <MapView ref="mapView" :merchants="filteredMerchants" />
+      <MapView ref="mapView" :merchants="filteredMerchants" :auto-fit="mapAutoFit" />
       
       <!-- Explore Merchants Button -->
       <div v-if="!exploreClicked" class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-[9999]">
@@ -706,6 +706,7 @@ export default {
       currentRecentMerchantIndex: 0, // Current index in the recent merchants list
       highlightedMerchantId: null, // Currently highlighted merchant ID
       lastFocusedCountry: null, // Country of the last focused merchant (for cross-country travel pause)
+      mapAutoFit: true, // Whether MapView may move the camera on marker updates
     };
   },
   async mounted() {
@@ -1049,11 +1050,13 @@ export default {
       };
       return countryFlags[country] || '🏳️';
     },
-    fetchMerchants() {
+    fetchMerchants({ autoFit = true } = {}) {
       // Prevent multiple simultaneous API calls
       if (this.isFetchingMerchants) {
         return;
       }
+
+      this.mapAutoFit = autoFit;
       
       let url = DOMAIN + '/api/merchants/'
       const params = new URLSearchParams()
@@ -1392,13 +1395,13 @@ export default {
     
     // Toggle the verified-only merchants filter
     toggleVerifiedFilter() {
-      this.$refs.mapView?.suppressNextAutoFit();
+      this.mapAutoFit = false;
       this.verifiedOnly = !this.verifiedOnly;
     },
 
     // Toggle the NFC card support filter
     toggleNfcFilter() {
-      this.$refs.mapView?.suppressNextAutoFit();
+      this.mapAutoFit = false;
       this.nfcOnly = !this.nfcOnly;
     },
 
@@ -1656,7 +1659,8 @@ export default {
           !this.searchQuery;
         
         if (allFiltersDefault && !this.isFetchingMerchants) {
-          this.fetchMerchants();
+          // Reloading the full list shouldn't move the globe/map.
+          this.fetchMerchants({ autoFit: false });
         }
       }, 100);
     },
