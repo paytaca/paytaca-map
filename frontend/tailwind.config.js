@@ -56,7 +56,8 @@ export default {
           700: '#147C96',
         },
         pink: {
-          100: '#FFE7EE',
+          100: 'rgb(var(--pink-100) / <alpha-value>)',
+          200: 'rgb(var(--pink-200) / <alpha-value>)',
           300: '#FFB3C7',
           500: '#FF7AA2',
           600: '#EE5A87',

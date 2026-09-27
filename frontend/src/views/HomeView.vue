@@ -53,7 +53,7 @@
         <button 
           @click="toggleNfcFilter" 
           class="px-4 py-2 text-xs md:text-sm font-semibold rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 whitespace-nowrap flex-shrink-0"
-          :class="nfcOnly ? 'text-white bg-pink-600 border border-pink-600 hover:bg-pink-700 focus:ring-pink-500 shadow-card' : 'text-pink-700 dark:text-pink-300 bg-pink-100 border border-pink-300 hover:bg-pink-300 focus:ring-pink-500'"
+          :class="nfcOnly ? 'text-white bg-pink-600 border border-pink-600 hover:bg-pink-700 focus:ring-pink-500 shadow-card' : 'text-pink-700 dark:text-pink-300 bg-pink-100 border border-pink-300 dark:border-pink-700 hover:bg-pink-200 focus:ring-pink-500'"
           title="Show merchants that accept NFC card payments"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
