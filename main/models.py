@@ -90,6 +90,14 @@ class FeedPost(models.Model):
         max_length=20, choices=Platform.choices, db_index=True
     )
     link = models.URLField()
+    image = models.ImageField(
+        upload_to="feed/", blank=True, null=True,
+        help_text="Upload a preview image. Takes precedence over the remote thumbnail URL.",
+    )
+    image_url = models.URLField(
+        max_length=500, blank=True, null=True,
+        help_text="Remote preview image URL. Left blank, TikTok posts are auto-filled via oEmbed.",
+    )
     description = models.TextField(blank=True, null=True)
     merchants = models.ManyToManyField(
         Merchant, blank=True, related_name="feed_posts"

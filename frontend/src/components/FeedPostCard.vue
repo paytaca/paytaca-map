@@ -6,6 +6,26 @@
     class="group flex flex-col rounded-2xl border bg-card shadow-card transition-all duration-300 hover:-translate-y-0.5 hover:shadow-card-hover focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
     :class="[compact ? 'w-56 shrink-0 p-3' : 'p-5', meta.border]"
   >
+    <div
+      v-if="previewSrc"
+      class="relative mb-3 overflow-hidden rounded-xl bg-soft"
+      :class="compact ? 'h-24' : 'h-44'"
+    >
+      <img
+        :src="previewSrc"
+        :alt="post.description || meta.label + ' post preview'"
+        loading="lazy"
+        class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+      />
+      <span class="absolute inset-0 flex items-center justify-center">
+        <span class="flex h-10 w-10 items-center justify-center rounded-full bg-black/55 backdrop-blur-sm">
+          <svg class="h-4 w-4 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </span>
+      </span>
+    </div>
+
     <div class="flex items-center justify-between gap-2">
       <span
         class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold"
@@ -23,10 +43,11 @@
     </div>
 
     <p
+      v-if="post.description"
       class="mt-3 text-sm leading-relaxed text-ink-muted"
       :class="compact ? 'line-clamp-2' : 'line-clamp-4'"
     >
-      {{ post.description || 'A Paytaca merchant moment shared online.' }}
+      {{ post.description }}
     </p>
 
     <div v-if="!compact && post.merchants && post.merchants.length" class="mt-3 flex flex-wrap gap-1.5">
@@ -54,6 +75,8 @@
 
 <script>
 import moment from 'moment'
+
+const DOMAIN = 'https://map.paytaca.com'
 
 const PLATFORM_META = {
   facebook: { label: 'Facebook', accent: '#1877F2', chipBg: '#E7F0FE', chipText: '#1257B8', border: 'border-[#CFE0FB]' },
@@ -85,6 +108,16 @@ export default {
         return ''
       }
       return moment(this.post.posted_at).fromNow()
+    },
+    previewSrc() {
+      const src = this.post.preview_image || this.post.image_url
+      if (!src) {
+        return null
+      }
+      if (/^https?:\/\//i.test(src)) {
+        return src
+      }
+      return `${DOMAIN}${src}`
     },
   },
 }

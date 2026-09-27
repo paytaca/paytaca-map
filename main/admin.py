@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import Merchant, Category, FeedPost
+from .oembed import fetch_tiktok_thumbnail
 
 
 @admin.register(Category)
@@ -74,6 +75,7 @@ class FeedPostAdmin(admin.ModelAdmin):
     search_fields = ["link", "description"]
     filter_horizontal = ["merchants"]
     date_hierarchy = "posted_at"
+    actions = ["fetch_tiktok_thumbnails"]
     fieldsets = (
         (
             "Post",
@@ -81,6 +83,8 @@ class FeedPostAdmin(admin.ModelAdmin):
                 "fields": (
                     "platform",
                     "link",
+                    "image",
+                    "image_url",
                     "description",
                     "posted_at",
                     "active",
@@ -89,3 +93,21 @@ class FeedPostAdmin(admin.ModelAdmin):
         ),
         ("Merchants", {"fields": ("merchants",)}),
     )
+
+    def save_model(self, request, obj, form, change):
+        if obj.platform == FeedPost.Platform.TIKTOK and not obj.image and not obj.image_url:
+            obj.image_url = fetch_tiktok_thumbnail(obj.link)
+        super().save_model(request, obj, form, change)
+
+    @admin.action(description="Fetch TikTok thumbnails (oEmbed)")
+    def fetch_tiktok_thumbnails(self, request, queryset):
+        updated = 0
+        for post in queryset.filter(platform=FeedPost.Platform.TIKTOK):
+            if post.image_url:
+                continue
+            thumbnail = fetch_tiktok_thumbnail(post.link)
+            if thumbnail:
+                post.image_url = thumbnail
+                post.save(update_fields=["image_url"])
+                updated += 1
+        self.message_user(request, f"Fetched {updated} thumbnail(s).")
