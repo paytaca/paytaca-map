@@ -13,6 +13,11 @@ const routes = [
     component: () => import('../views/FeedView.vue'),
   },
   {
+    path: '/get-listed',
+    name: 'get-listed',
+    component: () => import('../views/GetListedView.vue'),
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: '/',
   },

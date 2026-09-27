@@ -56,6 +56,7 @@ export default {
       links: [
         { to: '/', label: 'Map' },
         { to: '/feed', label: 'Feed' },
+        { to: '/get-listed', label: 'Get Listed' },
       ],
     }
   },
