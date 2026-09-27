@@ -3,13 +3,23 @@ from rest_framework.views import APIView
 from django.db import models
 from django.core.cache import cache
 from django.conf import settings
-from .models import Merchant, Category
-from .serializers import MerchantsSerializer
+from .models import Merchant, Category, FeedPost
+from .serializers import MerchantsSerializer, FeedPostSerializer
 
 
 def get_merchants_cache_version():
     """Get the current cache version for merchants."""
     version_key = "merchants_cache_version"
+    version = cache.get(version_key)
+    if version is None:
+        cache.set(version_key, 1, timeout=None)
+        return 1
+    return version
+
+
+def get_feed_cache_version():
+    """Get the current cache version for feed posts."""
+    version_key = "feed_cache_version"
     version = cache.get(version_key)
     if version is None:
         cache.set(version_key, 1, timeout=None)
@@ -190,3 +200,19 @@ class LogoListAPIView(APIView):
         cache.set(cache_key, logos, getattr(settings, "MERCHANTS_CACHE_TIMEOUT", 300))
 
         return Response(logos)
+
+
+class FeedPostListView(APIView):
+    def get(self, request):
+        cache_version = get_feed_cache_version()
+        cache_key = get_cache_key("feed", "all", version=cache_version)
+
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+
+        posts = FeedPost.objects.filter(active=True)
+        data = FeedPostSerializer(posts, many=True).data
+
+        cache.set(cache_key, data, getattr(settings, "FEED_CACHE_TIMEOUT", 300))
+        return Response(data)

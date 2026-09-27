@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save, post_delete, m2m_changed
 from django.dispatch import receiver
 from django.core.cache import cache
-from .models import Merchant, Category
+from .models import Merchant, Category, FeedPost
 
 
 def clear_merchants_cache():
@@ -14,6 +14,13 @@ def clear_merchants_cache():
 def clear_categories_cache():
     """Clear categories cache by incrementing the version."""
     version_key = "categories_cache_version"
+    current_version = cache.get(version_key, 0)
+    cache.set(version_key, current_version + 1, None)  # Store indefinitely
+
+
+def clear_feed_cache():
+    """Clear feed posts cache by incrementing the version."""
+    version_key = "feed_cache_version"
     current_version = cache.get(version_key, 0)
     cache.set(version_key, current_version + 1, None)  # Store indefinitely
 
@@ -38,3 +45,16 @@ def category_cache_invalidator(sender, **kwargs):
 def merchant_categories_changed(sender, **kwargs):
     """Invalidate merchant cache when merchant categories change."""
     clear_merchants_cache()
+
+
+@receiver(post_save, sender=FeedPost)
+@receiver(post_delete, sender=FeedPost)
+def feed_post_cache_invalidator(sender, **kwargs):
+    """Invalidate feed cache when a post is saved or deleted."""
+    clear_feed_cache()
+
+
+@receiver(m2m_changed, sender=FeedPost.merchants.through)
+def feed_post_merchants_changed(sender, **kwargs):
+    """Invalidate feed cache when a post's merchants change."""
+    clear_feed_cache()

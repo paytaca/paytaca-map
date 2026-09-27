@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Merchant, Category
+from .models import Merchant, Category, FeedPost
 
 
 @admin.register(Category)
@@ -65,3 +65,27 @@ class MerchantAdmin(admin.ModelAdmin):
         return ", ".join([category.name for category in obj.categories.all()])
 
     get_categories.short_description = "Categories"
+
+
+@admin.register(FeedPost)
+class FeedPostAdmin(admin.ModelAdmin):
+    list_display = ["platform", "link", "posted_at", "active", "created_at"]
+    list_filter = ["platform", "active"]
+    search_fields = ["link", "description"]
+    filter_horizontal = ["merchants"]
+    date_hierarchy = "posted_at"
+    fieldsets = (
+        (
+            "Post",
+            {
+                "fields": (
+                    "platform",
+                    "link",
+                    "description",
+                    "posted_at",
+                    "active",
+                )
+            },
+        ),
+        ("Merchants", {"fields": ("merchants",)}),
+    )

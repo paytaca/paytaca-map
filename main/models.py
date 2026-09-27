@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models import F
 from django.db.models.functions import Coalesce
 from django.core.validators import RegexValidator
+from django.utils import timezone
 
 
 class Category(models.Model):
@@ -76,3 +77,29 @@ class Merchant(models.Model):
 
     class Meta:
         ordering = ["-last_transaction_date", "-last_update"]
+
+
+class FeedPost(models.Model):
+    class Platform(models.TextChoices):
+        FACEBOOK = "facebook", "Facebook"
+        TIKTOK = "tiktok", "TikTok"
+        INSTAGRAM = "instagram", "Instagram"
+        X = "x", "X"
+
+    platform = models.CharField(
+        max_length=20, choices=Platform.choices, db_index=True
+    )
+    link = models.URLField()
+    description = models.TextField(blank=True, null=True)
+    merchants = models.ManyToManyField(
+        Merchant, blank=True, related_name="feed_posts"
+    )
+    posted_at = models.DateTimeField(default=timezone.now, null=True, blank=True, db_index=True)
+    active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.get_platform_display()}: {self.link}"
+
+    class Meta:
+        ordering = ["-posted_at", "-created_at"]
