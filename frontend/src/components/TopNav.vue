@@ -1,5 +1,5 @@
 <template>
-  <header class="shrink-0 border-b border-soft bg-card/85 backdrop-blur">
+  <header class="relative z-50 shrink-0 border-b border-soft bg-card/85 backdrop-blur">
     <div class="mx-auto flex h-14 max-w-[1500px] items-center gap-2 px-3 md:h-16 md:gap-4 md:px-8">
       <router-link to="/" class="flex shrink-0 items-center gap-2 md:gap-3">
         <span class="grid h-9 w-9 place-items-center rounded-2xl bg-brand-600 text-white shadow-pop md:h-10 md:w-10">
