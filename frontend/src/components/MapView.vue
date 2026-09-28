@@ -1517,7 +1517,7 @@ export default {
 }
 
 .map-error__title {
-  font-family: 'Baloo 2', ui-rounded, system-ui, sans-serif;
+  font-family: 'Rubik', system-ui, sans-serif;
   font-size: 1.125rem;
   font-weight: 700;
   color: rgb(var(--ink));

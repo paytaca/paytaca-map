@@ -76,8 +76,8 @@ export default {
         soft: 'rgb(var(--soft) / <alpha-value>)',
       },
       fontFamily: {
-        display: ['"Baloo 2"', 'ui-rounded', 'system-ui', 'sans-serif'],
-        sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['"Rubik"', 'system-ui', 'sans-serif'],
+        sans: ['"Rubik"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         xl: '1rem',
