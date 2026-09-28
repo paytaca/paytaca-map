@@ -59,17 +59,6 @@
         {{ merchant.name }}
       </span>
     </div>
-
-    <span
-      class="mt-auto pt-3 inline-flex items-center gap-1 text-xs font-semibold"
-      :class="compact ? 'mt-2 pt-2' : ''"
-      :style="{ color: meta.accent }"
-    >
-      View post
-      <svg class="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M7 17 17 7M7 7h10v10" />
-      </svg>
-    </span>
   </a>
 </template>
 
