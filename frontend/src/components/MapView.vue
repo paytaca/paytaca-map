@@ -55,6 +55,7 @@ export default {
     return {
       initialLoadComplete: false,
       isInitialDataLoad: true,
+      initialMarkersApplied: false,
       mapError: null,
       popup: null,
       featureHtmlById: {},
@@ -793,12 +794,20 @@ export default {
       this.buildClusterIndex();
       if (source) {
         source.setData(this.currentFeatureCollection);
-      }
 
-      // Only auto-fit to markers after initial data load is complete, and only
-      // when the parent allows camera movement for data updates.
-      if (features.length > 0 && !this.isInitialDataLoad && this.initialLoadComplete && this.autoFit) {
-        this.fitMapToMarkers();
+        // The first markers applied after map creation define the initial
+        // framing. Never auto-fit on top of it: on mobile the map is created
+        // lazily (after the list is tapped), so by then the "initial data load"
+        // timer has elapsed and fitting would yank the globe away from the
+        // preferred center. Desktop creates the map at mount, so this simply
+        // mirrors the existing first-load behaviour.
+        if (!this.initialMarkersApplied) {
+          this.initialMarkersApplied = true;
+        } else if (features.length > 0 && !this.isInitialDataLoad && this.initialLoadComplete && this.autoFit) {
+          // Only auto-fit to markers after initial data load is complete, and
+          // only when the parent allows camera movement for data updates.
+          this.fitMapToMarkers();
+        }
       }
     },
     buildMerchantPopupHtml(merchant) {
