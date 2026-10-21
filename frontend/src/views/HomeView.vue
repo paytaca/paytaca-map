@@ -174,10 +174,9 @@
             Current
           </div>
           <!-- Check if merchant.logo is defined before accessing its url property -->
-          <div class="h-full">
-            <img v-if="merchant.logo" :src="merchant.logo" :alt="merchant.name + ' Logo'" class="m-auto sm:h-auto md:h-20 w-20 md-50 lg-75 object-fill cursor-pointer float-right" style="padding-left: 12px;">
-            <div class="text-sm md:text-xs">
-              <h3 class="font-display text-lg font-semibold text-ink">{{ merchant.name }}</h3>
+          <div class="h-full flex items-start gap-3">
+            <div class="min-w-0 flex-1 text-sm md:text-xs">
+              <h3 class="font-display text-lg font-semibold text-ink truncate">{{ merchant.name }}</h3>
               <div class="mt-1 mb-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span
                   class="inline-flex items-center gap-1 text-[11px] font-medium leading-none"
@@ -213,6 +212,7 @@
               </template>
               <p class="text-ink-muted" v-if="merchant.last_transaction_date">Last transaction: {{ formatDate(merchant.last_transaction_date) }}</p>
             </div>
+            <img v-if="merchant.logo" :src="merchant.logo" :alt="merchant.name + ' Logo'" class="h-14 w-14 shrink-0 rounded-full object-cover ring-1 ring-brand-100">
           </div>
           <div class="mt-2 flex items-center justify-between">
             <div class="flex items-center space-x-3">
