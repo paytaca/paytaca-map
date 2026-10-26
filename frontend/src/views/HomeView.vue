@@ -180,7 +180,7 @@
               <div class="mt-1 mb-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span
                   class="inline-flex items-center gap-1 text-[11px] font-medium leading-none"
-                  :class="merchant.verified ? 'text-brand-700 dark:text-brand-300' : 'text-ink-faint'"
+                  :class="merchant.verified ? 'text-emerald-600 dark:text-emerald-400' : 'text-ink-faint'"
                   :title="merchant.verified ? 'Verified merchant' : 'Not yet verified'"
                 >
                   <svg v-if="merchant.verified" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-80" viewBox="0 0 20 20" fill="currentColor">

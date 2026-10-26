@@ -842,7 +842,7 @@ export default {
       const locationText = formatMerchantLocation(merchant);
 
       const verifiedBadge = merchant.verified
-        ? `<span class="inline-flex items-center gap-1 text-[11px] font-medium leading-none text-brand-700" title="Verified merchant">
+        ? `<span class="inline-flex items-center gap-1 text-[11px] font-medium leading-none text-emerald-600" title="Verified merchant">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 opacity-80" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
               Verified
             </span>`
