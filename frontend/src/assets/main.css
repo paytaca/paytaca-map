@@ -13,7 +13,7 @@
 
 :where(html.dark) :where(a),
 :where(html.dark) .green {
-  color: #5FE3A3;
+  color: #93C5FD;
 }
 
 @media (hover: hover) {
@@ -22,6 +22,6 @@
   }
 
   :where(html.dark) :where(a):hover {
-    color: #8FF0C0;
+    color: #BFDBFE;
   }
 }

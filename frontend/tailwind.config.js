@@ -21,17 +21,18 @@ export default {
     // },
     extend: {
       colors: {
+        // Paytaca brand blue (matches paytaca.com), not the old green theme.
         brand: {
           50: 'rgb(var(--brand-50) / <alpha-value>)',
           100: 'rgb(var(--brand-100) / <alpha-value>)',
           200: 'rgb(var(--brand-200) / <alpha-value>)',
-          300: '#5FE3A3',
-          400: '#2ED592',
-          500: '#10C57E',
-          600: '#0AA76C',
-          700: '#088455',
-          800: '#0A6A46',
-          900: '#0B5639',
+          300: '#93C5FD',
+          400: '#60A5FA',
+          500: '#3B82F6',
+          600: '#2563EB',
+          700: '#1D4ED8',
+          800: '#1E40AF',
+          900: '#1E3A8A',
         },
         mango: {
           100: 'rgb(var(--mango-100) / <alpha-value>)',
@@ -85,9 +86,9 @@ export default {
         '3xl': '1.75rem',
       },
       boxShadow: {
-        pop: '0 10px 30px -8px rgba(16, 197, 126, 0.45)',
-        card: '0 6px 20px -6px rgba(18, 36, 30, 0.14)',
-        'card-hover': '0 16px 34px -10px rgba(10, 167, 108, 0.34)',
+        pop: '0 10px 30px -8px rgba(37, 99, 235, 0.35)',
+        card: '0 6px 20px -6px rgba(15, 23, 42, 0.14)',
+        'card-hover': '0 16px 34px -10px rgba(29, 78, 216, 0.28)',
       },
     }
   },

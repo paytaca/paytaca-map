@@ -2006,7 +2006,7 @@ export default {
 }
 
 .focus\:ring:focus {
-  box-shadow: 0 0 0 3px rgba(16, 197, 126, 0.45);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.45);
 }
 
 .opacity-50 {
@@ -2103,10 +2103,10 @@ button:disabled {
 
 @keyframes highlight-pulse {
   0%, 100% {
-    box-shadow: 0 0 0 4px rgba(16, 197, 126, 0.45), 0 10px 25px -5px rgba(10, 167, 108, 0.35);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.45), 0 10px 25px -5px rgba(37, 99, 235, 0.35);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(16, 197, 126, 0.25), 0 10px 25px -5px rgba(10, 167, 108, 0.5);
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.25), 0 10px 25px -5px rgba(37, 99, 235, 0.5);
   }
 }
 

@@ -74,7 +74,7 @@ const PLATFORM_META = {
   x: { label: 'X', accent: '#14171A', chipBg: '#E9EAEB', chipText: '#14171A', border: 'border-[#DBDDDE]' },
 }
 
-const DEFAULT_META = { label: 'Post', accent: '#0AA76C', chipBg: '#E7FBF1', chipText: '#088455', border: 'border-soft' }
+const DEFAULT_META = { label: 'Post', accent: '#2563EB', chipBg: '#EFF6FF', chipText: '#1D4ED8', border: 'border-soft' }
 
 export default {
   name: 'FeedPostCard',
