@@ -204,12 +204,7 @@
                   NFC
                 </span>
               </div>
-              <template v-if="merchant.town">
-                <p class="text-ink-muted">{{ merchant.town }}, {{ merchant.province }}, {{ merchant.country }}</p>
-              </template>
-              <template v-else>
-                <p class="text-ink-muted">{{ merchant.city }}, {{ merchant.country }}</p>
-              </template>
+              <p v-if="formatMerchantLocation(merchant)" class="text-ink-muted">{{ formatMerchantLocation(merchant) }}</p>
               <p class="text-ink-muted" v-if="merchant.last_transaction_date">Last transaction: {{ formatDate(merchant.last_transaction_date) }}</p>
             </div>
             <img v-if="merchant.logo" :src="merchant.logo" :alt="merchant.name + ' Logo'" class="h-14 w-14 shrink-0 rounded-full object-cover ring-1 ring-brand-100">
@@ -388,7 +383,7 @@
               <img v-if="selectedMerchant?.logo" :src="selectedMerchant.logo" :alt="selectedMerchant?.name + ' Logo'" class="w-12 h-12 rounded-full object-cover">
               <div>
                 <h4 class="font-semibold text-ink">{{ selectedMerchant?.name }}</h4>
-                <p class="text-sm text-ink-muted">{{ selectedMerchant?.city }}, {{ selectedMerchant?.country }}</p>
+                <p v-if="formatMerchantLocation(selectedMerchant)" class="text-sm text-ink-muted">{{ formatMerchantLocation(selectedMerchant) }}</p>
               </div>
             </div>
 
@@ -646,6 +641,7 @@
 <script>
 import axios from 'axios';
 import MapView from '@/components/MapView.vue';
+import { formatMerchantLocation } from '@/utils/location';
 import moment from 'moment';
 
 const DOMAIN = 'https://map.paytaca.com'
@@ -856,6 +852,7 @@ export default {
     },
   },
   methods: {
+    formatMerchantLocation,
     getCountryFlag(country) {
       const countryFlags = {
         'Philippines': '🇵🇭', 'PH': '🇵🇭',

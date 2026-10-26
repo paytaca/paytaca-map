@@ -29,6 +29,7 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Supercluster } from '@maplibre/geojson-vt';
 import image from "../assets/marker_pin.png";
+import { formatMerchantLocation } from '@/utils/location';
 
 // Default map center - Philippines ([lng, lat] for MapLibre)
 const defaultCenter = [121.7740, 12.8797];
@@ -837,15 +838,8 @@ export default {
         timeText = minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`;
       }
 
-      let merchantLocation = '';
-      if (merchant.city) {
-        merchantLocation = `${merchant.city}, ${merchant.country}`;
-      } else if (merchant.town) {
-        merchantLocation = `${merchant.town}, ${merchant.province}, ${merchant.country}`;
-      }
-
       const countryFlag = this.getCountryFlag(merchant.country);
-      const locationText = merchantLocation || merchant.country || '';
+      const locationText = formatMerchantLocation(merchant);
 
       const verifiedBadge = merchant.verified
         ? `<span class="inline-flex items-center gap-1 text-[11px] font-medium leading-none text-brand-700" title="Verified merchant">
