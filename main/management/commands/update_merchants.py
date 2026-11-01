@@ -4,11 +4,33 @@ from main.models import Merchant
 import dateutil.parser as parser
 from django.utils import timezone
 import time, requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 import logging
 import pytz
 
 
 logger = logging.getLogger(__name__)
+
+SOURCE_URL = (
+    "https://watchtower.cash/api/paytacapos/merchants/?active=true&has_pagination=false"
+)
+# Generator ramp is ~500ms, so a healthy fetch takes ~15s. 30s allows slack while
+# still guaranteeing the loop makes progress: without a timeout a stalled
+# connection blocks the updater forever while supervisor still reports RUNNING.
+REQUEST_TIMEOUT = (10, 30)
+
+
+def _session():
+    session = requests.Session()
+    retries = Retry(
+        total=3,
+        backoff_factor=2,
+        status_forcelist=(429, 500, 502, 503, 504),
+        allowed_methods=("GET",),
+    )
+    session.mount("https://", HTTPAdapter(max_retries=retries))
+    return session
 
 
 def parse_last_transaction_date(datetime_string):
@@ -21,8 +43,6 @@ def parse_last_transaction_date(datetime_string):
 
 
 def _save_merchant(merchant_data):
-    logger.info(merchant_data)
-
     last_transaction_date_str = merchant_data["last_transaction_date"]
     last_transaction_date = parse_last_transaction_date(last_transaction_date_str)
 
@@ -64,7 +84,6 @@ def _save_merchant(merchant_data):
 
 
 def _update_merchant(merchant_data):
-    logger.info(merchant_data)
     merchant = Merchant.objects.get(watchtower_merchant_id=merchant_data["id"])
 
     # Update location
@@ -96,8 +115,9 @@ def _update_merchant(merchant_data):
         merchant.logo_url = logo_120x120
 
     # Update merchant details
-    last_transaction_date_str = merchant_data["last_transaction_date"]
-    last_transaction_date = parse_last_transaction_date(last_transaction_date_str)
+    last_transaction_date = parse_last_transaction_date(
+        merchant_data["last_transaction_date"]
+    )
 
     merchant.name = merchant_data["name"]
     merchant.website_url = merchant_data["website_url"]
@@ -109,7 +129,14 @@ def _update_merchant(merchant_data):
     # Only update NFC support if explicitly provided by API
     if "nfc_enabled" in merchant_data:
         merchant.nfc_enabled = merchant_data["nfc_enabled"]
-    merchant.last_transaction_date = last_transaction_date
+    # The source nulls and regresses `last_transaction_date` for some merchants,
+    # so only ever move it forward. Overwriting with None would erase the only
+    # data the home page sorts by.
+    if last_transaction_date and (
+        merchant.last_transaction_date is None
+        or merchant.last_transaction_date < last_transaction_date
+    ):
+        merchant.last_transaction_date = last_transaction_date
     merchant.last_update = timezone.now()
     merchant.save()
 
@@ -117,15 +144,20 @@ def _update_merchant(merchant_data):
     return True
 
 
-def _fetch_merchants(check_last_update=True):
-    source_url = "https://watchtower.cash/api/paytacapos/merchants/?active=true&has_pagination=false"
-    resp = requests.get(source_url)
+def _fetch_merchants(session=None, check_last_update=True):
+    session = session or _session()
+    resp = session.get(SOURCE_URL, timeout=REQUEST_TIMEOUT)
+    resp.raise_for_status()
+    merchants = resp.json()
 
     any_updates = False
+    failures = 0
 
-    if resp.status_code == 200:
-        merchants = resp.json()
-        for merchant_data in merchants:
+    for merchant_data in merchants:
+        # A single malformed record must not abort the cycle. Before per-record
+        # isolation, one bad payload aborted every pass at the same point, so
+        # every merchant later in the response silently stopped updating.
+        try:
             merchant_check = Merchant.objects.filter(
                 watchtower_merchant_id=merchant_data["id"]
             )
@@ -148,9 +180,8 @@ def _fetch_merchants(check_last_update=True):
                 else:
                     proceed_update = True
 
-                last_transaction_date_str = merchant_data["last_transaction_date"]
                 last_transaction_date = parse_last_transaction_date(
-                    last_transaction_date_str
+                    merchant_data["last_transaction_date"]
                 )
                 if last_transaction_date:
                     if (
@@ -159,7 +190,10 @@ def _fetch_merchants(check_last_update=True):
                     ):
                         proceed_update = True
 
-                if "verified" in merchant_data and merchant_data["verified"] != merchant.verified:
+                if (
+                    "verified" in merchant_data
+                    and merchant_data["verified"] != merchant.verified
+                ):
                     proceed_update = True
 
                 if (
@@ -176,6 +210,27 @@ def _fetch_merchants(check_last_update=True):
                 if location_data["longitude"]:
                     _save_merchant(merchant_data)
                     any_updates = True
+        except Exception:
+            failures += 1
+            logger.exception(
+                "Failed to update merchant id=%s", merchant_data.get("id")
+            )
+
+    active_ids = {m["id"] for m in merchants}
+    orphans = list(
+        Merchant.objects.filter(active=True)
+        .exclude(watchtower_merchant_id__in=active_ids)
+        .values_list("watchtower_merchant_id", "name")
+    )
+    if orphans:
+        logger.warning(
+            "Locally active but absent from source active set (%s): %s",
+            len(orphans),
+            ", ".join(f"{wid}:{name}" for wid, name in orphans),
+        )
+
+    if failures:
+        logger.error("Merchant sync finished with %s failed records", failures)
 
     return any_updates
 
@@ -184,11 +239,19 @@ class Command(BaseCommand):
     help = "Saves or updates merchants fetched from Watchtower.cash"
 
     def handle(self, *args, **kwargs):
+        session = _session()
         # Update merchants every 60 seconds
         while True:
             time.sleep(60)
             logger.info("Fetching merchants...")
-            any_updates = _fetch_merchants()
+            try:
+                any_updates = _fetch_merchants(session)
+            except Exception:
+                # Never exit: supervisor restarts with a 60s backoff, and a
+                # repeated crash is indistinguishable from a healthy loop
+                # except that data silently stops advancing.
+                logger.exception("Merchant fetch failed, retrying next cycle")
+                continue
 
             if any_updates:
                 logger.info("Triggering sync to sheets...")
